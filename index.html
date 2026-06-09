@@ -86,6 +86,9 @@
         <div class="nav-item" onclick="navigate('expenses')">
           <span class="icon">💸</span> المصاريف
         </div>
+        <div class="nav-item" onclick="navigate('workers')">
+          <span class="icon">👷</span> عمال المعمل
+        </div>
       </div>
 
       <div class="nav-group">
@@ -186,6 +189,16 @@
           <span class="stat-icon">📦</span>
           <div class="stat-value" id="stat-exports-month">—</div>
           <div class="stat-label">صادرات الشهر</div>
+        </div>
+        <div class="stat-card" style="--accent:#22c55e;background:linear-gradient(135deg,var(--bg-300) 0%,rgba(34,197,94,0.08) 100%)">
+          <span class="stat-icon">📈</span>
+          <div class="stat-value" id="stat-profit" style="color:#22c55e">—</div>
+          <div class="stat-label">صافي الربح الشهري (ج)</div>
+        </div>
+        <div class="stat-card" style="--accent:#ef4444;background:linear-gradient(135deg,var(--bg-300) 0%,rgba(239,68,68,0.08) 100%)">
+          <span class="stat-icon">📉</span>
+          <div class="stat-value" id="stat-loss" style="color:#ef4444">—</div>
+          <div class="stat-label">إجمالي الخسائر/المصاريف الشهر (ج)</div>
         </div>
       </div>
 
@@ -727,6 +740,43 @@
       </div>
     </div>
 
+    <!-- ════ PAGE: WORKERS ════ -->
+    <div class="page" id="page-workers">
+      <div class="section-header">
+        <span class="section-icon">👷</span>
+        <h2>عمال المعمل</h2>
+        <button class="btn btn-primary" onclick="openWorkerModal()">➕ إضافة عامل</button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="search-bar" style="flex:1;max-width:320px">
+            <span>🔍</span>
+            <input type="text" placeholder="البحث عن عامل..." id="workers-search" oninput="filterWorkers()">
+          </div>
+          <span style="color:var(--text-400);font-size:13px" id="workers-count"></span>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>اسم العامل</th>
+                <th>الهاتف</th>
+                <th>اليومية (ج)</th>
+                <th>أيام الأسبوع الحالي</th>
+                <th>المستحق الأسبوعي</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="workers-tbody">
+              <tr><td colspan="7"><div class="empty-state"><span class="empty-icon">👷</span><p>لا يوجد عمال</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- ════ PAGE: SETTINGS ════ -->
     <div class="page" id="page-settings">
       <div class="section-header">
@@ -850,6 +900,10 @@
     <div class="bs-item" onclick="navigate('expenses');closeBottomMenu()">
       <span class="bs-icon">💸</span>
       <span>المصاريف</span>
+    </div>
+    <div class="bs-item" onclick="navigate('workers');closeBottomMenu()">
+      <span class="bs-icon">👷</span>
+      <span>عمال المعمل</span>
     </div>
     <div class="bs-item" onclick="navigate('reports');closeBottomMenu()">
       <span class="bs-icon">📈</span>
@@ -1179,15 +1233,102 @@
 
 <!-- Supplier Account Detail Modal -->
 <div class="modal-backdrop" id="modal-account-detail">
-  <div class="modal" style="max-width:680px">
+  <div class="modal" style="max-width:720px">
     <div class="modal-header">
       <span style="font-size:22px">📋</span>
       <h3 id="account-detail-title">كشف حساب مورد</h3>
-      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-account-detail')">✕</button>
+      <button class="btn btn-secondary btn-icon" type="button" onclick="closeModal('modal-account-detail')">✕</button>
     </div>
     <div class="modal-body" id="account-detail-body"></div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('modal-account-detail')">إغلاق</button>
+      <button class="btn btn-secondary" type="button" onclick="closeModal('modal-account-detail')">إغلاق</button>
+      <button class="btn btn-success" type="button" id="wa-send-btn" style="background:var(--success);display:none">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="margin-left:6px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        إرسال واتساب
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Worker Modal -->
+<div class="modal-backdrop" id="modal-worker">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <span style="font-size:22px">👷</span>
+      <h3 id="worker-modal-title">إضافة عامل جديد</h3>
+      <button class="btn btn-secondary btn-icon" type="button" onclick="closeModal('modal-worker')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="worker-id">
+      <div class="form-grid">
+        <div class="form-group"><label>اسم العامل *</label><input type="text" id="w-name" placeholder="محمد أحمد"></div>
+        <div class="form-group"><label>رقم الهاتف</label><input type="tel" id="w-phone" placeholder="01012345678"></div>
+        <div class="form-group"><label>اليومية (جنيه) *</label><input type="number" id="w-daily" placeholder="0" min="0" step="0.01"></div>
+        <div class="form-group"><label>الحالة</label>
+          <select id="w-status"><option value="active">نشط</option><option value="inactive">متوقف</option></select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="w-notes" placeholder="ملاحظات اختيارية"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" type="button" onclick="closeModal('modal-worker')">إلغاء</button>
+      <button class="btn btn-primary" type="button" onclick="saveWorker()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Worker Attendance Modal -->
+<div class="modal-backdrop" id="modal-worker-attendance">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <span style="font-size:22px">📅</span>
+      <h3 id="worker-att-title">تسجيل حضور</h3>
+      <button class="btn btn-secondary btn-icon" type="button" onclick="closeModal('modal-worker-attendance')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="att-worker-id">
+      <div style="margin-bottom:16px;padding:12px;background:var(--bg-300);border-radius:8px;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+        <div>
+          <div style="font-size:11px;color:var(--text-400)">الأسبوع</div>
+          <div id="att-week-label" style="color:var(--gold);font-weight:700">—</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-400)">اليومية</div>
+          <div id="att-daily-rate" style="color:var(--info);font-weight:700">—</div>
+        </div>
+        <div style="margin-right:auto">
+          <div style="font-size:11px;color:var(--text-400)">المستحق</div>
+          <div id="att-due" style="color:var(--success);font-weight:900;font-size:18px">—</div>
+        </div>
+      </div>
+      <div id="att-days-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:20px"></div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;color:var(--text-300);margin-bottom:6px;display:block">أسبوع آخر</label>
+        <input type="week" id="att-week-picker" onchange="loadAttendanceWeek()">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" type="button" onclick="closeModal('modal-worker-attendance')">إغلاق</button>
+      <button class="btn btn-primary" type="button" onclick="saveAttendance()">💾 حفظ الحضور</button>
+    </div>
+  </div>
+</div>
+
+<!-- Worker Account Detail Modal -->
+<div class="modal-backdrop" id="modal-worker-account">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <span style="font-size:22px">📋</span>
+      <h3 id="worker-account-title">كشف حساب عامل</h3>
+      <button class="btn btn-secondary btn-icon" type="button" onclick="closeModal('modal-worker-account')">✕</button>
+    </div>
+    <div class="modal-body" id="worker-account-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" type="button" onclick="closeModal('modal-worker-account')">إغلاق</button>
+      <button class="btn btn-success" type="button" id="worker-wa-btn" style="background:var(--success);display:none">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="margin-left:6px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        إرسال واتساب
+      </button>
     </div>
   </div>
 </div>
@@ -1215,7 +1356,10 @@ const state = {
   sales: {},
   settings: {},
   buyers: {},
-  buyerPayments: {}
+  buyerPayments: {},
+  workers: {},
+  workerAttendance: {},
+  workerPayments: {}
 };
 
 // ── Utils ──────────────────────────────────────────────────────────
@@ -1269,7 +1413,8 @@ const pageTitles = {
   warehouse1: 'المخزن الأول', warehouse2: 'المخزن الثاني',
   exports: 'الصادرات', sales: 'المبيعات',
   buyers: 'إدارة المشترين', 'buyer-accounts': 'حسابات المشترين',
-  expenses: 'المصاريف', reports: 'التقارير', settings: 'الإعدادات'
+  expenses: 'المصاريف', reports: 'التقارير', settings: 'الإعدادات',
+  workers: 'عمال المعمل'
 };
 
 // Bottom nav primary pages
@@ -1308,6 +1453,7 @@ window.navigate = function(page) {
   if (page === 'expenses') loadExpenses();
   if (page === 'reports') initReports();
   if (page === 'settings') loadSettings();
+  if (page === 'workers') renderWorkers();
 };
 
 window.toggleSidebar = () => {
@@ -1342,6 +1488,9 @@ dbListen('sales', v => { state.sales = v || {}; });
 dbListen('settings', v => { state.settings = v || {}; loadSettingsUI(); });
 dbListen('buyers', v => { state.buyers = v || {}; });
 dbListen('buyerPayments', v => { state.buyerPayments = v || {}; });
+dbListen('workers', v => { state.workers = v || {}; });
+dbListen('workerAttendance', v => { state.workerAttendance = v || {}; });
+dbListen('workerPayments', v => { state.workerPayments = v || {}; });
 
 // ══════════════════════════════════════════════════════════════════
 // DASHBOARD
@@ -1384,6 +1533,22 @@ window.loadDashboard = function() {
   // Exports month
   const exportsMonth = Object.values(state.exports).filter(e => (e.date||'').startsWith(monthStr)).length;
   $('stat-exports-month').textContent = exportsMonth;
+
+  // Profit/Loss calculation
+  // Revenue = sales this month
+  // Costs = expenses this month + supplier payments this month + worker payments this month
+  const workerPayMonthly = Object.values(state.workerPayments||{})
+    .filter(p => (p.date||'').startsWith(monthStr))
+    .reduce((s,p) => s + Number(p.amount||0), 0);
+  const totalCosts = expMonth + workerPayMonthly;
+  const netProfit = salesMonth - totalCosts;
+  const profitEl = $('stat-profit');
+  const lossEl = $('stat-loss');
+  if (profitEl) {
+    profitEl.textContent = fmt(netProfit > 0 ? netProfit : 0, 0);
+    profitEl.style.color = netProfit > 0 ? '#22c55e' : '#ef4444';
+  }
+  if (lossEl) lossEl.textContent = fmt(totalCosts, 0);
 
   // Recent milk
   const recentMilk = Object.entries(state.milkRecords)
@@ -1545,6 +1710,17 @@ window.showAccountDetail = function(supplierId) {
   const paySum      = payments.reduce((s,[,p]) => s + Number(p.amount||0), 0);
   const advSum      = advances.reduce((s,[,a]) => s + Number(a.amount||0), 0);
 
+  // Get current week records
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0=sun
+  const weekStart = new Date(now); weekStart.setDate(now.getDate() - dayOfWeek);
+  const weekEnd   = new Date(now); weekEnd.setDate(now.getDate() + (6 - dayOfWeek));
+  const ws = weekStart.toISOString().slice(0,10);
+  const we = weekEnd.toISOString().slice(0,10);
+  const weekDayNames = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+
+  const weekRecords = milkRecords.filter(([,r]) => r.date >= ws && r.date <= we);
+
   $('account-detail-body').innerHTML = `
     <div class="summary-bar" style="margin-bottom:20px">
       <div class="summary-item"><div class="val">${fmt(milkSum,2)}</div><div class="lbl">إجمالي الحليب (ج)</div></div>
@@ -1552,7 +1728,19 @@ window.showAccountDetail = function(supplierId) {
       <div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(advSum,2)}</div><div class="lbl">السلف (ج)</div></div>
       <div class="summary-item"><div class="val" style="color:${balance>0?'var(--success)':'var(--danger)'}">${fmt(balance,2)}</div><div class="lbl">الرصيد المستحق (ج)</div></div>
     </div>
-    <h4 style="color:var(--gold);margin-bottom:10px">سجل الحليب (${milkRecords.length} سجل)</h4>
+    <div style="background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(16,185,129,0.05));border:1px solid var(--border-soft);border-radius:10px;padding:14px;margin-bottom:16px">
+      <div style="color:var(--gold);font-weight:700;margin-bottom:10px">📅 تفاصيل الأسبوع الحالي (${ws} : ${we})</div>
+      <div class="table-wrapper" style="margin:0">
+        <table><thead><tr><th>اليوم</th><th>التاريخ</th><th>الكمية (لتر)</th><th>السعر</th><th>الإجمالي</th></tr></thead>
+        <tbody>${weekRecords.length ? weekRecords.map(([,r]) => {
+          const d = new Date(r.date); const dayName = weekDayNames[d.getDay()];
+          return `<tr><td style="color:var(--gold);font-weight:600">${dayName}</td><td>${r.date}</td><td>${fmt(r.qty,1)} لتر</td><td>${fmt(r.price,2)} ج</td><td style="color:var(--success);font-weight:700">${fmt(r.total,2)} ج</td></tr>`;
+        }).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--text-400)">لا توجد سجلات هذا الأسبوع</td></tr>'}
+        ${weekRecords.length ? `<tr style="background:var(--bg-300)"><td colspan="2" style="font-weight:700;color:var(--gold)">الإجمالي</td><td style="font-weight:700">${fmt(weekRecords.reduce((s,[,r])=>s+Number(r.qty||0),0),1)} لتر</td><td></td><td style="font-weight:900;color:var(--success)">${fmt(weekRecords.reduce((s,[,r])=>s+Number(r.total||0),0),2)} ج</td></tr>` : ''}
+        </tbody></table>
+      </div>
+    </div>
+    <h4 style="color:var(--gold);margin-bottom:10px">سجل الحليب الكامل (${milkRecords.length} سجل)</h4>
     <div class="table-wrapper" style="margin-bottom:16px">
       <table><thead><tr><th>التاريخ</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead>
       <tbody>${milkRecords.slice(0,20).map(([,r]) => `<tr><td>${r.date}</td><td>${fmt(r.qty,1)} لتر</td><td>${fmt(r.price,2)}</td><td style="color:var(--gold)">${fmt(r.total,2)} ج</td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text-400)">لا توجد سجلات</td></tr>'}</tbody>
@@ -1564,6 +1752,43 @@ window.showAccountDetail = function(supplierId) {
       <tbody>${payments.map(([,p]) => `<tr><td>${p.date}</td><td style="color:var(--danger)">${fmt(p.amount,2)} ج</td><td>${sanitize(p.method)}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--text-400)">لا توجد مدفوعات</td></tr>'}</tbody>
       </table>
     </div>`;
+
+  // WhatsApp button
+  const waPhone = (s.phone||'').replace(/\D/g,'');
+  const waBtnEl = $('wa-send-btn');
+  if (waPhone && waBtnEl) {
+    const weeklyQty  = weekRecords.reduce((s,[,r])=>s+Number(r.qty||0),0);
+    const weeklyAmt  = weekRecords.reduce((s,[,r])=>s+Number(r.total||0),0);
+    const dayLines   = weekRecords.map(([,r]) => {
+      const d = new Date(r.date); return `  • ${weekDayNames[d.getDay()]} ${r.date}: ${fmt(r.qty,1)} لتر = ${fmt(r.total,2)} ج`;
+    }).join('\n');
+    const waMsg = encodeURIComponent(
+`السلام عليكم ورحمة الله ${s.name} 🥛
+
+📋 *كشف حسابك الأسبوعي*
+━━━━━━━━━━━━━━━━━━━━━
+📅 الأسبوع: ${ws} ← ${we}
+
+🗓️ *تفاصيل الأيام:*
+${dayLines || '  لا توجد سجلات هذا الأسبوع'}
+
+📊 *ملخص الأسبوع:*
+  🥛 إجمالي الكمية: ${fmt(weeklyQty,1)} لتر
+  💰 إجمالي المبلغ: ${fmt(weeklyAmt,2)} ج
+
+💼 *الحساب الإجمالي:*
+  📥 إجمالي الحليب: ${fmt(milkSum,2)} ج
+  ✅ المدفوعات: ${fmt(paySum,2)} ج
+  🟡 السلف: ${fmt(advSum,2)} ج
+  📌 *الرصيد المستحق: ${fmt(balance,2)} ج*
+
+شكراً لتعاملكم معنا 🙏`
+    );
+    waBtnEl.style.display = '';
+    waBtnEl.onclick = () => window.open(`https://wa.me/2${waPhone}?text=${waMsg}`, '_blank');
+  } else if (waBtnEl) {
+    waBtnEl.style.display = 'none';
+  }
 
   openModal('modal-account-detail');
 };
@@ -2562,6 +2787,356 @@ window.deleteBuyerPayment = async function(id) {
   await dbRemove(`buyerPayments/${id}`);
   toast('تم الحذف', 'success');
   renderBuyerAccounts(); loadBuyerPayments();
+};
+
+// ══════════════════════════════════════════════════════════════════
+// WORKERS
+// ══════════════════════════════════════════════════════════════════
+const weekDayNamesW = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+
+function getWeekBounds(dateStr) {
+  const d = dateStr ? new Date(dateStr + 'T00:00:00') : new Date();
+  const day = d.getDay();
+  const start = new Date(d); start.setDate(d.getDate() - day);
+  const end   = new Date(d); end.setDate(d.getDate() + (6 - day));
+  return { start: start.toISOString().slice(0,10), end: end.toISOString().slice(0,10) };
+}
+
+function calcWorkerWeekDays(workerId, weekStart, weekEnd) {
+  return Object.values(state.workerAttendance)
+    .filter(a => a.workerId === workerId && a.date >= weekStart && a.date <= weekEnd && a.present)
+    .length;
+}
+
+function calcWorkerTotalDue(workerId) {
+  const w = state.workers[workerId];
+  if (!w) return 0;
+  const dailyRate = Number(w.daily||0);
+  const totalDays = Object.values(state.workerAttendance)
+    .filter(a => a.workerId === workerId && a.present).length;
+  const paid = Object.values(state.workerPayments||{})
+    .filter(p => p.workerId === workerId)
+    .reduce((s,p) => s + Number(p.amount||0), 0);
+  return (totalDays * dailyRate) - paid;
+}
+
+window.openWorkerModal = function(id='') {
+  $('worker-id').value = id;
+  if (id) {
+    const w = state.workers[id];
+    $('worker-modal-title').textContent = 'تعديل بيانات العامل';
+    $('w-name').value   = w.name   || '';
+    $('w-phone').value  = w.phone  || '';
+    $('w-daily').value  = w.daily  || '';
+    $('w-status').value = w.status || 'active';
+    $('w-notes').value  = w.notes  || '';
+  } else {
+    $('worker-modal-title').textContent = 'إضافة عامل جديد';
+    ['w-name','w-phone','w-daily','w-notes'].forEach(f => $(f).value = '');
+    $('w-status').value = 'active';
+  }
+  openModal('modal-worker');
+};
+
+window.saveWorker = async function() {
+  const name = sanitize($('w-name').value);
+  if (!name) { toast('اسم العامل مطلوب', 'error'); return; }
+  const daily = parseFloat($('w-daily').value) || 0;
+  const data = { name, phone: sanitize($('w-phone').value), daily, status: $('w-status').value, notes: sanitize($('w-notes').value) };
+  loading(true, 'جارٍ حفظ بيانات العامل...');
+  try {
+    const id = $('worker-id').value;
+    if (id) await dbUpdate(`workers/${id}`, data);
+    else    await dbPush('workers', data);
+    toast(id ? 'تم تحديث العامل' : 'تم إضافة العامل', 'success');
+    closeModal('modal-worker');
+    renderWorkers();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.deleteWorker = async function(id) {
+  if (!confirm('حذف هذا العامل نهائياً؟')) return;
+  loading(true);
+  try { await dbRemove(`workers/${id}`); toast('تم الحذف', 'success'); renderWorkers(); }
+  catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.filterWorkers = function() { renderWorkers($('workers-search').value); };
+
+function renderWorkers(search='') {
+  const rows = Object.entries(state.workers)
+    .filter(([,w]) => !search || w.name?.includes(search) || w.phone?.includes(search));
+  $('workers-count').textContent = `(${rows.length} عامل)`;
+  const { start: ws, end: we } = getWeekBounds();
+  $('workers-tbody').innerHTML = rows.length ? rows.map(([id,w], i) => {
+    const days = calcWorkerWeekDays(id, ws, we);
+    const weekDue = days * Number(w.daily||0);
+    const totalDue = calcWorkerTotalDue(id);
+    const waPhone = (w.phone||'').replace(/\D/g,'');
+    return `<tr style="animation: rowFadeIn 0.3s ease ${i*0.05}s both">
+      <td>${i+1}</td>
+      <td><strong>${sanitize(w.name)}</strong></td>
+      <td dir="ltr">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span>${sanitize(w.phone||'—')}</span>
+          ${waPhone ? `<a href="https://wa.me/2${waPhone}" target="_blank" class="wa-btn" title="واتساب">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </a>` : ''}
+        </div>
+      </td>
+      <td style="color:var(--gold);font-weight:700">${fmt(w.daily,2)} ج</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px;font-weight:900;color:${days>=5?'var(--success)':days>0?'var(--warning)':'var(--text-400)'}">${days}</span>
+          <span style="font-size:11px;color:var(--text-400)">يوم من 7</span>
+        </div>
+      </td>
+      <td style="color:var(--success);font-weight:700">${fmt(weekDue,2)} ج</td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm btn-icon" onclick="openWorkerModal('${id}')">✏️</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteWorker('${id}')">🗑️</button>
+          <button class="btn btn-primary btn-sm" onclick="openWorkerAttendance('${id}')">📅 حضور</button>
+          <button class="btn btn-secondary btn-sm" onclick="showWorkerAccount('${id}')">📋</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="7"><div class="empty-state"><span class="empty-icon">👷</span><p>لا يوجد عمال</p></div></td></tr>`;
+}
+
+// ── Worker Attendance ───────────────────────────────────────────────
+let currentAttWeek = null;
+
+window.openWorkerAttendance = function(workerId) {
+  const w = state.workers[workerId];
+  if (!w) return;
+  $('att-worker-id').value = workerId;
+  $('worker-att-title').textContent = `حضور: ${w.name}`;
+  const d = new Date();
+  const iso = d.toISOString().slice(0,10);
+  // Set week picker to current week
+  const wy = d.getFullYear();
+  const wn = getWeekNumber(d);
+  $('att-week-picker').value = `${wy}-W${String(wn).padStart(2,'0')}`;
+  currentAttWeek = getWeekBounds(iso);
+  renderAttendanceDays(workerId, currentAttWeek.start, currentAttWeek.end);
+  openModal('modal-worker-attendance');
+};
+
+function getWeekNumber(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay()||7));
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1)/7);
+}
+
+window.loadAttendanceWeek = function() {
+  const val = $('att-week-picker').value; // "2025-W24"
+  if (!val) return;
+  const [year, wk] = val.split('-W');
+  // get monday of that ISO week
+  const simple = new Date(+year, 0, 1 + (parseInt(wk)-1)*7);
+  const day = simple.getDay();
+  const mon = new Date(simple); mon.setDate(simple.getDate() - (day<=4?day-1:day-8));
+  // But we use Sun-Sat weeks, so get Sunday
+  const sun = new Date(mon); sun.setDate(mon.getDate() - 1);
+  const sunStr = sun.toISOString().slice(0,10);
+  currentAttWeek = getWeekBounds(sunStr);
+  const workerId = $('att-worker-id').value;
+  renderAttendanceDays(workerId, currentAttWeek.start, currentAttWeek.end);
+};
+
+function renderAttendanceDays(workerId, weekStart, weekEnd) {
+  const w = state.workers[workerId];
+  if (!w) return;
+  const dailyRate = Number(w.daily||0);
+  $('att-week-label').textContent = `${weekStart} ← ${weekEnd}`;
+  $('att-daily-rate').textContent = `${fmt(dailyRate,2)} ج/يوم`;
+
+  const grid = $('att-days-grid');
+  grid.innerHTML = '';
+  let days = [];
+  const cur = new Date(weekStart + 'T00:00:00');
+  for (let i=0;i<7;i++) {
+    const dateStr = cur.toISOString().slice(0,10);
+    const dayName = weekDayNamesW[cur.getDay()];
+    const att = Object.values(state.workerAttendance).find(a => a.workerId===workerId && a.date===dateStr);
+    const present = att ? att.present : false;
+    days.push({ dateStr, dayName, present, id: att?Object.keys(state.workerAttendance).find(k=>state.workerAttendance[k]===att):null });
+    cur.setDate(cur.getDate()+1);
+  }
+
+  days.forEach(({dateStr, dayName, present}, idx) => {
+    const div = document.createElement('div');
+    div.style.cssText = `text-align:center;padding:10px 4px;border-radius:10px;cursor:pointer;border:2px solid ${present?'var(--success)':'var(--border-soft)'};background:${present?'rgba(16,185,129,0.15)':'var(--bg-300)'};transition:all 0.2s`;
+    div.innerHTML = `<div style="font-size:11px;color:var(--text-400);margin-bottom:4px">${dayName}</div>
+      <div style="font-size:11px;color:var(--text-400);margin-bottom:8px">${dateStr.slice(5)}</div>
+      <div style="font-size:24px">${present?'✅':'⬜'}</div>`;
+    div.onclick = () => {
+      const newPresent = !present;
+      days[idx].present = newPresent;
+      div.style.border = `2px solid ${newPresent?'var(--success)':'var(--border-soft)'}`;
+      div.style.background = newPresent?'rgba(16,185,129,0.15)':'var(--bg-300)';
+      div.querySelector('div:last-child').textContent = newPresent?'✅':'⬜';
+      // update attendance count
+      const attended = days.filter(d=>d.present).length;
+      $('att-due').textContent = `${fmt(attended * dailyRate, 2)} ج (${attended} يوم)`;
+    };
+    grid.appendChild(div);
+  });
+
+  const attended = days.filter(d=>d.present).length;
+  $('att-due').textContent = `${fmt(attended * dailyRate, 2)} ج (${attended} يوم)`;
+
+  // Store days reference for saving
+  grid._days = days;
+  grid._workerId = workerId;
+  grid._weekStart = weekStart;
+  grid._weekEnd = weekEnd;
+}
+
+window.saveAttendance = async function() {
+  const grid = $('att-days-grid');
+  const days = grid._days;
+  const workerId = grid._workerId;
+  if (!days || !workerId) return;
+  loading(true, 'جارٍ حفظ الحضور...');
+  try {
+    // Remove old records for this worker & week
+    const toDelete = Object.entries(state.workerAttendance)
+      .filter(([,a]) => a.workerId===workerId && a.date>=grid._weekStart && a.date<=grid._weekEnd)
+      .map(([id]) => id);
+    for (const id of toDelete) await dbRemove(`workerAttendance/${id}`);
+    // Save new records
+    for (const d of days) {
+      await dbPush('workerAttendance', { workerId, date: d.dateStr, present: d.present });
+    }
+
+    // Add worker wages to expenses automatically if any days
+    const w = state.workers[workerId];
+    const attendedDays = days.filter(d=>d.present).length;
+    if (attendedDays > 0 && w) {
+      const totalWage = attendedDays * Number(w.daily||0);
+      await dbPush('workerPayments', {
+        workerId, date: today(),
+        amount: totalWage,
+        week: grid._weekStart,
+        days: attendedDays,
+        notes: `أجور الأسبوع ${grid._weekStart}`
+      });
+      // Also log to expenses
+      await dbPush('expenses', {
+        date: today(),
+        desc: `أجور عامل: ${w.name} (${attendedDays} يوم)`,
+        category: 'مرتبات',
+        amount: totalWage,
+        method: 'نقدي',
+        notes: `أسبوع ${grid._weekStart} → ${grid._weekEnd}`
+      });
+    }
+
+    toast('تم حفظ الحضور', 'success');
+    closeModal('modal-worker-attendance');
+    renderWorkers();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+// ── Worker Account Detail ───────────────────────────────────────────
+window.showWorkerAccount = function(workerId) {
+  const w = state.workers[workerId];
+  if (!w) return;
+  $('worker-account-title').textContent = `كشف حساب: ${w.name}`;
+  const dailyRate = Number(w.daily||0);
+
+  // All attendance records
+  const attRecords = Object.values(state.workerAttendance)
+    .filter(a => a.workerId===workerId && a.present)
+    .sort((a,b) => a.date > b.date ? -1 : 1);
+  const totalDays = attRecords.length;
+  const totalEarned = totalDays * dailyRate;
+  const paid = Object.values(state.workerPayments||{})
+    .filter(p => p.workerId===workerId)
+    .reduce((s,p) => s+Number(p.amount||0), 0);
+  const remaining = totalEarned - paid;
+
+  // Current week
+  const { start: ws, end: we } = getWeekBounds();
+  const weekAtt = attRecords.filter(a => a.date>=ws && a.date<=we);
+  const weekDays = weekAtt.length;
+
+  // Group by week
+  const weekGroups = {};
+  attRecords.forEach(a => {
+    const { start } = getWeekBounds(a.date);
+    if (!weekGroups[start]) weekGroups[start] = [];
+    weekGroups[start].push(a);
+  });
+
+  $('worker-account-body').innerHTML = `
+    <div class="summary-bar" style="margin-bottom:20px">
+      <div class="summary-item"><div class="val" style="color:var(--info)">${totalDays}</div><div class="lbl">إجمالي أيام الحضور</div></div>
+      <div class="summary-item"><div class="val" style="color:var(--gold)">${fmt(totalEarned,2)}</div><div class="lbl">إجمالي المستحق (ج)</div></div>
+      <div class="summary-item"><div class="val" style="color:var(--success)">${fmt(paid,2)}</div><div class="lbl">المدفوع (ج)</div></div>
+      <div class="summary-item"><div class="val" style="color:${remaining>0?'var(--danger)':'var(--success)'}">${fmt(remaining,2)}</div><div class="lbl">المتبقي (ج)</div></div>
+    </div>
+    <div style="background:linear-gradient(135deg,rgba(245,158,11,0.1),transparent);border:1px solid var(--border-soft);border-radius:10px;padding:14px;margin-bottom:16px">
+      <div style="color:var(--gold);font-weight:700;margin-bottom:10px">📅 الأسبوع الحالي (${ws} : ${we})</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div><span style="color:var(--text-400)">أيام الحضور:</span> <strong style="color:var(--success)">${weekDays} يوم</strong></div>
+        <div><span style="color:var(--text-400)">المستحق:</span> <strong style="color:var(--gold)">${fmt(weekDays*dailyRate,2)} ج</strong></div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <h4 style="color:var(--gold);margin-bottom:10px">📆 ملخص الأسابيع</h4>
+      <div class="table-wrapper">
+        <table><thead><tr><th>الأسبوع</th><th>أيام الحضور</th><th>المستحق</th></tr></thead>
+        <tbody>${Object.entries(weekGroups).sort((a,b)=>b[0]>a[0]?1:-1).map(([wk,recs]) => {
+          const { end } = getWeekBounds(recs[0].date);
+          return `<tr><td>${wk} ← ${end}</td><td style="color:var(--success);font-weight:700">${recs.length} يوم</td><td style="color:var(--gold);font-weight:700">${fmt(recs.length*dailyRate,2)} ج</td></tr>`;
+        }).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--text-400)">لا توجد سجلات</td></tr>'}
+        </tbody></table>
+      </div>
+    </div>`;
+
+  // WhatsApp
+  const waPhone = (w.phone||'').replace(/\D/g,'');
+  const waBtnEl = $('worker-wa-btn');
+  if (waPhone && waBtnEl) {
+    const weekLines = Object.entries(weekGroups)
+      .sort((a,b)=>b[0]>a[0]?1:-1)
+      .slice(0,4)
+      .map(([wk,recs]) => {
+        const { end } = getWeekBounds(recs[0].date);
+        return `  • أسبوع ${wk}: ${recs.length} يوم = ${fmt(recs.length*dailyRate,2)} ج`;
+      }).join('\n');
+    const waMsg = encodeURIComponent(
+`السلام عليكم ورحمة الله ${w.name} 👷
+
+📋 *كشف حسابك*
+━━━━━━━━━━━━━━━━━━━━━
+💵 اليومية: ${fmt(dailyRate,2)} ج
+
+📅 *ملخص الأسابيع:*
+${weekLines || '  لا توجد سجلات'}
+
+📊 *الإجمالي:*
+  📆 إجمالي أيام الحضور: ${totalDays} يوم
+  💰 إجمالي المستحق: ${fmt(totalEarned,2)} ج
+  ✅ المدفوع: ${fmt(paid,2)} ج
+  📌 *المتبقي: ${fmt(remaining,2)} ج*
+
+شكراً على جهدك 🙏`
+    );
+    waBtnEl.style.display = '';
+    waBtnEl.onclick = () => window.open(`https://wa.me/2${waPhone}?text=${waMsg}`, '_blank');
+  } else if (waBtnEl) {
+    waBtnEl.style.display = 'none';
+  }
+
+  openModal('modal-worker-account');
 };
 
 // ══════════════════════════════════════════════════════════════════
