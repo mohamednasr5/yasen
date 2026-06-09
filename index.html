@@ -77,6 +77,12 @@
         <div class="nav-item" onclick="navigate('sales')">
           <span class="icon">🛒</span> المبيعات
         </div>
+        <div class="nav-item" onclick="navigate('buyers')">
+          <span class="icon">🧑‍🤝‍🧑</span> المشترون
+        </div>
+        <div class="nav-item" onclick="navigate('buyer-accounts')">
+          <span class="icon">💳</span> حسابات المشترين
+        </div>
         <div class="nav-item" onclick="navigate('expenses')">
           <span class="icon">💸</span> المصاريف
         </div>
@@ -474,7 +480,9 @@
       </div>
 
       <div id="sales-summary" class="summary-bar">
-        <div class="summary-item"><div class="val" id="sales-sum-total">0</div><div class="lbl">الإيرادات (جنيه)</div></div>
+        <div class="summary-item"><div class="val" id="sales-sum-total" style="color:var(--success)">0</div><div class="lbl">إجمالي المبيعات (ج)</div></div>
+        <div class="summary-item"><div class="val" id="sales-sum-paid" style="color:var(--gold)">0</div><div class="lbl">إجمالي المدفوع (ج)</div></div>
+        <div class="summary-item"><div class="val" id="sales-sum-remaining" style="color:var(--danger)">0</div><div class="lbl">إجمالي المتبقي (ج)</div></div>
         <div class="summary-item"><div class="val" id="sales-sum-count">0</div><div class="lbl">عدد الفواتير</div></div>
       </div>
 
@@ -482,10 +490,151 @@
         <div class="table-wrapper">
           <table>
             <thead>
-              <tr><th>#</th><th>التاريخ</th><th>العميل</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th><th>طريقة الدفع</th><th>ملاحظات</th><th>حذف</th></tr>
+              <tr><th>#</th><th>التاريخ</th><th>العميل</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>طريقة الدفع</th><th>ملاحظات</th><th>حذف</th></tr>
             </thead>
             <tbody id="sales-tbody"></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: BUYERS ════ -->
+    <div class="page" id="page-buyers">
+      <div class="section-header">
+        <span class="section-icon">
+          <svg viewBox="0 0 40 40" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="buyerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#F5A623"/>
+                <stop offset="100%" style="stop-color:#E8821A"/>
+              </linearGradient>
+            </defs>
+            <circle cx="14" cy="13" r="6" fill="url(#buyerGrad)" opacity="0.9"/>
+            <circle cx="26" cy="13" r="6" fill="url(#buyerGrad)" opacity="0.7"/>
+            <ellipse cx="14" cy="28" rx="9" ry="6" fill="url(#buyerGrad)" opacity="0.9"/>
+            <ellipse cx="26" cy="28" rx="9" ry="6" fill="url(#buyerGrad)" opacity="0.7"/>
+          </svg>
+        </span>
+        <h2>إدارة المشترين</h2>
+        <button class="btn btn-primary" onclick="openBuyerModal()">➕ إضافة مشترٍ</button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="search-bar" style="flex:1;max-width:320px">
+            <span>🔍</span>
+            <input type="text" placeholder="البحث عن مشترٍ..." id="buyers-search" oninput="filterBuyers()">
+          </div>
+          <span style="color:var(--text-400);font-size:13px" id="buyers-count"></span>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>اسم المشتري</th>
+                <th>رقم الهاتف</th>
+                <th>العنوان</th>
+                <th>الرصيد (له/عليه)</th>
+                <th>الحالة</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="buyers-tbody">
+              <tr><td colspan="7"><div class="empty-state"><span class="empty-icon">🧑‍🤝‍🧑</span><p>لا يوجد مشترون</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: BUYER ACCOUNTS ════ -->
+    <div class="page" id="page-buyer-accounts">
+      <div class="section-header">
+        <span class="section-icon">
+          <svg viewBox="0 0 40 40" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="acctGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#4ECDC4"/>
+                <stop offset="100%" style="stop-color:#2AB5AC"/>
+              </linearGradient>
+            </defs>
+            <rect x="5" y="8" width="30" height="24" rx="4" fill="url(#acctGrad)" opacity="0.15" stroke="url(#acctGrad)" stroke-width="1.5"/>
+            <rect x="5" y="14" width="30" height="4" fill="url(#acctGrad)" opacity="0.4"/>
+            <rect x="9" y="22" width="8" height="2" rx="1" fill="url(#acctGrad)"/>
+            <rect x="9" y="26" width="12" height="2" rx="1" fill="url(#acctGrad)" opacity="0.7"/>
+            <circle cx="30" cy="24" r="5" fill="#25D366" opacity="0.9"/>
+            <text x="30" y="27" text-anchor="middle" font-size="7" fill="white">₪</text>
+          </svg>
+        </span>
+        <h2>حسابات المشترين</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="openBuyerPaymentModal()">💳 تسجيل دفعة مشترٍ</button>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div id="buyer-accounts-summary" class="summary-bar" style="margin-bottom:20px">
+        <div class="summary-item">
+          <div class="val" id="buyer-sum-sales" style="color:var(--success)">0</div>
+          <div class="lbl">إجمالي المبيعات (ج)</div>
+        </div>
+        <div class="summary-item">
+          <div class="val" id="buyer-sum-paid" style="color:var(--gold)">0</div>
+          <div class="lbl">إجمالي المدفوع (ج)</div>
+        </div>
+        <div class="summary-item">
+          <div class="val" id="buyer-sum-remaining" style="color:var(--danger)">0</div>
+          <div class="lbl">إجمالي المتبقي (ج)</div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchBuyerTab('balances')">أرصدة المشترين</div>
+        <div class="tab" onclick="switchBuyerTab('payments')">سجل المدفوعات</div>
+      </div>
+
+      <!-- Balances Tab -->
+      <div id="buyer-tab-balances">
+        <div class="card">
+          <div class="card-header">
+            <div class="search-bar" style="flex:1;max-width:300px">
+              <span>🔍</span>
+              <input type="text" placeholder="بحث عن مشترٍ..." id="buyer-accounts-search" oninput="filterBuyerAccounts()">
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>المشتري</th>
+                  <th>إجمالي المشتريات</th>
+                  <th>المدفوع</th>
+                  <th>المتبقي عليه</th>
+                  <th>الحالة</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="buyer-accounts-tbody">
+                <tr><td colspan="7"><div class="empty-state"><span class="empty-icon">💳</span><p>لا توجد بيانات</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payments Tab -->
+      <div id="buyer-tab-payments" style="display:none">
+        <div class="card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr><th>#</th><th>التاريخ</th><th>المشتري</th><th>المبلغ المدفوع</th><th>طريقة الدفع</th><th>ملاحظات</th><th>حذف</th></tr>
+              </thead>
+              <tbody id="buyer-payments-tbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -776,6 +925,63 @@
   </div>
 </div>
 
+<!-- Buyer Modal -->
+<div class="modal-backdrop" id="modal-buyer">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <span style="font-size:22px">🧑‍🤝‍🧑</span>
+      <h3 id="buyer-modal-title">إضافة مشترٍ جديد</h3>
+      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-buyer')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="buyer-id">
+      <div class="form-grid">
+        <div class="form-group"><label>اسم المشتري *</label><input type="text" id="b-name" placeholder="محمد أحمد"></div>
+        <div class="form-group"><label>رقم الهاتف</label><input type="tel" id="b-phone" placeholder="01012345678"></div>
+        <div class="form-group"><label>العنوان / المنطقة</label><input type="text" id="b-area" placeholder="القاهرة"></div>
+        <div class="form-group"><label>الحالة</label>
+          <select id="b-status"><option value="active">نشط</option><option value="inactive">متوقف</option></select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="b-notes" placeholder="ملاحظات إضافية"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-buyer')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveBuyer()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Buyer Payment Modal -->
+<div class="modal-backdrop" id="modal-buyer-payment">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <span style="font-size:22px">💳</span>
+      <h3>تسجيل دفعة مشترٍ</h3>
+      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-buyer-payment')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>التاريخ *</label><input type="date" id="bp-date"></div>
+        <div class="form-group"><label>المشتري *</label>
+          <select id="bp-buyer-id">
+            <option value="">اختر مشترياً...</option>
+          </select>
+        </div>
+        <div class="form-group"><label>المبلغ المدفوع *</label><input type="number" id="bp-amount" placeholder="0" min="0" step="0.01"></div>
+        <div class="form-group"><label>طريقة الدفع</label>
+          <select id="bp-method"><option>نقدي</option><option>تحويل</option><option>شيك</option></select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="bp-notes" placeholder="رقم الشيك، مرجع التحويل..."></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-buyer-payment')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveBuyerPayment()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
 <!-- Payment Modal -->
 <div class="modal-backdrop" id="modal-payment">
   <div class="modal" style="max-width:480px">
@@ -901,13 +1107,33 @@
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-group"><label>التاريخ *</label><input type="date" id="sale-date"></div>
-        <div class="form-group"><label>العميل *</label><input type="text" id="sale-client" placeholder="اسم العميل"></div>
+        <div class="form-group">
+          <label>العميل *</label>
+          <div style="display:flex;gap:6px">
+            <input type="text" id="sale-client" placeholder="اسم العميل" list="buyers-datalist" style="flex:1">
+            <datalist id="buyers-datalist"></datalist>
+          </div>
+        </div>
         <div class="form-group"><label>المنتج *</label><input type="text" id="sale-product" placeholder="اسم المنتج"></div>
         <div class="form-group"><label>الكمية</label><input type="number" id="sale-qty" placeholder="1" min="0" step="0.01" oninput="calcSaleTotal()"></div>
         <div class="form-group"><label>سعر الوحدة</label><input type="number" id="sale-price" placeholder="0" min="0" step="0.01" oninput="calcSaleTotal()"></div>
         <div class="form-group"><label>الإجمالي</label><input type="number" id="sale-total" placeholder="0" readonly style="background:var(--bg-500);color:var(--success);font-weight:700"></div>
-        <div class="form-group"><label>طريقة الدفع</label>
-          <select id="sale-method"><option>نقدي</option><option>تحويل</option><option>آجل</option></select>
+        <div class="form-group">
+          <label>طريقة الدفع</label>
+          <select id="sale-method" onchange="toggleSalePaymentFields()">
+            <option value="نقدي">نقدي (كاش)</option>
+            <option value="تحويل">تحويل بنكي</option>
+            <option value="آجل">آجل (دين)</option>
+            <option value="جزئي">دفع جزئي</option>
+          </select>
+        </div>
+        <div class="form-group" id="sale-paid-group" style="display:none">
+          <label>المبلغ المدفوع الآن</label>
+          <input type="number" id="sale-paid-now" placeholder="0" min="0" step="0.01" oninput="calcSaleRemaining()">
+        </div>
+        <div class="form-group" id="sale-remaining-group" style="display:none">
+          <label>المتبقي (دين)</label>
+          <input type="number" id="sale-remaining" placeholder="0" readonly style="background:var(--bg-500);color:var(--danger);font-weight:700">
         </div>
         <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="sale-notes" placeholder="ملاحظات"></div>
       </div>
@@ -987,7 +1213,9 @@ const state = {
   warehouse2: {},
   exports: {},
   sales: {},
-  settings: {}
+  settings: {},
+  buyers: {},
+  buyerPayments: {}
 };
 
 // ── Utils ──────────────────────────────────────────────────────────
@@ -1040,6 +1268,7 @@ const pageTitles = {
   milk: 'استلام الحليب', accounts: 'حسابات الموردين',
   warehouse1: 'المخزن الأول', warehouse2: 'المخزن الثاني',
   exports: 'الصادرات', sales: 'المبيعات',
+  buyers: 'إدارة المشترين', 'buyer-accounts': 'حسابات المشترين',
   expenses: 'المصاريف', reports: 'التقارير', settings: 'الإعدادات'
 };
 
@@ -1074,6 +1303,8 @@ window.navigate = function(page) {
   if (page === 'warehouse2') renderWarehouse('warehouse2');
   if (page === 'exports') loadExports();
   if (page === 'sales') loadSales();
+  if (page === 'buyers') renderBuyers();
+  if (page === 'buyer-accounts') { renderBuyerAccounts(); loadBuyerPayments(); }
   if (page === 'expenses') loadExpenses();
   if (page === 'reports') initReports();
   if (page === 'settings') loadSettings();
@@ -1109,6 +1340,8 @@ dbListen('warehouse2', v => { state.warehouse2 = v || {}; });
 dbListen('exports', v => { state.exports = v || {}; });
 dbListen('sales', v => { state.sales = v || {}; });
 dbListen('settings', v => { state.settings = v || {}; loadSettingsUI(); });
+dbListen('buyers', v => { state.buyers = v || {}; });
+dbListen('buyerPayments', v => { state.buyerPayments = v || {}; });
 
 // ══════════════════════════════════════════════════════════════════
 // DASHBOARD
@@ -1256,10 +1489,20 @@ function renderSuppliers(search='') {
   $('suppliers-tbody').innerHTML = rows.map(([id, s], i) => {
     const bal = calcSupplierBalance(id);
     const balClass = bal > 0 ? 'balance-positive' : bal < 0 ? 'balance-negative' : 'balance-zero';
-    return `<tr>
+    const waPhone = (s.phone||'').replace(/\D/g,'');
+    const waMsg = encodeURIComponent(`السلام عليكم ${s.name}،\nكشف حسابك الأسبوعي:\nإجمالي المستحقات: ${fmt(bal,2)} جنيه\nشكراً لتعاملكم معنا 🥛`);
+    const waLink = waPhone ? `https://wa.me/2${waPhone}?text=${waMsg}` : '#';
+    return `<tr style="animation: rowFadeIn 0.3s ease ${i*0.05}s both">
       <td>${i+1}</td>
       <td><strong>${sanitize(s.name)}</strong></td>
-      <td dir="ltr">${sanitize(s.phone||'—')}</td>
+      <td dir="ltr">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span>${sanitize(s.phone||'—')}</span>
+          ${waPhone ? `<a href="${waLink}" target="_blank" class="wa-btn" title="إرسال الحساب الأسبوعي عبر واتساب">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </a>` : ''}
+        </div>
+      </td>
       <td>${sanitize(s.area||'—')}</td>
       <td>${fmt(s.price,2)} ج</td>
       <td class="${balClass}" style="font-weight:700">${fmt(bal,2)} ج</td>
@@ -1462,9 +1705,19 @@ function renderAccounts(search='') {
     const advances  = Object.values(state.supplierAdvances).filter(a => a.supplierId === id).reduce((s,a) => s + Number(a.amount||0), 0);
     const balance   = milkTotal - payments - advances;
     const balClass  = balance > 0 ? 'balance-positive' : balance < 0 ? 'balance-negative' : 'balance-zero';
-    return `<tr>
+    const waPhone = (s.phone||'').replace(/\D/g,'');
+    const waMsg = encodeURIComponent(`السلام عليكم ${s.name}،\n📊 كشف حسابك الأسبوعي:\n💰 إجمالي الحليب: ${fmt(milkTotal,2)} ج\n✅ المدفوع: ${fmt(payments,2)} ج\n💵 السلف: ${fmt(advances,2)} ج\n📌 الرصيد المستحق: ${fmt(balance,2)} ج\nشكراً 🥛`);
+    const waLink = waPhone ? `https://wa.me/2${waPhone}?text=${waMsg}` : '#';
+    return `<tr style="animation: rowFadeIn 0.3s ease ${i*0.05}s both">
       <td>${i+1}</td>
-      <td><strong>${sanitize(s.name)}</strong></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <strong>${sanitize(s.name)}</strong>
+          ${waPhone ? `<a href="${waLink}" target="_blank" class="wa-btn" title="إرسال الحساب الأسبوعي">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </a>` : ''}
+        </div>
+      </td>
       <td style="color:var(--gold)">${fmt(milkTotal,2)} ج</td>
       <td style="color:var(--danger)">${fmt(payments,2)} ج</td>
       <td style="color:var(--warning)">${fmt(advances,2)} ج</td>
@@ -1762,15 +2015,39 @@ window.deleteExport = async function(id, wh, itemId, qty) {
 // ══════════════════════════════════════════════════════════════════
 window.openSaleModal = function() {
   $('sale-date').value = today();
-  ['sale-client','sale-product','sale-qty','sale-price','sale-total','sale-notes'].forEach(f => $(f).value = '');
+  ['sale-client','sale-product','sale-qty','sale-price','sale-total','sale-notes','sale-paid-now','sale-remaining'].forEach(f => { const el=$(f); if(el) el.value=''; });
   $('sale-qty').value = 1;
+  $('sale-method').value = 'نقدي';
+  toggleSalePaymentFields();
+  // Populate buyers datalist
+  const dl = $('buyers-datalist');
+  if (dl) dl.innerHTML = Object.values(state.buyers).map(b => `<option value="${sanitize(b.name)}">`).join('');
   openModal('modal-sale');
+};
+
+window.toggleSalePaymentFields = function() {
+  const method = $('sale-method')?.value;
+  const showPartial = method === 'جزئي';
+  const showAjel = method === 'آجل';
+  $('sale-paid-group').style.display = showPartial ? '' : 'none';
+  $('sale-remaining-group').style.display = (showPartial || showAjel) ? '' : 'none';
+  if (showAjel) {
+    $('sale-remaining').value = $('sale-total').value || 0;
+    if ($('sale-paid-now')) $('sale-paid-now').value = 0;
+  }
+};
+
+window.calcSaleRemaining = function() {
+  const total = parseFloat($('sale-total').value) || 0;
+  const paid = parseFloat($('sale-paid-now')?.value) || 0;
+  if ($('sale-remaining')) $('sale-remaining').value = Math.max(0, total - paid).toFixed(2);
 };
 
 window.calcSaleTotal = function() {
   const qty   = parseFloat($('sale-qty').value)   || 0;
   const price = parseFloat($('sale-price').value) || 0;
   $('sale-total').value = (qty * price).toFixed(2);
+  calcSaleRemaining();
 };
 
 window.loadSales = function() {
@@ -1783,22 +2060,43 @@ window.loadSales = function() {
   }).sort((a,b) => b[1].date > a[1].date ? 1 : -1);
 
   const total = rows.reduce((s,[,r]) => s + Number(r.total||0), 0);
+  const paid  = rows.reduce((s,[,r]) => s + Number(r.paidNow ?? r.total ?? 0), 0);
+  const remaining = total - paid;
   $('sales-sum-total').textContent = fmt(total, 2);
+  if ($('sales-sum-paid')) $('sales-sum-paid').textContent = fmt(paid, 2);
+  if ($('sales-sum-remaining')) $('sales-sum-remaining').textContent = fmt(remaining, 2);
   $('sales-sum-count').textContent = rows.length;
 
-  $('sales-tbody').innerHTML = rows.length ? rows.map(([id,s], i) => `
-    <tr>
+  $('sales-tbody').innerHTML = rows.length ? rows.map(([id,s], i) => {
+    const paidAmt = Number(s.paidNow ?? s.total ?? 0);
+    const remAmt  = Number(s.total||0) - paidAmt;
+    const waPhone = (() => {
+      const buyer = Object.values(state.buyers).find(b => b.name.trim().toLowerCase() === (s.client||'').trim().toLowerCase());
+      return buyer ? (buyer.phone||'').replace(/\D/g,'') : '';
+    })();
+    const waMsg = encodeURIComponent(`السلام عليكم ${s.client}،\n🧾 فاتورتك بتاريخ ${s.date}:\n📦 المنتج: ${s.product}\n🔢 الكمية: ${fmt(s.qty,2)}\n💰 الإجمالي: ${fmt(s.total,2)} ج\n✅ المدفوع: ${fmt(paidAmt,2)} ج\n📌 المتبقي: ${fmt(remAmt,2)} ج\nشكراً 🥛`);
+    return `<tr style="animation: rowFadeIn 0.3s ease ${i*0.04}s both">
       <td>${i+1}</td><td>${s.date}</td>
-      <td>${sanitize(s.client)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          ${sanitize(s.client)}
+          ${waPhone ? `<a href="https://wa.me/2${waPhone}?text=${waMsg}" target="_blank" class="wa-btn" title="إرسال الفاتورة">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </a>` : ''}
+        </div>
+      </td>
       <td>${sanitize(s.product)}</td>
       <td>${fmt(s.qty,2)}</td>
       <td>${fmt(s.price,2)} ج</td>
       <td style="color:var(--success);font-weight:700">${fmt(s.total,2)} ج</td>
+      <td style="color:var(--gold);font-weight:600">${fmt(paidAmt,2)} ج</td>
+      <td style="color:${remAmt>0?'var(--danger)':'var(--success)'};font-weight:700">${fmt(remAmt,2)} ج</td>
       <td><span class="badge badge-info">${sanitize(s.method)}</span></td>
       <td>${sanitize(s.notes||'—')}</td>
       <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteSale('${id}')">🗑️</button></td>
-    </tr>`).join('') :
-    `<tr><td colspan="10"><div class="empty-state"><span class="empty-icon">🛒</span><p>لا توجد مبيعات</p></div></td></tr>`;
+    </tr>`;
+  }).join('') :
+    `<tr><td colspan="12"><div class="empty-state"><span class="empty-icon">🛒</span><p>لا توجد مبيعات</p></div></td></tr>`;
 };
 
 window.saveSale = async function() {
@@ -1808,11 +2106,23 @@ window.saveSale = async function() {
   const price = parseFloat($('sale-price').value) || 0;
   if (!client || !product) { toast('العميل والمنتج مطلوبان', 'error'); return; }
 
+  const method = $('sale-method').value;
+  const total = qty * price;
+  const paidNow = method === 'آجل' ? 0 : (method === 'جزئي' ? (parseFloat($('sale-paid-now')?.value) || 0) : total);
+  const remaining = total - paidNow;
+
   loading(true);
   try {
-    await dbPush('sales', { date: $('sale-date').value, client, product, qty, price, total: qty*price, method: $('sale-method').value, notes: sanitize($('sale-notes').value) });
+    await dbPush('sales', { date: $('sale-date').value, client, product, qty, price, total, paidNow, remaining, method, notes: sanitize($('sale-notes').value) });
+    // If partial or deferred, try to link buyer and record their debt
+    if (remaining > 0) {
+      const matchedBuyer = Object.entries(state.buyers).find(([,b]) => b.name.trim().toLowerCase() === client.toLowerCase());
+      if (matchedBuyer) {
+        // buyer debt is tracked via sales remaining
+      }
+    }
     toast('تم تسجيل البيع', 'success');
-    track('sale_create', { product, qty, total: qty*price });
+    track('sale_create', { product, qty, total });
     closeModal('modal-sale');
     loadSales();
   } catch(e) { toast('خطأ: ' + e.message, 'error'); }
@@ -2048,6 +2358,210 @@ window.saveSettings = async function() {
     toast('تم حفظ الإعدادات', 'success');
   } catch(e) { toast('خطأ: ' + e.message, 'error'); }
   finally { loading(false); }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// BUYERS
+// ══════════════════════════════════════════════════════════════════
+window.openBuyerModal = function(id) {
+  $('buyer-modal-title').textContent = id ? 'تعديل مشترٍ' : 'إضافة مشترٍ جديد';
+  $('buyer-id').value = id || '';
+  if (id && state.buyers[id]) {
+    const b = state.buyers[id];
+    $('b-name').value   = b.name   || '';
+    $('b-phone').value  = b.phone  || '';
+    $('b-area').value   = b.area   || '';
+    $('b-status').value = b.status || 'active';
+    $('b-notes').value  = b.notes  || '';
+  } else {
+    ['b-name','b-phone','b-area','b-notes'].forEach(f => $(f).value = '');
+    $('b-status').value = 'active';
+  }
+  openModal('modal-buyer');
+};
+
+window.saveBuyer = async function() {
+  const name = sanitize($('b-name').value);
+  if (!name) { toast('اسم المشتري مطلوب', 'error'); return; }
+  const data = { name, phone: sanitize($('b-phone').value), area: sanitize($('b-area').value), status: $('b-status').value, notes: sanitize($('b-notes').value) };
+  loading(true);
+  try {
+    const id = $('buyer-id').value;
+    if (id) await dbUpdate(`buyers/${id}`, data);
+    else    await dbPush('buyers', data);
+    toast('تم حفظ المشتري', 'success');
+    closeModal('modal-buyer');
+    renderBuyers();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.deleteBuyer = async function(id) {
+  if (!confirm('حذف هذا المشتري؟')) return;
+  await dbRemove(`buyers/${id}`);
+  toast('تم الحذف', 'success');
+  renderBuyers();
+};
+
+window.filterBuyers = function() { renderBuyers($('buyers-search').value); };
+
+function calcBuyerBalance(buyerId) {
+  const b = state.buyers[buyerId];
+  if (!b) return { salesTotal: 0, paid: 0, remaining: 0 };
+  const name = b.name.trim().toLowerCase();
+  // Sum all sales for this buyer (by name match)
+  const salesTotal = Object.values(state.sales)
+    .filter(s => (s.client||'').trim().toLowerCase() === name)
+    .reduce((sum, s) => sum + Number(s.total||0), 0);
+  // Sum buyer payments
+  const bPayments = Object.values(state.buyerPayments)
+    .filter(p => p.buyerId === buyerId)
+    .reduce((sum, p) => sum + Number(p.amount||0), 0);
+  // Sum already-paid from sales themselves (paidNow field)
+  const salesPaid = Object.values(state.sales)
+    .filter(s => (s.client||'').trim().toLowerCase() === name)
+    .reduce((sum, s) => sum + Number(s.paidNow ?? s.total ?? 0), 0);
+  const totalPaid = bPayments + salesPaid;
+  const remaining = Math.max(0, salesTotal - totalPaid);
+  return { salesTotal, paid: totalPaid, remaining };
+}
+
+function renderBuyers(search='') {
+  const rows = Object.entries(state.buyers)
+    .filter(([,b]) => !search || b.name?.toLowerCase().includes(search.toLowerCase()) || b.phone?.includes(search));
+  $('buyers-count').textContent = `(${rows.length} مشترٍ)`;
+
+  if (!rows.length) {
+    $('buyers-tbody').innerHTML = `<tr><td colspan="7"><div class="empty-state"><span class="empty-icon">🧑‍🤝‍🧑</span><p>لا يوجد مشترون</p></div></td></tr>`;
+    return;
+  }
+  $('buyers-tbody').innerHTML = rows.map(([id, b], i) => {
+    const { salesTotal, paid, remaining } = calcBuyerBalance(id);
+    const waPhone = (b.phone||'').replace(/\D/g,'');
+    const waMsg = encodeURIComponent(`السلام عليكم ${b.name}،\n📊 كشف حسابك:\n💰 إجمالي مشترياتك: ${fmt(salesTotal,2)} ج\n✅ المدفوع: ${fmt(paid,2)} ج\n📌 المتبقي عليك: ${fmt(remaining,2)} ج\nيرجى السداد في أقرب وقت. شكراً 🥛`);
+    const waLink = waPhone ? `https://wa.me/2${waPhone}?text=${waMsg}` : '#';
+    const balClass = remaining > 0 ? 'balance-negative' : 'balance-zero';
+    return `<tr style="animation: rowFadeIn 0.3s ease ${i*0.05}s both">
+      <td>${i+1}</td>
+      <td><strong>${sanitize(b.name)}</strong></td>
+      <td dir="ltr">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span>${sanitize(b.phone||'—')}</span>
+          ${waPhone ? `<a href="${waLink}" target="_blank" class="wa-btn" title="إرسال الفاتورة عبر واتساب">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </a>` : ''}
+        </div>
+      </td>
+      <td>${sanitize(b.area||'—')}</td>
+      <td class="${balClass}" style="font-weight:700">${remaining > 0 ? `عليه ${fmt(remaining,2)} ج` : `<span style="color:var(--success)">✅ مسدد</span>`}</td>
+      <td><span class="badge ${b.status==='active'?'badge-success':'badge-danger'}">${b.status==='active'?'نشط':'متوقف'}</span></td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm btn-icon" onclick="openBuyerModal('${id}')">✏️</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteBuyer('${id}')">🗑️</button>
+          <button class="btn btn-primary btn-sm" onclick="openBuyerPaymentModal('${id}')">💳</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderBuyerAccounts(search='') {
+  const buyers = Object.entries(state.buyers)
+    .filter(([,b]) => !search || b.name?.toLowerCase().includes(search.toLowerCase()));
+
+  let totalSales = 0, totalPaid = 0, totalRemaining = 0;
+
+  $('buyer-accounts-tbody').innerHTML = buyers.length ? buyers.map(([id,b], i) => {
+    const { salesTotal, paid, remaining } = calcBuyerBalance(id);
+    totalSales    += salesTotal;
+    totalPaid     += paid;
+    totalRemaining+= remaining;
+    const balClass = remaining > 0 ? 'balance-negative' : 'balance-zero';
+    const waPhone = (b.phone||'').replace(/\D/g,'');
+    const waMsg = encodeURIComponent(`السلام عليكم ${b.name}،\n📊 كشف حسابك الأسبوعي:\n💰 إجمالي المشتريات: ${fmt(salesTotal,2)} ج\n✅ المدفوع: ${fmt(paid,2)} ج\n📌 المتبقي عليك: ${fmt(remaining,2)} ج\nيرجى السداد. شكراً 🥛`);
+    return `<tr style="animation: rowFadeIn 0.3s ease ${i*0.05}s both">
+      <td>${i+1}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <strong>${sanitize(b.name)}</strong>
+          ${waPhone ? `<a href="https://wa.me/2${waPhone}?text=${waMsg}" target="_blank" class="wa-btn" title="إرسال الفاتورة">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </a>` : ''}
+        </div>
+      </td>
+      <td style="color:var(--success)">${fmt(salesTotal,2)} ج</td>
+      <td style="color:var(--gold)">${fmt(paid,2)} ج</td>
+      <td class="${balClass}" style="font-weight:900;font-size:15px">${fmt(remaining,2)} ج</td>
+      <td>${remaining > 0 ? `<span class="badge badge-danger">متبقي دين</span>` : `<span class="badge badge-success">مسدد</span>`}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-primary btn-sm" onclick="openBuyerPaymentModal('${id}')">💳 دفعة</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="7"><div class="empty-state"><span class="empty-icon">💳</span><p>لا توجد بيانات</p></div></td></tr>`;
+
+  if ($('buyer-sum-sales'))     $('buyer-sum-sales').textContent     = fmt(totalSales,2);
+  if ($('buyer-sum-paid'))      $('buyer-sum-paid').textContent      = fmt(totalPaid,2);
+  if ($('buyer-sum-remaining')) $('buyer-sum-remaining').textContent = fmt(totalRemaining,2);
+}
+
+window.filterBuyerAccounts = function() { renderBuyerAccounts($('buyer-accounts-search').value); };
+
+window.switchBuyerTab = function(tab) {
+  ['balances','payments'].forEach((t,i) => {
+    $(`buyer-tab-${t}`).style.display = t===tab ? '' : 'none';
+    document.querySelectorAll('#page-buyer-accounts .tabs .tab')[i]?.classList.toggle('active', t===tab);
+  });
+  if (tab==='payments') loadBuyerPayments();
+};
+
+function loadBuyerPayments() {
+  const rows = Object.entries(state.buyerPayments||{}).sort((a,b) => b[1].date > a[1].date ? 1 : -1);
+  const tbody = $('buyer-payments-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = rows.length ? rows.map(([id,p], i) => `
+    <tr>
+      <td>${i+1}</td><td>${p.date}</td>
+      <td>${sanitize(state.buyers[p.buyerId]?.name||'—')}</td>
+      <td style="color:var(--gold);font-weight:700">${fmt(p.amount,2)} ج</td>
+      <td>${sanitize(p.method||'—')}</td>
+      <td>${sanitize(p.notes||'—')}</td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteBuyerPayment('${id}')">🗑️</button></td>
+    </tr>`).join('') :
+    `<tr><td colspan="7"><div class="empty-state"><span class="empty-icon">💳</span><p>لا توجد مدفوعات</p></div></td></tr>`;
+}
+
+window.openBuyerPaymentModal = function(buyerId) {
+  $('bp-date').value = today();
+  ['bp-amount','bp-notes'].forEach(f => $(f).value = '');
+  // Populate buyers dropdown
+  $('bp-buyer-id').innerHTML = `<option value="">اختر مشترياً...</option>` +
+    Object.entries(state.buyers).map(([id,b]) => `<option value="${id}" ${id===buyerId?'selected':''}>${sanitize(b.name)}</option>`).join('');
+  openModal('modal-buyer-payment');
+};
+
+window.saveBuyerPayment = async function() {
+  const buyerId = $('bp-buyer-id').value;
+  const amount  = parseFloat($('bp-amount').value) || 0;
+  if (!buyerId) { toast('يرجى اختيار المشتري', 'error'); return; }
+  if (!amount || amount <= 0) { toast('المبلغ يجب أن يكون أكبر من صفر', 'error'); return; }
+  loading(true);
+  try {
+    await dbPush('buyerPayments', { date: $('bp-date').value, buyerId, amount, method: $('bp-method').value, notes: sanitize($('bp-notes').value) });
+    toast('تم تسجيل الدفعة', 'success');
+    closeModal('modal-buyer-payment');
+    renderBuyerAccounts(); loadBuyerPayments();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.deleteBuyerPayment = async function(id) {
+  if (!confirm('حذف هذه الدفعة؟')) return;
+  await dbRemove(`buyerPayments/${id}`);
+  toast('تم الحذف', 'success');
+  renderBuyerAccounts(); loadBuyerPayments();
 };
 
 // ══════════════════════════════════════════════════════════════════

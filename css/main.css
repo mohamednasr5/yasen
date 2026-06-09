@@ -765,3 +765,64 @@ input[type=number] { direction: ltr; text-align: right; }
     line-height: 1;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   WHATSAPP BUTTON
+══════════════════════════════════════════════════════════════════ */
+.wa-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #25D366;
+  color: white;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(37,211,102,0.4);
+  animation: waPulse 2.5s ease-in-out infinite;
+}
+
+.wa-btn:hover {
+  background: #1da851;
+  transform: scale(1.15);
+  box-shadow: 0 4px 14px rgba(37,211,102,0.6);
+}
+
+.wa-btn:active {
+  transform: scale(0.95);
+}
+
+@keyframes waPulse {
+  0%, 100% { box-shadow: 0 2px 8px rgba(37,211,102,0.4); }
+  50%       { box-shadow: 0 2px 16px rgba(37,211,102,0.7); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ROW FADE-IN ANIMATION
+══════════════════════════════════════════════════════════════════ */
+@keyframes rowFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   PAYMENT STATUS BADGES
+══════════════════════════════════════════════════════════════════ */
+.badge-warning {
+  background: rgba(245,166,35,0.15);
+  color: var(--gold);
+  border: 1px solid rgba(245,166,35,0.3);
+}
+
+/* Summary bar enhanced */
+.summary-bar .summary-item .val {
+  transition: all 0.4s ease;
+}
+
+/* Buyer accounts page SVG icon */
+.section-icon svg {
+  filter: drop-shadow(0 2px 6px rgba(212,168,67,0.3));
+}
