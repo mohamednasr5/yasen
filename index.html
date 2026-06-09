@@ -1385,6 +1385,8 @@ function loading(show, text='جارٍ الحفظ...') {
 
 function openModal(id) { $(id).classList.add('open'); }
 function closeModal(id) { $(id).classList.remove('open'); }
+window.openModal  = openModal;
+window.closeModal = closeModal;
 
 // Close modal on backdrop click
 document.querySelectorAll('.modal-backdrop').forEach(bd => {
