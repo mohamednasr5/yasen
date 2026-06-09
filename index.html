@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#0A0C0F">
+  <meta name="description" content="نظام إدارة مصنع الألبان - إدارة شاملة للموردين والإنتاج والمخازن">
+  <title>🥛 نظام إدارة مصنع الألبان</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+
+<!-- ═══════════════ TOAST ═══════════════ -->
+<div id="toast-container"></div>
+
+<!-- ═══════════════ LOADING ═══════════════ -->
+<div id="loading-overlay" class="loading-overlay" style="display:none">
+  <div style="text-align:center">
+    <div class="spinner"></div>
+    <p style="margin-top:12px;color:var(--gold);font-size:13px" id="loading-text">جارٍ التحميل...</p>
+  </div>
+</div>
+
+<!-- ═══════════════ SIDEBAR OVERLAY ═══════════════ -->
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- ═══════════════ APP SHELL ═══════════════ -->
+<div class="app-shell">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">🥛</div>
+      <div class="sidebar-title">نظام إدارة مصنع الألبان</div>
+      <div class="sidebar-sub">إدارة شاملة ومتكاملة</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <div class="nav-label">الرئيسية</div>
+        <div class="nav-item active" onclick="navigate('dashboard')">
+          <span class="icon">📊</span> لوحة التحكم
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">الموردون</div>
+        <div class="nav-item" onclick="navigate('suppliers')">
+          <span class="icon">👥</span> الموردون
+        </div>
+        <div class="nav-item" onclick="navigate('milk')">
+          <span class="icon">🥛</span> استلام الحليب
+        </div>
+        <div class="nav-item" onclick="navigate('accounts')">
+          <span class="icon">💰</span> حسابات الموردين
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">المخازن</div>
+        <div class="nav-item" onclick="navigate('warehouse1')">
+          <span class="icon">🏭</span> المخزن الأول
+        </div>
+        <div class="nav-item" onclick="navigate('warehouse2')">
+          <span class="icon">🏪</span> المخزن الثاني
+        </div>
+        <div class="nav-item" onclick="navigate('exports')">
+          <span class="icon">📦</span> الصادرات
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">المبيعات والمصاريف</div>
+        <div class="nav-item" onclick="navigate('sales')">
+          <span class="icon">🛒</span> المبيعات
+        </div>
+        <div class="nav-item" onclick="navigate('expenses')">
+          <span class="icon">💸</span> المصاريف
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">التقارير والإعدادات</div>
+        <div class="nav-item" onclick="navigate('reports')">
+          <span class="icon">📈</span> التقارير
+        </div>
+        <div class="nav-item" onclick="navigate('settings')">
+          <span class="icon">⚙️</span> الإعدادات
+        </div>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary btn-sm" style="flex:1" onclick="exportBackupUI()">💾 نسخ احتياطي</button>
+        <label class="btn btn-secondary btn-sm" style="flex:1;cursor:pointer;justify-content:center">
+          📥 استعادة <input type="file" accept=".json" style="display:none" onchange="importBackupUI(event)">
+        </label>
+      </div>
+      <div class="dev-signature">
+        <div class="dev-sig-text">تم البرمجة والتطوير بكل <span class="heartbeat">❤️</span> بواسطة</div>
+        <div class="dev-sig-name">المهندس محمد حماد</div>
+        <div class="dev-sig-year">© 2026 / 2027</div>
+        <div class="dev-sig-links">
+          <a href="https://www.facebook.com/en.mohamed.nasr" target="_blank" rel="noopener" class="dev-sig-link dev-sig-fb" title="فيسبوك">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </a>
+          <a href="https://wa.me/201279934735" target="_blank" rel="noopener" class="dev-sig-link dev-sig-wa" title="واتساب">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─── MAIN CONTENT ─── -->
+  <div class="main-content">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <button class="hamburger" id="hamburger" onclick="toggleSidebar()">☰</button>
+      <span class="topbar-title" id="page-title">لوحة التحكم</span>
+      <div class="topbar-actions">
+        <div class="connection-badge online" id="connection-badge">
+          <span class="connection-dot"></span>
+          <span id="connection-text">متصل</span>
+        </div>
+        <span style="font-size:12px;color:var(--text-400)" id="current-date"></span>
+      </div>
+    </header>
+
+    <!-- ════ PAGE: DASHBOARD ════ -->
+    <div class="page active" id="page-dashboard">
+      <div class="section-header">
+        <span class="section-icon">📊</span>
+        <h2>لوحة التحكم</h2>
+        <button class="btn btn-secondary btn-sm" onclick="loadDashboard()">🔄 تحديث</button>
+      </div>
+
+      <div class="stats-grid" id="dashboard-stats">
+        <div class="stat-card" style="--accent:var(--gold)">
+          <span class="stat-icon">👥</span>
+          <div class="stat-value" id="stat-suppliers">—</div>
+          <div class="stat-label">إجمالي الموردين</div>
+        </div>
+        <div class="stat-card" style="--accent:var(--info)">
+          <span class="stat-icon">🥛</span>
+          <div class="stat-value" id="stat-milk-today">—</div>
+          <div class="stat-label">كمية الحليب اليوم (لتر)</div>
+        </div>
+        <div class="stat-card" style="--accent:var(--success)">
+          <span class="stat-icon">🏭</span>
+          <div class="stat-value" id="stat-wh1">—</div>
+          <div class="stat-label">مخزون المخزن الأول</div>
+        </div>
+        <div class="stat-card" style="--accent:var(--warning)">
+          <span class="stat-icon">🏪</span>
+          <div class="stat-value" id="stat-wh2">—</div>
+          <div class="stat-label">مخزون المخزن الثاني</div>
+        </div>
+        <div class="stat-card" style="--accent:var(--success)">
+          <span class="stat-icon">💰</span>
+          <div class="stat-value" id="stat-sales-month">—</div>
+          <div class="stat-label">مبيعات الشهر (جنيه)</div>
+        </div>
+        <div class="stat-card" style="--accent:var(--danger)">
+          <span class="stat-icon">💸</span>
+          <div class="stat-value" id="stat-expenses-month">—</div>
+          <div class="stat-label">مصاريف الشهر (جنيه)</div>
+        </div>
+        <div class="stat-card" style="--accent:var(--danger)">
+          <span class="stat-icon">🔴</span>
+          <div class="stat-value" id="stat-overdue">—</div>
+          <div class="stat-label">موردون لديهم مستحقات</div>
+        </div>
+        <div class="stat-card" style="--accent:var(--info)">
+          <span class="stat-icon">📦</span>
+          <div class="stat-value" id="stat-exports-month">—</div>
+          <div class="stat-label">صادرات الشهر</div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px">
+        <div class="card">
+          <div class="card-header">
+            <span>🥛</span>
+            <h3>آخر استلاميات الحليب</h3>
+          </div>
+          <div class="card-body" id="recent-milk">
+            <div class="empty-state"><span class="empty-icon">🥛</span><p>لا توجد بيانات</p></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span>💸</span>
+            <h3>آخر المصاريف</h3>
+          </div>
+          <div class="card-body" id="recent-expenses">
+            <div class="empty-state"><span class="empty-icon">💸</span><p>لا توجد بيانات</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: SUPPLIERS ════ -->
+    <div class="page" id="page-suppliers">
+      <div class="section-header">
+        <span class="section-icon">👥</span>
+        <h2>إدارة الموردين</h2>
+        <button class="btn btn-primary" onclick="openSupplierModal()">➕ إضافة مورد</button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="search-bar" style="flex:1;max-width:320px">
+            <span>🔍</span>
+            <input type="text" placeholder="البحث عن مورد..." id="suppliers-search" oninput="filterSuppliers()">
+          </div>
+          <span style="color:var(--text-400);font-size:13px" id="suppliers-count"></span>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>اسم المورد</th>
+                <th>رقم الهاتف</th>
+                <th>المنطقة</th>
+                <th>سعر اللتر</th>
+                <th>الرصيد</th>
+                <th>الحالة</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="suppliers-tbody">
+              <tr><td colspan="8"><div class="empty-state"><span class="empty-icon">👥</span><p>لا يوجد موردون</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: MILK RECEIVING ════ -->
+    <div class="page" id="page-milk">
+      <div class="section-header">
+        <span class="section-icon">🥛</span>
+        <h2>استلام الحليب</h2>
+        <button class="btn btn-primary" onclick="openMilkModal()">➕ تسجيل استلام</button>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-body">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+            <div class="form-group" style="min-width:160px">
+              <label>من تاريخ</label>
+              <input type="date" id="milk-from" onchange="loadMilkRecords()">
+            </div>
+            <div class="form-group" style="min-width:160px">
+              <label>إلى تاريخ</label>
+              <input type="date" id="milk-to" onchange="loadMilkRecords()">
+            </div>
+            <div class="form-group" style="min-width:180px">
+              <label>المورد</label>
+              <select id="milk-filter-supplier" onchange="loadMilkRecords()">
+                <option value="">جميع الموردين</option>
+              </select>
+            </div>
+            <button class="btn btn-secondary" style="margin-top:22px" onclick="clearMilkFilter()">🗑️ مسح</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="milk-summary" class="summary-bar" style="display:none">
+        <div class="summary-item"><div class="val" id="milk-sum-qty">0</div><div class="lbl">إجمالي الكمية (لتر)</div></div>
+        <div class="summary-item"><div class="val" id="milk-sum-amt">0</div><div class="lbl">إجمالي المبلغ (جنيه)</div></div>
+        <div class="summary-item"><div class="val" id="milk-sum-count">0</div><div class="lbl">عدد السجلات</div></div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>التاريخ</th>
+                <th>الوقت</th>
+                <th>المورد</th>
+                <th>الكمية (لتر)</th>
+                <th>سعر اللتر</th>
+                <th>الإجمالي</th>
+                <th>ملاحظات</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="milk-tbody">
+              <tr><td colspan="9"><div class="empty-state"><span class="empty-icon">🥛</span><p>لا توجد سجلات</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: ACCOUNTS ════ -->
+    <div class="page" id="page-accounts">
+      <div class="section-header">
+        <span class="section-icon">💰</span>
+        <h2>حسابات الموردين</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="openPaymentModal()">💳 تسجيل دفعة</button>
+          <button class="btn btn-secondary" onclick="openAdvanceModal()">💵 سلفة</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchAccountTab('balances')">أرصدة الموردين</div>
+        <div class="tab" onclick="switchAccountTab('payments')">سجل المدفوعات</div>
+        <div class="tab" onclick="switchAccountTab('advances')">السلف</div>
+      </div>
+
+      <!-- Balances Tab -->
+      <div id="tab-balances">
+        <div class="card">
+          <div class="card-header">
+            <div class="search-bar" style="flex:1;max-width:300px">
+              <span>🔍</span>
+              <input type="text" placeholder="بحث عن مورد..." id="accounts-search" oninput="filterAccounts()">
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>المورد</th>
+                  <th>إجمالي الحليب</th>
+                  <th>إجمالي المدفوعات</th>
+                  <th>السلف</th>
+                  <th>الرصيد المستحق</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="accounts-tbody">
+                <tr><td colspan="7"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payments Tab -->
+      <div id="tab-payments" style="display:none">
+        <div class="card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr><th>#</th><th>التاريخ</th><th>المورد</th><th>المبلغ</th><th>طريقة الدفع</th><th>ملاحظات</th><th>حذف</th></tr>
+              </thead>
+              <tbody id="payments-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Advances Tab -->
+      <div id="tab-advances" style="display:none">
+        <div class="card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr><th>#</th><th>التاريخ</th><th>المورد</th><th>المبلغ</th><th>السبب</th><th>الحالة</th><th>حذف</th></tr>
+              </thead>
+              <tbody id="advances-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: WAREHOUSE 1 ════ -->
+    <div class="page" id="page-warehouse1">
+      <div class="section-header">
+        <span class="section-icon">🏭</span>
+        <h2>المخزن الأول</h2>
+        <button class="btn btn-primary" onclick="openWH1Modal()">➕ إضافة صنف</button>
+      </div>
+      <div id="wh1-stats" class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:20px"></div>
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>#</th><th>الصنف</th><th>الوحدة</th><th>الكمية</th><th>سعر الوحدة</th><th>القيمة الإجمالية</th><th>الحد الأدنى</th><th>الحالة</th><th>الإجراءات</th></tr>
+            </thead>
+            <tbody id="wh1-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: WAREHOUSE 2 ════ -->
+    <div class="page" id="page-warehouse2">
+      <div class="section-header">
+        <span class="section-icon">🏪</span>
+        <h2>المخزن الثاني</h2>
+        <button class="btn btn-primary" onclick="openWH2Modal()">➕ إضافة صنف</button>
+      </div>
+      <div id="wh2-stats" class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:20px"></div>
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>#</th><th>الصنف</th><th>الوحدة</th><th>الكمية</th><th>سعر الوحدة</th><th>القيمة الإجمالية</th><th>الحد الأدنى</th><th>الحالة</th><th>الإجراءات</th></tr>
+            </thead>
+            <tbody id="wh2-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: EXPORTS ════ -->
+    <div class="page" id="page-exports">
+      <div class="section-header">
+        <span class="section-icon">📦</span>
+        <h2>الصادرات</h2>
+        <button class="btn btn-primary" onclick="openExportModal()">➕ تسجيل صادر</button>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-body">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+            <div class="form-group" style="min-width:160px"><label>من تاريخ</label><input type="date" id="exports-from" onchange="loadExports()"></div>
+            <div class="form-group" style="min-width:160px"><label>إلى تاريخ</label><input type="date" id="exports-to" onchange="loadExports()"></div>
+            <div class="form-group" style="min-width:180px"><label>المخزن</label>
+              <select id="exports-wh-filter" onchange="loadExports()">
+                <option value="">كل المخازن</option>
+                <option value="warehouse1">المخزن الأول</option>
+                <option value="warehouse2">المخزن الثاني</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>#</th><th>التاريخ</th><th>المخزن</th><th>الصنف</th><th>الكمية</th><th>العميل/الجهة</th><th>ملاحظات</th><th>حذف</th></tr>
+            </thead>
+            <tbody id="exports-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: SALES ════ -->
+    <div class="page" id="page-sales">
+      <div class="section-header">
+        <span class="section-icon">🛒</span>
+        <h2>المبيعات</h2>
+        <button class="btn btn-primary" onclick="openSaleModal()">➕ تسجيل بيع</button>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-body">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+            <div class="form-group" style="min-width:160px"><label>من تاريخ</label><input type="date" id="sales-from" onchange="loadSales()"></div>
+            <div class="form-group" style="min-width:160px"><label>إلى تاريخ</label><input type="date" id="sales-to" onchange="loadSales()"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sales-summary" class="summary-bar">
+        <div class="summary-item"><div class="val" id="sales-sum-total">0</div><div class="lbl">الإيرادات (جنيه)</div></div>
+        <div class="summary-item"><div class="val" id="sales-sum-count">0</div><div class="lbl">عدد الفواتير</div></div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>#</th><th>التاريخ</th><th>العميل</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th><th>طريقة الدفع</th><th>ملاحظات</th><th>حذف</th></tr>
+            </thead>
+            <tbody id="sales-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: EXPENSES ════ -->
+    <div class="page" id="page-expenses">
+      <div class="section-header">
+        <span class="section-icon">💸</span>
+        <h2>المصاريف</h2>
+        <button class="btn btn-primary" onclick="openExpenseModal()">➕ إضافة مصروف</button>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-body">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+            <div class="form-group" style="min-width:160px"><label>من تاريخ</label><input type="date" id="exp-from" onchange="loadExpenses()"></div>
+            <div class="form-group" style="min-width:160px"><label>إلى تاريخ</label><input type="date" id="exp-to" onchange="loadExpenses()"></div>
+            <div class="form-group" style="min-width:180px"><label>الفئة</label>
+              <select id="exp-category-filter" onchange="loadExpenses()">
+                <option value="">كل الفئات</option>
+                <option>مرتبات</option><option>وقود</option><option>صيانة</option>
+                <option>كهرباء</option><option>مياه</option><option>مستلزمات</option><option>أخرى</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="exp-summary" class="summary-bar">
+        <div class="summary-item"><div class="val" id="exp-sum-total">0</div><div class="lbl">الإجمالي (جنيه)</div></div>
+        <div class="summary-item"><div class="val" id="exp-sum-count">0</div><div class="lbl">عدد السجلات</div></div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الفئة</th><th>المبلغ</th><th>طريقة الدفع</th><th>ملاحظات</th><th>حذف</th></tr>
+            </thead>
+            <tbody id="expenses-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: REPORTS ════ -->
+    <div class="page" id="page-reports">
+      <div class="section-header">
+        <span class="section-icon">📈</span>
+        <h2>التقارير</h2>
+        <button class="btn btn-secondary" onclick="printReport()">🖨️ طباعة</button>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchReportTab('monthly')">التقرير الشهري</div>
+        <div class="tab" onclick="switchReportTab('supplier')">تقرير مورد</div>
+        <div class="tab" onclick="switchReportTab('inventory')">تقرير المخزون</div>
+      </div>
+
+      <!-- Monthly Report -->
+      <div id="report-monthly">
+        <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+          <div class="form-group" style="min-width:160px">
+            <label>الشهر</label>
+            <input type="month" id="report-month" onchange="generateMonthlyReport()">
+          </div>
+          <button class="btn btn-primary" style="margin-top:22px" onclick="generateMonthlyReport()">📊 إنشاء التقرير</button>
+        </div>
+        <div id="monthly-report-output"></div>
+      </div>
+
+      <!-- Supplier Report -->
+      <div id="report-supplier" style="display:none">
+        <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+          <div class="form-group" style="min-width:200px">
+            <label>المورد</label>
+            <select id="report-supplier-select"><option value="">اختر مورداً...</option></select>
+          </div>
+          <div class="form-group" style="min-width:160px"><label>من تاريخ</label><input type="date" id="report-sup-from"></div>
+          <div class="form-group" style="min-width:160px"><label>إلى تاريخ</label><input type="date" id="report-sup-to"></div>
+          <button class="btn btn-primary" style="margin-top:22px" onclick="generateSupplierReport()">📊 إنشاء</button>
+        </div>
+        <div id="supplier-report-output"></div>
+      </div>
+
+      <!-- Inventory Report -->
+      <div id="report-inventory" style="display:none">
+        <button class="btn btn-primary" style="margin-bottom:20px" onclick="generateInventoryReport()">📊 إنشاء تقرير المخزون</button>
+        <div id="inventory-report-output"></div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: SETTINGS ════ -->
+    <div class="page" id="page-settings">
+      <div class="section-header">
+        <span class="section-icon">⚙️</span>
+        <h2>الإعدادات</h2>
+        <button class="btn btn-primary" onclick="saveSettings()">💾 حفظ الإعدادات</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px">
+        <div class="card">
+          <div class="card-header"><span>🏭</span><h3>معلومات المصنع</h3></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group"><label>اسم المصنع</label><input type="text" id="s-factory-name" placeholder="مصنع الألبان"></div>
+              <div class="form-group"><label>رقم الهاتف</label><input type="text" id="s-factory-phone"></div>
+              <div class="form-group"><label>العنوان</label><input type="text" id="s-factory-address"></div>
+              <div class="form-group"><label>المسؤول</label><input type="text" id="s-factory-manager"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span>🥛</span><h3>إعدادات الحليب</h3></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group"><label>سعر اللتر الافتراضي (جنيه)</label><input type="number" id="s-milk-price" placeholder="3.50" min="0" step="0.01"></div>
+              <div class="form-group"><label>عدد رحلات الاستلام اليومية</label><input type="number" id="s-milk-trips" placeholder="2" min="1"></div>
+              <div class="form-group"><label>الحد الأدنى للكمية (لتر)</label><input type="number" id="s-milk-min" placeholder="10" min="0"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span>💰</span><h3>إعدادات المدفوعات</h3></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group"><label>دورة الدفع (أيام)</label><input type="number" id="s-pay-cycle" placeholder="7" min="1"></div>
+              <div class="form-group"><label>العملة</label>
+                <select id="s-currency">
+                  <option value="EGP">جنيه مصري (EGP)</option>
+                  <option value="SAR">ريال سعودي (SAR)</option>
+                  <option value="AED">درهم إماراتي (AED)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ APP FOOTER ════ -->
+    <footer class="app-footer">
+      <div class="app-footer-inner">
+        <span>تم البرمجة والتطوير بكل</span>
+        <span class="heartbeat footer-heart">❤️</span>
+        <span>بواسطة</span>
+        <strong class="footer-dev-name">المهندس محمد حماد</strong>
+        <span class="footer-year">© 2026 / 2027</span>
+        <div class="footer-social">
+          <a href="https://www.facebook.com/en.mohamed.nasr" target="_blank" rel="noopener" class="footer-social-link footer-fb" title="تواصل عبر فيسبوك">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            <span>فيسبوك</span>
+          </a>
+          <a href="https://wa.me/201279934735" target="_blank" rel="noopener" class="footer-social-link footer-wa" title="تواصل عبر واتساب">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            <span>واتساب</span>
+          </a>
+        </div>
+      </div>
+    </footer>
+
+  </div><!-- /main-content -->
+</div><!-- /app-shell -->
+
+<!-- ═══════════════ MODALS ═══════════════ -->
+
+<!-- Supplier Modal -->
+<div class="modal-backdrop" id="modal-supplier">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <span style="font-size:22px">👥</span>
+      <h3 id="supplier-modal-title">إضافة مورد جديد</h3>
+      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-supplier')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="supplier-id">
+      <div class="form-grid">
+        <div class="form-group"><label>اسم المورد *</label><input type="text" id="s-name" placeholder="محمد أحمد"></div>
+        <div class="form-group"><label>رقم الهاتف</label><input type="tel" id="s-phone" placeholder="01012345678"></div>
+        <div class="form-group"><label>المنطقة / القرية</label><input type="text" id="s-area" placeholder="قرية / مدينة"></div>
+        <div class="form-group"><label>سعر اللتر (جنيه)</label><input type="number" id="s-price" placeholder="3.50" min="0" step="0.01"></div>
+        <div class="form-group"><label>الحالة</label>
+          <select id="s-status">
+            <option value="active">نشط</option>
+            <option value="inactive">غير نشط</option>
+          </select>
+        </div>
+        <div class="form-group"><label>ملاحظات</label><input type="text" id="s-notes" placeholder="ملاحظات اختيارية"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-supplier')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveSupplier()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Milk Modal -->
+<div class="modal-backdrop" id="modal-milk">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <span style="font-size:22px">🥛</span>
+      <h3>تسجيل استلام حليب</h3>
+      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-milk')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>التاريخ *</label><input type="date" id="m-date"></div>
+        <div class="form-group"><label>الوقت</label><input type="time" id="m-time"></div>
+        <div class="form-group"><label>المورد *</label><select id="m-supplier"><option value="">اختر مورداً...</option></select></div>
+        <div class="form-group"><label>الكمية (لتر) *</label><input type="number" id="m-qty" placeholder="0" min="0" step="0.1" oninput="calcMilkTotal()"></div>
+        <div class="form-group"><label>سعر اللتر</label><input type="number" id="m-price" placeholder="0" min="0" step="0.01" oninput="calcMilkTotal()"></div>
+        <div class="form-group"><label>الإجمالي</label><input type="number" id="m-total" placeholder="0" readonly style="background:var(--bg-500);color:var(--gold);font-weight:700"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="m-notes" placeholder="ملاحظات اختيارية"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-milk')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveMilkRecord()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal-backdrop" id="modal-payment">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <span style="font-size:22px">💳</span>
+      <h3>تسجيل دفعة</h3>
+      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-payment')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>المورد *</label><select id="p-supplier"><option value="">اختر مورداً...</option></select></div>
+        <div class="form-group"><label>التاريخ *</label><input type="date" id="p-date"></div>
+        <div class="form-group"><label>المبلغ (جنيه) *</label><input type="number" id="p-amount" placeholder="0" min="0" step="0.01"></div>
+        <div class="form-group"><label>طريقة الدفع</label>
+          <select id="p-method">
+            <option>نقدي</option><option>تحويل بنكي</option><option>شيك</option><option>فودافون كاش</option><option>أخرى</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="p-notes" placeholder="ملاحظات"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-payment')">إلغاء</button>
+      <button class="btn btn-primary" onclick="savePayment()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Advance Modal -->
+<div class="modal-backdrop" id="modal-advance">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <span style="font-size:22px">💵</span>
+      <h3>تسجيل سلفة</h3>
+      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-advance')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>المورد *</label><select id="adv-supplier"><option value="">اختر مورداً...</option></select></div>
+        <div class="form-group"><label>التاريخ *</label><input type="date" id="adv-date"></div>
+        <div class="form-group"><label>المبلغ (جنيه) *</label><input type="number" id="adv-amount" placeholder="0" min="0" step="0.01"></div>
+        <div class="form-group"><label>السبب</label><input type="text" id="adv-reason" placeholder="سبب السلفة"></div>
+        <div class="form-group"><label>الحالة</label>
+          <select id="adv-status"><option value="pending">معلقة</option><option value="deducted">تم الخصم</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-advance')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveAdvance()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Warehouse Modal (shared for WH1 & WH2) -->
+<div class="modal-backdrop" id="modal-warehouse">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <span style="font-size:22px" id="wh-modal-icon">🏭</span>
+      <h3 id="wh-modal-title">إضافة صنف للمخزن</h3>
+      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-warehouse')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="wh-modal-target">
+      <input type="hidden" id="wh-item-id">
+      <div class="form-grid">
+        <div class="form-group"><label>اسم الصنف *</label><input type="text" id="wh-name" placeholder="اسم المنتج"></div>
+        <div class="form-group"><label>وحدة القياس</label>
+          <select id="wh-unit"><option>كجم</option><option>لتر</option><option>كيس</option><option>علبة</option><option>قطعة</option><option>طرد</option><option>كرتون</option></select>
+        </div>
+        <div class="form-group"><label>الكمية</label><input type="number" id="wh-qty" placeholder="0" min="0" step="0.01"></div>
+        <div class="form-group"><label>سعر الوحدة (جنيه)</label><input type="number" id="wh-price" placeholder="0" min="0" step="0.01"></div>
+        <div class="form-group"><label>الحد الأدنى للتنبيه</label><input type="number" id="wh-min" placeholder="5" min="0"></div>
+        <div class="form-group"><label>الفئة</label><input type="text" id="wh-category" placeholder="فئة الصنف"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="wh-notes" placeholder="ملاحظات"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-warehouse')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveWarehouseItem()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-backdrop" id="modal-export">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <span style="font-size:22px">📦</span>
+      <h3>تسجيل صادر</h3>
+      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-export')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>التاريخ *</label><input type="date" id="ex-date"></div>
+        <div class="form-group"><label>المخزن *</label>
+          <select id="ex-warehouse" onchange="loadExportItems()">
+            <option value="warehouse1">المخزن الأول</option>
+            <option value="warehouse2">المخزن الثاني</option>
+          </select>
+        </div>
+        <div class="form-group"><label>الصنف *</label><select id="ex-item"><option value="">اختر صنفاً...</option></select></div>
+        <div class="form-group"><label>الكمية *</label><input type="number" id="ex-qty" placeholder="0" min="0" step="0.01"></div>
+        <div class="form-group"><label>العميل / الجهة</label><input type="text" id="ex-client" placeholder="اسم العميل"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="ex-notes" placeholder="ملاحظات"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-export')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveExport()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sale Modal -->
+<div class="modal-backdrop" id="modal-sale">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <span style="font-size:22px">🛒</span>
+      <h3>تسجيل بيع</h3>
+      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-sale')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>التاريخ *</label><input type="date" id="sale-date"></div>
+        <div class="form-group"><label>العميل *</label><input type="text" id="sale-client" placeholder="اسم العميل"></div>
+        <div class="form-group"><label>المنتج *</label><input type="text" id="sale-product" placeholder="اسم المنتج"></div>
+        <div class="form-group"><label>الكمية</label><input type="number" id="sale-qty" placeholder="1" min="0" step="0.01" oninput="calcSaleTotal()"></div>
+        <div class="form-group"><label>سعر الوحدة</label><input type="number" id="sale-price" placeholder="0" min="0" step="0.01" oninput="calcSaleTotal()"></div>
+        <div class="form-group"><label>الإجمالي</label><input type="number" id="sale-total" placeholder="0" readonly style="background:var(--bg-500);color:var(--success);font-weight:700"></div>
+        <div class="form-group"><label>طريقة الدفع</label>
+          <select id="sale-method"><option>نقدي</option><option>تحويل</option><option>آجل</option></select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="sale-notes" placeholder="ملاحظات"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-sale')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveSale()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Expense Modal -->
+<div class="modal-backdrop" id="modal-expense">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <span style="font-size:22px">💸</span>
+      <h3>إضافة مصروف</h3>
+      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-expense')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>التاريخ *</label><input type="date" id="e-date"></div>
+        <div class="form-group"><label>الوصف *</label><input type="text" id="e-desc" placeholder="وصف المصروف"></div>
+        <div class="form-group"><label>الفئة</label>
+          <select id="e-category">
+            <option>مرتبات</option><option>وقود</option><option>صيانة</option>
+            <option>كهرباء</option><option>مياه</option><option>مستلزمات</option><option>أخرى</option>
+          </select>
+        </div>
+        <div class="form-group"><label>المبلغ (جنيه) *</label><input type="number" id="e-amount" placeholder="0" min="0" step="0.01"></div>
+        <div class="form-group"><label>طريقة الدفع</label>
+          <select id="e-method"><option>نقدي</option><option>تحويل</option><option>شيك</option></select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="e-notes" placeholder="ملاحظات"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-expense')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveExpense()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supplier Account Detail Modal -->
+<div class="modal-backdrop" id="modal-account-detail">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <span style="font-size:22px">📋</span>
+      <h3 id="account-detail-title">كشف حساب مورد</h3>
+      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-account-detail')">✕</button>
+    </div>
+    <div class="modal-body" id="account-detail-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-account-detail')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SVG ICON ═══════════════ -->
+<script>
+// Inline SVG icon for manifest
+const iconSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#111418"/><text y="70" x="10" font-size="65">🥛</text></svg>`;
+</script>
+
+<!-- ═══════════════ MAIN APP ═══════════════ -->
+<script type="module">
+import { db, dbPush, dbSet, dbUpdate, dbRemove, dbGet, dbListen, exportBackup, importBackup, track, getOnlineState } from './js/firebase.js';
+
+// ── State ──────────────────────────────────────────────────────────
+const state = {
+  suppliers: {},
+  milkRecords: {},
+  expenses: {},
+  supplierPayments: {},
+  supplierAdvances: {},
+  warehouse1: {},
+  warehouse2: {},
+  exports: {},
+  sales: {},
+  settings: {}
+};
+
+// ── Utils ──────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const fmt = (n, dec=0) => (isNaN(n) ? 0 : Number(n)).toLocaleString('ar-EG', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+const today = () => new Date().toISOString().slice(0,10);
+const now   = () => new Date().toTimeString().slice(0,5);
+const sanitize = s => String(s || '').trim().replace(/[<>]/g,'');
+
+function toast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${type==='success'?'✅':type==='error'?'❌':'ℹ️'}</span> ${sanitize(msg)}`;
+  $('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+function loading(show, text='جارٍ الحفظ...') {
+  const el = $('loading-overlay');
+  el.style.display = show ? 'flex' : 'none';
+  if (show) $('loading-text').textContent = text;
+}
+
+function openModal(id) { $(id).classList.add('open'); }
+function closeModal(id) { $(id).classList.remove('open'); }
+
+// Close modal on backdrop click
+document.querySelectorAll('.modal-backdrop').forEach(bd => {
+  bd.addEventListener('click', e => { if (e.target === bd) bd.classList.remove('open'); });
+});
+
+// ── Connection State ───────────────────────────────────────────────
+function updateConnectionUI() {
+  const online = navigator.onLine;
+  const badge = $('connection-badge');
+  const text  = $('connection-text');
+  badge.className = `connection-badge ${online ? 'online' : 'offline'}`;
+  text.textContent = online ? 'متصل' : 'غير متصل';
+}
+window.addEventListener('online',  updateConnectionUI);
+window.addEventListener('offline', updateConnectionUI);
+updateConnectionUI();
+
+// Current date
+$('current-date').textContent = new Date().toLocaleDateString('ar-EG', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+// ── Navigation ─────────────────────────────────────────────────────
+const pageTitles = {
+  dashboard: 'لوحة التحكم', suppliers: 'إدارة الموردين',
+  milk: 'استلام الحليب', accounts: 'حسابات الموردين',
+  warehouse1: 'المخزن الأول', warehouse2: 'المخزن الثاني',
+  exports: 'الصادرات', sales: 'المبيعات',
+  expenses: 'المصاريف', reports: 'التقارير', settings: 'الإعدادات'
+};
+
+window.navigate = function(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  $(`page-${page}`).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick')?.includes(`'${page}'`)) n.classList.add('active');
+  });
+  $('page-title').textContent = pageTitles[page] || '';
+  closeSidebar();
+
+  // Scroll to top of main content instantly on page switch
+  const mc = document.querySelector('.main-content');
+  if (mc) mc.scrollTo({ top: 0, behavior: 'smooth' });
+
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'suppliers') renderSuppliers();
+  if (page === 'milk') { initMilkPage(); loadMilkRecords(); }
+  if (page === 'accounts') { renderAccounts(); loadPayments(); loadAdvances(); }
+  if (page === 'warehouse1') renderWarehouse('warehouse1');
+  if (page === 'warehouse2') renderWarehouse('warehouse2');
+  if (page === 'exports') loadExports();
+  if (page === 'sales') loadSales();
+  if (page === 'expenses') loadExpenses();
+  if (page === 'reports') initReports();
+  if (page === 'settings') loadSettings();
+};
+
+window.toggleSidebar = () => {
+  $('sidebar').classList.toggle('open');
+  $('sidebar-overlay').classList.toggle('open');
+};
+window.closeSidebar = () => {
+  $('sidebar').classList.remove('open');
+  $('sidebar-overlay').classList.remove('open');
+};
+
+// ══════════════════════════════════════════════════════════════════
+// REALTIME LISTENERS
+// ══════════════════════════════════════════════════════════════════
+dbListen('suppliers', v => { state.suppliers = v || {}; });
+dbListen('milkRecords', v => { state.milkRecords = v || {}; });
+dbListen('expenses', v => { state.expenses = v || {}; });
+dbListen('supplierPayments', v => { state.supplierPayments = v || {}; });
+dbListen('supplierAdvances', v => { state.supplierAdvances = v || {}; });
+dbListen('warehouse1', v => { state.warehouse1 = v || {}; });
+dbListen('warehouse2', v => { state.warehouse2 = v || {}; });
+dbListen('exports', v => { state.exports = v || {}; });
+dbListen('sales', v => { state.sales = v || {}; });
+dbListen('settings', v => { state.settings = v || {}; loadSettingsUI(); });
+
+// ══════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════════════
+window.loadDashboard = function() {
+  const todayStr = today();
+  const monthStr = todayStr.slice(0,7);
+
+  // Suppliers
+  $('stat-suppliers').textContent = Object.keys(state.suppliers).length;
+
+  // Milk today
+  const milkToday = Object.values(state.milkRecords)
+    .filter(r => r.date === todayStr)
+    .reduce((s,r) => s + Number(r.qty||0), 0);
+  $('stat-milk-today').textContent = fmt(milkToday, 1);
+
+  // Warehouse stocks
+  const wh1Total = Object.values(state.warehouse1).reduce((s,i) => s + Number(i.qty||0), 0);
+  const wh2Total = Object.values(state.warehouse2).reduce((s,i) => s + Number(i.qty||0), 0);
+  $('stat-wh1').textContent = fmt(wh1Total, 1);
+  $('stat-wh2').textContent = fmt(wh2Total, 1);
+
+  // Sales month
+  const salesMonth = Object.values(state.sales)
+    .filter(s => (s.date||'').startsWith(monthStr))
+    .reduce((s,r) => s + Number(r.total||0), 0);
+  $('stat-sales-month').textContent = fmt(salesMonth, 0);
+
+  // Expenses month
+  const expMonth = Object.values(state.expenses)
+    .filter(e => (e.date||'').startsWith(monthStr))
+    .reduce((s,r) => s + Number(r.amount||0), 0);
+  $('stat-expenses-month').textContent = fmt(expMonth, 0);
+
+  // Overdue suppliers
+  const overdue = Object.keys(state.suppliers).filter(id => calcSupplierBalance(id) > 0).length;
+  $('stat-overdue').textContent = overdue;
+
+  // Exports month
+  const exportsMonth = Object.values(state.exports).filter(e => (e.date||'').startsWith(monthStr)).length;
+  $('stat-exports-month').textContent = exportsMonth;
+
+  // Recent milk
+  const recentMilk = Object.entries(state.milkRecords)
+    .sort((a,b) => (b[1].createdAt||0) - (a[1].createdAt||0))
+    .slice(0,5);
+  $('recent-milk').innerHTML = recentMilk.length ? recentMilk.map(([,r]) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-soft)">
+      <div>
+        <div style="font-weight:600;font-size:13px">${sanitize(state.suppliers[r.supplierId]?.name || 'غير محدد')}</div>
+        <div style="font-size:11px;color:var(--text-400)">${r.date} ${r.time||''}</div>
+      </div>
+      <div style="text-align:left">
+        <div style="color:var(--gold);font-weight:700">${fmt(r.qty,1)} لتر</div>
+        <div style="font-size:11px;color:var(--success)">${fmt(r.total,2)} ج</div>
+      </div>
+    </div>`).join('') : '<div class="empty-state"><span class="empty-icon">🥛</span><p>لا توجد سجلات اليوم</p></div>';
+
+  // Recent expenses
+  const recentExp = Object.entries(state.expenses)
+    .sort((a,b) => (b[1].createdAt||0) - (a[1].createdAt||0))
+    .slice(0,5);
+  $('recent-expenses').innerHTML = recentExp.length ? recentExp.map(([,e]) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-soft)">
+      <div>
+        <div style="font-weight:600;font-size:13px">${sanitize(e.desc)}</div>
+        <div style="font-size:11px;color:var(--text-400)">${e.date} — <span class="badge badge-info" style="padding:1px 6px">${sanitize(e.category)}</span></div>
+      </div>
+      <div style="color:var(--danger);font-weight:700">${fmt(e.amount,2)} ج</div>
+    </div>`).join('') : '<div class="empty-state"><span class="empty-icon">💸</span><p>لا توجد مصاريف</p></div>';
+};
+
+// ══════════════════════════════════════════════════════════════════
+// SUPPLIERS
+// ══════════════════════════════════════════════════════════════════
+window.openSupplierModal = function(id='') {
+  $('supplier-id').value = id;
+  if (id) {
+    const s = state.suppliers[id];
+    $('supplier-modal-title').textContent = 'تعديل بيانات المورد';
+    $('s-name').value   = s.name   || '';
+    $('s-phone').value  = s.phone  || '';
+    $('s-area').value   = s.area   || '';
+    $('s-price').value  = s.price  || '';
+    $('s-status').value = s.status || 'active';
+    $('s-notes').value  = s.notes  || '';
+  } else {
+    $('supplier-modal-title').textContent = 'إضافة مورد جديد';
+    ['s-name','s-phone','s-area','s-price','s-notes'].forEach(f => $(f).value = '');
+    $('s-status').value = 'active';
+    // default price from settings
+    if (state.settings.milkPrice) $('s-price').value = state.settings.milkPrice;
+  }
+  openModal('modal-supplier');
+};
+
+window.saveSupplier = async function() {
+  const name = sanitize($('s-name').value);
+  if (!name) { toast('اسم المورد مطلوب', 'error'); return; }
+  const price = parseFloat($('s-price').value) || 0;
+  if (price < 0) { toast('سعر اللتر غير صحيح', 'error'); return; }
+
+  const data = {
+    name, phone: sanitize($('s-phone').value), area: sanitize($('s-area').value),
+    price, status: $('s-status').value, notes: sanitize($('s-notes').value)
+  };
+
+  loading(true, 'جارٍ حفظ بيانات المورد...');
+  try {
+    const id = $('supplier-id').value;
+    if (id) await dbUpdate(`suppliers/${id}`, data);
+    else    await dbPush('suppliers', data);
+    toast(id ? 'تم تحديث المورد' : 'تم إضافة المورد', 'success');
+    track(id ? 'supplier_update' : 'supplier_create', { name });
+    closeModal('modal-supplier');
+    renderSuppliers();
+  } catch(e) { toast('خطأ في الحفظ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.deleteSupplier = async function(id) {
+  if (!confirm('حذف هذا المورد نهائياً؟')) return;
+  loading(true, 'جارٍ الحذف...');
+  try {
+    await dbRemove(`suppliers/${id}`);
+    toast('تم حذف المورد', 'success');
+    renderSuppliers();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.filterSuppliers = function() { renderSuppliers($('suppliers-search').value); };
+
+function renderSuppliers(search='') {
+  const rows = Object.entries(state.suppliers)
+    .filter(([, s]) => !search || s.name?.toLowerCase().includes(search.toLowerCase()) || s.phone?.includes(search));
+
+  $('suppliers-count').textContent = `(${rows.length} مورد)`;
+
+  if (!rows.length) {
+    $('suppliers-tbody').innerHTML = `<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">👥</span><p>لا يوجد موردون</p></div></td></tr>`;
+    return;
+  }
+  $('suppliers-tbody').innerHTML = rows.map(([id, s], i) => {
+    const bal = calcSupplierBalance(id);
+    const balClass = bal > 0 ? 'balance-positive' : bal < 0 ? 'balance-negative' : 'balance-zero';
+    return `<tr>
+      <td>${i+1}</td>
+      <td><strong>${sanitize(s.name)}</strong></td>
+      <td dir="ltr">${sanitize(s.phone||'—')}</td>
+      <td>${sanitize(s.area||'—')}</td>
+      <td>${fmt(s.price,2)} ج</td>
+      <td class="${balClass}" style="font-weight:700">${fmt(bal,2)} ج</td>
+      <td><span class="badge ${s.status==='active'?'badge-success':'badge-danger'}">${s.status==='active'?'نشط':'متوقف'}</span></td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm btn-icon" onclick="openSupplierModal('${id}')">✏️</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteSupplier('${id}')">🗑️</button>
+          <button class="btn btn-secondary btn-sm" onclick="showAccountDetail('${id}')">📋</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Supplier Balance Calculation ───────────────────────────────────
+function calcSupplierBalance(supplierId) {
+  const milkTotal = Object.values(state.milkRecords)
+    .filter(r => r.supplierId === supplierId)
+    .reduce((s,r) => s + Number(r.total||0), 0);
+  const payments = Object.values(state.supplierPayments)
+    .filter(p => p.supplierId === supplierId)
+    .reduce((s,p) => s + Number(p.amount||0), 0);
+  const advances = Object.values(state.supplierAdvances)
+    .filter(a => a.supplierId === supplierId)
+    .reduce((s,a) => s + Number(a.amount||0), 0);
+  return milkTotal - payments - advances;
+}
+
+window.showAccountDetail = function(supplierId) {
+  const s = state.suppliers[supplierId];
+  if (!s) return;
+  $('account-detail-title').textContent = `كشف حساب: ${s.name}`;
+
+  const milkRecords = Object.entries(state.milkRecords).filter(([,r]) => r.supplierId === supplierId).sort((a,b) => a[1].date > b[1].date ? -1 : 1);
+  const payments    = Object.entries(state.supplierPayments).filter(([,p]) => p.supplierId === supplierId).sort((a,b) => a[1].date > b[1].date ? -1 : 1);
+  const advances    = Object.entries(state.supplierAdvances).filter(([,a]) => a.supplierId === supplierId);
+  const balance     = calcSupplierBalance(supplierId);
+  const milkSum     = milkRecords.reduce((s,[,r]) => s + Number(r.total||0), 0);
+  const paySum      = payments.reduce((s,[,p]) => s + Number(p.amount||0), 0);
+  const advSum      = advances.reduce((s,[,a]) => s + Number(a.amount||0), 0);
+
+  $('account-detail-body').innerHTML = `
+    <div class="summary-bar" style="margin-bottom:20px">
+      <div class="summary-item"><div class="val">${fmt(milkSum,2)}</div><div class="lbl">إجمالي الحليب (ج)</div></div>
+      <div class="summary-item"><div class="val" style="color:var(--danger)">${fmt(paySum,2)}</div><div class="lbl">المدفوعات (ج)</div></div>
+      <div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(advSum,2)}</div><div class="lbl">السلف (ج)</div></div>
+      <div class="summary-item"><div class="val" style="color:${balance>0?'var(--success)':'var(--danger)'}">${fmt(balance,2)}</div><div class="lbl">الرصيد المستحق (ج)</div></div>
+    </div>
+    <h4 style="color:var(--gold);margin-bottom:10px">سجل الحليب (${milkRecords.length} سجل)</h4>
+    <div class="table-wrapper" style="margin-bottom:16px">
+      <table><thead><tr><th>التاريخ</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead>
+      <tbody>${milkRecords.slice(0,20).map(([,r]) => `<tr><td>${r.date}</td><td>${fmt(r.qty,1)} لتر</td><td>${fmt(r.price,2)}</td><td style="color:var(--gold)">${fmt(r.total,2)} ج</td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text-400)">لا توجد سجلات</td></tr>'}</tbody>
+      </table>
+    </div>
+    <h4 style="color:var(--gold);margin-bottom:10px">المدفوعات</h4>
+    <div class="table-wrapper">
+      <table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead>
+      <tbody>${payments.map(([,p]) => `<tr><td>${p.date}</td><td style="color:var(--danger)">${fmt(p.amount,2)} ج</td><td>${sanitize(p.method)}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--text-400)">لا توجد مدفوعات</td></tr>'}</tbody>
+      </table>
+    </div>`;
+
+  openModal('modal-account-detail');
+};
+
+// ══════════════════════════════════════════════════════════════════
+// MILK RECEIVING
+// ══════════════════════════════════════════════════════════════════
+function initMilkPage() {
+  // Populate supplier dropdown
+  const sel = $('milk-filter-supplier');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">جميع الموردين</option>' +
+    Object.entries(state.suppliers).map(([id,s]) => `<option value="${id}">${sanitize(s.name)}</option>`).join('');
+  sel.value = current;
+
+  if (!$('milk-from').value) {
+    const d = new Date(); d.setDate(1);
+    $('milk-from').value = d.toISOString().slice(0,10);
+    $('milk-to').value   = today();
+  }
+}
+
+window.loadMilkRecords = function() {
+  const from = $('milk-from').value;
+  const to   = $('milk-to').value;
+  const sup  = $('milk-filter-supplier').value;
+
+  let records = Object.entries(state.milkRecords).filter(([,r]) => {
+    if (from && r.date < from) return false;
+    if (to   && r.date > to)   return false;
+    if (sup  && r.supplierId !== sup) return false;
+    return true;
+  }).sort((a,b) => b[1].date > a[1].date ? 1 : b[1].date < a[1].date ? -1 : 0);
+
+  const totalQty = records.reduce((s,[,r]) => s + Number(r.qty||0), 0);
+  const totalAmt = records.reduce((s,[,r]) => s + Number(r.total||0), 0);
+
+  $('milk-sum-qty').textContent   = fmt(totalQty, 1);
+  $('milk-sum-amt').textContent   = fmt(totalAmt, 2);
+  $('milk-sum-count').textContent = records.length;
+  $('milk-summary').style.display = records.length ? 'flex' : 'none';
+
+  $('milk-tbody').innerHTML = records.length ? records.map(([id,r], i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${r.date}</td>
+      <td>${r.time||'—'}</td>
+      <td>${sanitize(state.suppliers[r.supplierId]?.name || 'غير محدد')}</td>
+      <td><strong style="color:var(--gold)">${fmt(r.qty,1)}</strong></td>
+      <td>${fmt(r.price,2)} ج</td>
+      <td style="color:var(--success);font-weight:700">${fmt(r.total,2)} ج</td>
+      <td>${sanitize(r.notes||'—')}</td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteMilkRecord('${id}')">🗑️</button></td>
+    </tr>`).join('') :
+    `<tr><td colspan="9"><div class="empty-state"><span class="empty-icon">🥛</span><p>لا توجد سجلات في الفترة المحددة</p></div></td></tr>`;
+};
+
+window.clearMilkFilter = function() {
+  $('milk-from').value = ''; $('milk-to').value = ''; $('milk-filter-supplier').value = '';
+  loadMilkRecords();
+};
+
+window.openMilkModal = function() {
+  const sel = $('m-supplier');
+  sel.innerHTML = '<option value="">اختر مورداً...</option>' +
+    Object.entries(state.suppliers).filter(([,s]) => s.status === 'active')
+      .map(([id,s]) => `<option value="${id}">${sanitize(s.name)}</option>`).join('');
+  sel.onchange = function() {
+    const sup = state.suppliers[this.value];
+    if (sup && sup.price) $('m-price').value = sup.price;
+    calcMilkTotal();
+  };
+  $('m-date').value  = today();
+  $('m-time').value  = now();
+  $('m-qty').value   = '';
+  $('m-price').value = state.settings.milkPrice || '';
+  $('m-total').value = '';
+  $('m-notes').value = '';
+  openModal('modal-milk');
+};
+
+window.calcMilkTotal = function() {
+  const qty   = parseFloat($('m-qty').value)   || 0;
+  const price = parseFloat($('m-price').value) || 0;
+  $('m-total').value = (qty * price).toFixed(2);
+};
+
+window.saveMilkRecord = async function() {
+  const supplierId = $('m-supplier').value;
+  const qty = parseFloat($('m-qty').value);
+  if (!supplierId) { toast('اختر المورد', 'error'); return; }
+  if (!qty || qty <= 0) { toast('الكمية يجب أن تكون أكبر من صفر', 'error'); return; }
+
+  const price = parseFloat($('m-price').value) || 0;
+  const data = {
+    supplierId, date: $('m-date').value, time: $('m-time').value,
+    qty, price, total: qty * price, notes: sanitize($('m-notes').value)
+  };
+
+  loading(true, 'جارٍ حفظ سجل الحليب...');
+  try {
+    await dbPush('milkRecords', data);
+    toast('تم تسجيل استلام الحليب', 'success');
+    track('milk_receive', { supplierId, qty });
+    closeModal('modal-milk');
+    loadMilkRecords();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.deleteMilkRecord = async function(id) {
+  if (!confirm('حذف هذا السجل؟')) return;
+  loading(true);
+  try { await dbRemove(`milkRecords/${id}`); toast('تم الحذف', 'success'); loadMilkRecords(); }
+  catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// ACCOUNTS
+// ══════════════════════════════════════════════════════════════════
+window.switchAccountTab = function(tab) {
+  ['balances','payments','advances'].forEach(t => {
+    $(document.getElementById(`tab-${t}`) ? `tab-${t}` : '').style && ($(`tab-${t}`).style.display = 'none');
+  });
+  $(`tab-${tab}`).style.display = 'block';
+  document.querySelectorAll(`#page-accounts .tab`).forEach((el,i) => {
+    el.classList.toggle('active', ['balances','payments','advances'][i] === tab);
+  });
+};
+
+function renderAccounts(search='') {
+  const suppliers = Object.entries(state.suppliers)
+    .filter(([,s]) => !search || s.name?.toLowerCase().includes(search.toLowerCase()));
+
+  $('accounts-tbody').innerHTML = suppliers.length ? suppliers.map(([id,s], i) => {
+    const milkTotal = Object.values(state.milkRecords).filter(r => r.supplierId === id).reduce((s,r) => s + Number(r.total||0), 0);
+    const payments  = Object.values(state.supplierPayments).filter(p => p.supplierId === id).reduce((s,p) => s + Number(p.amount||0), 0);
+    const advances  = Object.values(state.supplierAdvances).filter(a => a.supplierId === id).reduce((s,a) => s + Number(a.amount||0), 0);
+    const balance   = milkTotal - payments - advances;
+    const balClass  = balance > 0 ? 'balance-positive' : balance < 0 ? 'balance-negative' : 'balance-zero';
+    return `<tr>
+      <td>${i+1}</td>
+      <td><strong>${sanitize(s.name)}</strong></td>
+      <td style="color:var(--gold)">${fmt(milkTotal,2)} ج</td>
+      <td style="color:var(--danger)">${fmt(payments,2)} ج</td>
+      <td style="color:var(--warning)">${fmt(advances,2)} ج</td>
+      <td class="${balClass}" style="font-weight:900;font-size:15px">${fmt(balance,2)} ج</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-primary btn-sm" onclick="openPaymentModal('${id}')">💳 دفعة</button>
+          <button class="btn btn-secondary btn-sm" onclick="showAccountDetail('${id}')">📋 كشف</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="7"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>`;
+}
+
+window.filterAccounts = function() { renderAccounts($('accounts-search').value); };
+
+function loadPayments() {
+  const rows = Object.entries(state.supplierPayments).sort((a,b) => b[1].date > a[1].date ? 1 : -1);
+  $('payments-tbody').innerHTML = rows.length ? rows.map(([id,p], i) => `
+    <tr>
+      <td>${i+1}</td><td>${p.date}</td>
+      <td>${sanitize(state.suppliers[p.supplierId]?.name||'—')}</td>
+      <td style="color:var(--danger);font-weight:700">${fmt(p.amount,2)} ج</td>
+      <td>${sanitize(p.method)}</td>
+      <td>${sanitize(p.notes||'—')}</td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="deletePayment('${id}')">🗑️</button></td>
+    </tr>`).join('') : `<tr><td colspan="7" style="text-align:center;color:var(--text-400);padding:20px">لا توجد مدفوعات</td></tr>`;
+}
+
+function loadAdvances() {
+  const rows = Object.entries(state.supplierAdvances).sort((a,b) => b[1].date > a[1].date ? 1 : -1);
+  $('advances-tbody').innerHTML = rows.length ? rows.map(([id,a], i) => `
+    <tr>
+      <td>${i+1}</td><td>${a.date}</td>
+      <td>${sanitize(state.suppliers[a.supplierId]?.name||'—')}</td>
+      <td style="color:var(--warning);font-weight:700">${fmt(a.amount,2)} ج</td>
+      <td>${sanitize(a.reason||'—')}</td>
+      <td><span class="badge ${a.status==='deducted'?'badge-success':'badge-warning'}">${a.status==='deducted'?'تم الخصم':'معلقة'}</span></td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteAdvance('${id}')">🗑️</button></td>
+    </tr>`).join('') : `<tr><td colspan="7" style="text-align:center;color:var(--text-400);padding:20px">لا توجد سلف</td></tr>`;
+}
+
+window.openPaymentModal = function(supplierId='') {
+  const sel = $('p-supplier');
+  sel.innerHTML = '<option value="">اختر مورداً...</option>' +
+    Object.entries(state.suppliers).map(([id,s]) => `<option value="${id}" ${id===supplierId?'selected':''}>${sanitize(s.name)}</option>`).join('');
+  $('p-date').value   = today();
+  $('p-amount').value = '';
+  $('p-notes').value  = '';
+  openModal('modal-payment');
+};
+
+window.savePayment = async function() {
+  const supplierId = $('p-supplier').value;
+  const amount = parseFloat($('p-amount').value);
+  if (!supplierId) { toast('اختر المورد', 'error'); return; }
+  if (!amount || amount <= 0) { toast('المبلغ يجب أن يكون أكبر من صفر', 'error'); return; }
+
+  loading(true);
+  try {
+    await dbPush('supplierPayments', { supplierId, date: $('p-date').value, amount, method: $('p-method').value, notes: sanitize($('p-notes').value) });
+    toast('تم تسجيل الدفعة', 'success');
+    track('payment_create', { supplierId, amount });
+    closeModal('modal-payment');
+    renderAccounts(); loadPayments();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.deletePayment = async function(id) {
+  if (!confirm('حذف هذه الدفعة؟')) return;
+  await dbRemove(`supplierPayments/${id}`);
+  toast('تم الحذف', 'success'); renderAccounts(); loadPayments();
+};
+
+window.openAdvanceModal = function() {
+  const sel = $('adv-supplier');
+  sel.innerHTML = '<option value="">اختر مورداً...</option>' +
+    Object.entries(state.suppliers).map(([id,s]) => `<option value="${id}">${sanitize(s.name)}</option>`).join('');
+  $('adv-date').value   = today();
+  $('adv-amount').value = '';
+  $('adv-reason').value = '';
+  openModal('modal-advance');
+};
+
+window.saveAdvance = async function() {
+  const supplierId = $('adv-supplier').value;
+  const amount = parseFloat($('adv-amount').value);
+  if (!supplierId) { toast('اختر المورد', 'error'); return; }
+  if (!amount || amount <= 0) { toast('المبلغ يجب أن يكون أكبر من صفر', 'error'); return; }
+
+  loading(true);
+  try {
+    await dbPush('supplierAdvances', { supplierId, date: $('adv-date').value, amount, reason: sanitize($('adv-reason').value), status: $('adv-status').value });
+    toast('تم تسجيل السلفة', 'success');
+    closeModal('modal-advance');
+    renderAccounts(); loadAdvances();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.deleteAdvance = async function(id) {
+  if (!confirm('حذف هذه السلفة؟')) return;
+  await dbRemove(`supplierAdvances/${id}`);
+  toast('تم الحذف', 'success'); renderAccounts(); loadAdvances();
+};
+
+// ══════════════════════════════════════════════════════════════════
+// WAREHOUSE
+// ══════════════════════════════════════════════════════════════════
+function renderWarehouse(wh) {
+  const items = Object.entries(state[wh]);
+  const isWH1 = wh === 'warehouse1';
+  const totalValue = items.reduce((s,[,i]) => s + Number(i.qty||0)*Number(i.price||0), 0);
+  const lowStock   = items.filter(([,i]) => Number(i.qty||0) <= Number(i.minQty||0)).length;
+
+  const statsEl = $(isWH1 ? 'wh1-stats' : 'wh2-stats');
+  statsEl.innerHTML = `
+    <div class="stat-card" style="--accent:var(--gold)"><span class="stat-icon">📦</span><div class="stat-value">${items.length}</div><div class="stat-label">عدد الأصناف</div></div>
+    <div class="stat-card" style="--accent:var(--success)"><span class="stat-icon">💰</span><div class="stat-value">${fmt(totalValue,0)}</div><div class="stat-label">القيمة الإجمالية (ج)</div></div>
+    <div class="stat-card" style="--accent:var(--danger)"><span class="stat-icon">⚠️</span><div class="stat-value">${lowStock}</div><div class="stat-label">تحت الحد الأدنى</div></div>`;
+
+  const tbody = $(isWH1 ? 'wh1-tbody' : 'wh2-tbody');
+  tbody.innerHTML = items.length ? items.map(([id,i], idx) => {
+    const qty = Number(i.qty||0);
+    const min = Number(i.minQty||0);
+    const status = qty === 0 ? '<span class="badge badge-danger">نفد</span>' :
+                   qty <= min ? '<span class="badge badge-warning">منخفض</span>' :
+                   '<span class="badge badge-success">متوفر</span>';
+    return `<tr>
+      <td>${idx+1}</td>
+      <td><strong>${sanitize(i.name)}</strong>${i.category?`<br><small style="color:var(--text-400)">${sanitize(i.category)}</small>`:''}</td>
+      <td>${sanitize(i.unit||'وحدة')}</td>
+      <td style="color:${qty<=min?'var(--danger)':'var(--gold)'};font-weight:700">${fmt(qty,2)}</td>
+      <td>${fmt(i.price,2)} ج</td>
+      <td>${fmt(qty*Number(i.price||0),2)} ج</td>
+      <td>${min||'—'}</td>
+      <td>${status}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm btn-icon" onclick="openWHEditModal('${wh}','${id}')">✏️</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteWHItem('${wh}','${id}')">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="9"><div class="empty-state"><span class="empty-icon">📦</span><p>المخزن فارغ</p></div></td></tr>`;
+}
+
+function openWHModal(wh, id='') {
+  $('wh-modal-target').value = wh;
+  $('wh-item-id').value = id;
+  const isWH1 = wh === 'warehouse1';
+  $('wh-modal-icon').textContent = isWH1 ? '🏭' : '🏪';
+  $('wh-modal-title').textContent = `${id ? 'تعديل' : 'إضافة'} صنف — ${isWH1 ? 'المخزن الأول' : 'المخزن الثاني'}`;
+
+  if (id) {
+    const item = state[wh][id];
+    $('wh-name').value     = item.name     || '';
+    $('wh-unit').value     = item.unit     || 'كجم';
+    $('wh-qty').value      = item.qty      || '';
+    $('wh-price').value    = item.price    || '';
+    $('wh-min').value      = item.minQty   || '';
+    $('wh-category').value = item.category || '';
+    $('wh-notes').value    = item.notes    || '';
+  } else {
+    ['wh-name','wh-qty','wh-price','wh-min','wh-category','wh-notes'].forEach(f => $(f).value = '');
+    $('wh-unit').value = 'كجم';
+  }
+  openModal('modal-warehouse');
+}
+window.openWH1Modal = () => openWHModal('warehouse1');
+window.openWH2Modal = () => openWHModal('warehouse2');
+window.openWHEditModal = (wh, id) => openWHModal(wh, id);
+
+window.saveWarehouseItem = async function() {
+  const wh   = $('wh-modal-target').value;
+  const id   = $('wh-item-id').value;
+  const name = sanitize($('wh-name').value);
+  if (!name) { toast('اسم الصنف مطلوب', 'error'); return; }
+  const qty = parseFloat($('wh-qty').value) || 0;
+  if (qty < 0) { toast('الكمية لا يمكن أن تكون سالبة', 'error'); return; }
+
+  const data = {
+    name, unit: $('wh-unit').value, qty,
+    price: parseFloat($('wh-price').value) || 0,
+    minQty: parseFloat($('wh-min').value) || 0,
+    category: sanitize($('wh-category').value),
+    notes: sanitize($('wh-notes').value)
+  };
+
+  loading(true);
+  try {
+    if (id) await dbUpdate(`${wh}/${id}`, data);
+    else    await dbPush(wh, data);
+    toast('تم الحفظ', 'success');
+    track('warehouse_update', { wh, name });
+    closeModal('modal-warehouse');
+    renderWarehouse(wh);
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.deleteWHItem = async function(wh, id) {
+  if (!confirm('حذف هذا الصنف نهائياً؟')) return;
+  loading(true);
+  try { await dbRemove(`${wh}/${id}`); toast('تم الحذف', 'success'); renderWarehouse(wh); }
+  catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// EXPORTS
+// ══════════════════════════════════════════════════════════════════
+window.openExportModal = function() {
+  $('ex-date').value = today();
+  $('ex-qty').value  = '';
+  $('ex-client').value = '';
+  $('ex-notes').value  = '';
+  loadExportItems();
+  openModal('modal-export');
+};
+
+window.loadExportItems = function() {
+  const wh  = $('ex-warehouse').value;
+  const sel = $('ex-item');
+  sel.innerHTML = '<option value="">اختر صنفاً...</option>' +
+    Object.entries(state[wh]).map(([id,i]) => `<option value="${id}">${sanitize(i.name)} (${fmt(i.qty||0,2)} ${i.unit||''})</option>`).join('');
+};
+
+window.loadExports = function() {
+  const from = $('exports-from').value;
+  const to   = $('exports-to').value;
+  const wh   = $('exports-wh-filter').value;
+
+  const rows = Object.entries(state.exports).filter(([,e]) => {
+    if (from && e.date < from) return false;
+    if (to   && e.date > to)   return false;
+    if (wh   && e.warehouse !== wh) return false;
+    return true;
+  }).sort((a,b) => b[1].date > a[1].date ? 1 : -1);
+
+  $('exports-tbody').innerHTML = rows.length ? rows.map(([id,e], i) => {
+    const whn = e.warehouse === 'warehouse1' ? 'المخزن الأول' : 'المخزن الثاني';
+    const itemName = state[e.warehouse]?.[e.itemId]?.name || e.itemId || '—';
+    return `<tr>
+      <td>${i+1}</td><td>${e.date}</td>
+      <td><span class="badge badge-info">${whn}</span></td>
+      <td>${sanitize(itemName)}</td>
+      <td style="color:var(--gold);font-weight:700">${fmt(e.qty,2)}</td>
+      <td>${sanitize(e.client||'—')}</td>
+      <td>${sanitize(e.notes||'—')}</td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteExport('${id}','${e.warehouse}','${e.itemId}',${e.qty})">🗑️</button></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">📦</span><p>لا توجد صادرات</p></div></td></tr>`;
+};
+
+window.saveExport = async function() {
+  const wh     = $('ex-warehouse').value;
+  const itemId = $('ex-item').value;
+  const qty    = parseFloat($('ex-qty').value);
+  if (!itemId) { toast('اختر الصنف', 'error'); return; }
+  if (!qty || qty <= 0) { toast('الكمية يجب أن تكون أكبر من صفر', 'error'); return; }
+
+  const item = state[wh][itemId];
+  if (!item) { toast('الصنف غير موجود', 'error'); return; }
+  if (Number(item.qty||0) < qty) { toast('الكمية المطلوبة أكبر من المتاح في المخزن', 'error'); return; }
+
+  loading(true);
+  try {
+    await dbPush('exports', { date: $('ex-date').value, warehouse: wh, itemId, qty, client: sanitize($('ex-client').value), notes: sanitize($('ex-notes').value) });
+    await dbUpdate(`${wh}/${itemId}`, { qty: Number(item.qty) - qty });
+    toast('تم تسجيل الصادر وخصم الكمية من المخزن', 'success');
+    track('export_create', { wh, itemId, qty });
+    closeModal('modal-export');
+    loadExports(); renderWarehouse(wh);
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.deleteExport = async function(id, wh, itemId, qty) {
+  if (!confirm('حذف هذا الصادر واسترجاع الكمية للمخزن؟')) return;
+  loading(true);
+  try {
+    const item = state[wh]?.[itemId];
+    if (item) await dbUpdate(`${wh}/${itemId}`, { qty: Number(item.qty||0) + Number(qty) });
+    await dbRemove(`exports/${id}`);
+    toast('تم الحذف واسترجاع الكمية', 'success');
+    loadExports(); renderWarehouse(wh);
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// SALES
+// ══════════════════════════════════════════════════════════════════
+window.openSaleModal = function() {
+  $('sale-date').value = today();
+  ['sale-client','sale-product','sale-qty','sale-price','sale-total','sale-notes'].forEach(f => $(f).value = '');
+  $('sale-qty').value = 1;
+  openModal('modal-sale');
+};
+
+window.calcSaleTotal = function() {
+  const qty   = parseFloat($('sale-qty').value)   || 0;
+  const price = parseFloat($('sale-price').value) || 0;
+  $('sale-total').value = (qty * price).toFixed(2);
+};
+
+window.loadSales = function() {
+  const from = $('sales-from').value;
+  const to   = $('sales-to').value;
+  const rows = Object.entries(state.sales).filter(([,s]) => {
+    if (from && s.date < from) return false;
+    if (to   && s.date > to)   return false;
+    return true;
+  }).sort((a,b) => b[1].date > a[1].date ? 1 : -1);
+
+  const total = rows.reduce((s,[,r]) => s + Number(r.total||0), 0);
+  $('sales-sum-total').textContent = fmt(total, 2);
+  $('sales-sum-count').textContent = rows.length;
+
+  $('sales-tbody').innerHTML = rows.length ? rows.map(([id,s], i) => `
+    <tr>
+      <td>${i+1}</td><td>${s.date}</td>
+      <td>${sanitize(s.client)}</td>
+      <td>${sanitize(s.product)}</td>
+      <td>${fmt(s.qty,2)}</td>
+      <td>${fmt(s.price,2)} ج</td>
+      <td style="color:var(--success);font-weight:700">${fmt(s.total,2)} ج</td>
+      <td><span class="badge badge-info">${sanitize(s.method)}</span></td>
+      <td>${sanitize(s.notes||'—')}</td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteSale('${id}')">🗑️</button></td>
+    </tr>`).join('') :
+    `<tr><td colspan="10"><div class="empty-state"><span class="empty-icon">🛒</span><p>لا توجد مبيعات</p></div></td></tr>`;
+};
+
+window.saveSale = async function() {
+  const client  = sanitize($('sale-client').value);
+  const product = sanitize($('sale-product').value);
+  const qty   = parseFloat($('sale-qty').value)   || 0;
+  const price = parseFloat($('sale-price').value) || 0;
+  if (!client || !product) { toast('العميل والمنتج مطلوبان', 'error'); return; }
+
+  loading(true);
+  try {
+    await dbPush('sales', { date: $('sale-date').value, client, product, qty, price, total: qty*price, method: $('sale-method').value, notes: sanitize($('sale-notes').value) });
+    toast('تم تسجيل البيع', 'success');
+    track('sale_create', { product, qty, total: qty*price });
+    closeModal('modal-sale');
+    loadSales();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.deleteSale = async function(id) {
+  if (!confirm('حذف هذا البيع؟')) return;
+  await dbRemove(`sales/${id}`); toast('تم الحذف', 'success'); loadSales();
+};
+
+// ══════════════════════════════════════════════════════════════════
+// EXPENSES
+// ══════════════════════════════════════════════════════════════════
+window.openExpenseModal = function() {
+  $('e-date').value = today();
+  ['e-desc','e-amount','e-notes'].forEach(f => $(f).value = '');
+  openModal('modal-expense');
+};
+
+window.loadExpenses = function() {
+  const from = $('exp-from').value;
+  const to   = $('exp-to').value;
+  const cat  = $('exp-category-filter').value;
+  const rows = Object.entries(state.expenses).filter(([,e]) => {
+    if (from && e.date < from) return false;
+    if (to   && e.date > to)   return false;
+    if (cat  && e.category !== cat) return false;
+    return true;
+  }).sort((a,b) => b[1].date > a[1].date ? 1 : -1);
+
+  const total = rows.reduce((s,[,r]) => s + Number(r.amount||0), 0);
+  $('exp-sum-total').textContent = fmt(total, 2);
+  $('exp-sum-count').textContent = rows.length;
+
+  $('expenses-tbody').innerHTML = rows.length ? rows.map(([id,e], i) => `
+    <tr>
+      <td>${i+1}</td><td>${e.date}</td>
+      <td>${sanitize(e.desc)}</td>
+      <td><span class="badge badge-info">${sanitize(e.category)}</span></td>
+      <td style="color:var(--danger);font-weight:700">${fmt(e.amount,2)} ج</td>
+      <td>${sanitize(e.method)}</td>
+      <td>${sanitize(e.notes||'—')}</td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteExpense('${id}')">🗑️</button></td>
+    </tr>`).join('') :
+    `<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💸</span><p>لا توجد مصاريف</p></div></td></tr>`;
+};
+
+window.saveExpense = async function() {
+  const desc   = sanitize($('e-desc').value);
+  const amount = parseFloat($('e-amount').value);
+  if (!desc) { toast('وصف المصروف مطلوب', 'error'); return; }
+  if (!amount || amount <= 0) { toast('المبلغ يجب أن يكون أكبر من صفر', 'error'); return; }
+
+  loading(true);
+  try {
+    await dbPush('expenses', { date: $('e-date').value, desc, category: $('e-category').value, amount, method: $('e-method').value, notes: sanitize($('e-notes').value) });
+    toast('تم تسجيل المصروف', 'success');
+    track('expense_create', { category: $('e-category').value, amount });
+    closeModal('modal-expense');
+    loadExpenses();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.deleteExpense = async function(id) {
+  if (!confirm('حذف هذا المصروف؟')) return;
+  await dbRemove(`expenses/${id}`); toast('تم الحذف', 'success'); loadExpenses();
+};
+
+// ══════════════════════════════════════════════════════════════════
+// REPORTS
+// ══════════════════════════════════════════════════════════════════
+function initReports() {
+  const sel = $('report-supplier-select');
+  sel.innerHTML = '<option value="">اختر مورداً...</option>' +
+    Object.entries(state.suppliers).map(([id,s]) => `<option value="${id}">${sanitize(s.name)}</option>`).join('');
+
+  if (!$('report-month').value) {
+    const d = new Date();
+    $('report-month').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  }
+}
+
+window.switchReportTab = function(tab) {
+  ['monthly','supplier','inventory'].forEach(t => $(`report-${t}`).style.display = 'none');
+  $(`report-${tab}`).style.display = 'block';
+  document.querySelectorAll('#page-reports .tab').forEach((el,i) => {
+    el.classList.toggle('active', ['monthly','supplier','inventory'][i] === tab);
+  });
+};
+
+window.generateMonthlyReport = function() {
+  const month = $('report-month').value;
+  if (!month) { toast('اختر الشهر', 'error'); return; }
+
+  const milkRecs   = Object.values(state.milkRecords).filter(r => (r.date||'').startsWith(month));
+  const salesRecs  = Object.values(state.sales).filter(s => (s.date||'').startsWith(month));
+  const expRecs    = Object.values(state.expenses).filter(e => (e.date||'').startsWith(month));
+  const paymRecs   = Object.values(state.supplierPayments).filter(p => (p.date||'').startsWith(month));
+
+  const milkQty    = milkRecs.reduce((s,r) => s + Number(r.qty||0), 0);
+  const milkAmt    = milkRecs.reduce((s,r) => s + Number(r.total||0), 0);
+  const salesAmt   = salesRecs.reduce((s,r) => s + Number(r.total||0), 0);
+  const expAmt     = expRecs.reduce((s,r) => s + Number(r.amount||0), 0);
+  const paymAmt    = paymRecs.reduce((s,r) => s + Number(r.amount||0), 0);
+  const netProfit  = salesAmt - expAmt - paymAmt;
+
+  // Expenses by category
+  const expByCat = {};
+  expRecs.forEach(e => { expByCat[e.category] = (expByCat[e.category]||0) + Number(e.amount||0); });
+
+  $('monthly-report-output').innerHTML = `
+    <div style="background:var(--bg-700);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:20px">
+      <h3 style="color:var(--gold);margin-bottom:16px;font-size:18px">📊 التقرير الشهري — ${month}</h3>
+      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+        <div class="stat-card" style="--accent:var(--info)"><span class="stat-icon">🥛</span><div class="stat-value">${fmt(milkQty,1)}</div><div class="stat-label">كمية الحليب (لتر)</div></div>
+        <div class="stat-card" style="--accent:var(--gold)"><span class="stat-icon">💰</span><div class="stat-value">${fmt(milkAmt,0)}</div><div class="stat-label">تكلفة الحليب (ج)</div></div>
+        <div class="stat-card" style="--accent:var(--success)"><span class="stat-icon">🛒</span><div class="stat-value">${fmt(salesAmt,0)}</div><div class="stat-label">إيرادات المبيعات (ج)</div></div>
+        <div class="stat-card" style="--accent:var(--danger)"><span class="stat-icon">💸</span><div class="stat-value">${fmt(expAmt,0)}</div><div class="stat-label">إجمالي المصاريف (ج)</div></div>
+        <div class="stat-card" style="--accent:var(--danger)"><span class="stat-icon">💳</span><div class="stat-value">${fmt(paymAmt,0)}</div><div class="stat-label">مدفوعات الموردين (ج)</div></div>
+        <div class="stat-card" style="--accent:${netProfit>=0?'var(--success)':'var(--danger)'}">
+          <span class="stat-icon">${netProfit>=0?'📈':'📉'}</span>
+          <div class="stat-value" style="color:${netProfit>=0?'var(--success)':'var(--danger)'}">${fmt(netProfit,0)}</div>
+          <div class="stat-label">صافي الربح (ج)</div>
+        </div>
+      </div>
+      ${Object.keys(expByCat).length ? `
+      <h4 style="color:var(--gold);margin:16px 0 10px">تفصيل المصاريف</h4>
+      <div class="table-wrapper">
+        <table><thead><tr><th>الفئة</th><th>المبلغ</th><th>النسبة</th></tr></thead>
+        <tbody>${Object.entries(expByCat).map(([cat,amt]) => `
+          <tr><td>${sanitize(cat)}</td><td style="color:var(--danger)">${fmt(amt,2)} ج</td>
+          <td>${expAmt?fmt(amt/expAmt*100,1):'0'}%</td></tr>`).join('')}
+        </tbody></table>
+      </div>` : ''}
+    </div>`;
+};
+
+window.generateSupplierReport = function() {
+  const supId = $('report-supplier-select').value;
+  const from  = $('report-sup-from').value;
+  const to    = $('report-sup-to').value;
+  if (!supId) { toast('اختر المورد', 'error'); return; }
+
+  const sup  = state.suppliers[supId];
+  const milk = Object.values(state.milkRecords).filter(r => r.supplierId===supId && (!from||r.date>=from) && (!to||r.date<=to));
+  const pays = Object.values(state.supplierPayments).filter(p => p.supplierId===supId);
+  const advs = Object.values(state.supplierAdvances).filter(a => a.supplierId===supId);
+
+  const milkQty = milk.reduce((s,r) => s + Number(r.qty||0), 0);
+  const milkAmt = milk.reduce((s,r) => s + Number(r.total||0), 0);
+  const paysAmt = pays.reduce((s,p) => s + Number(p.amount||0), 0);
+  const advsAmt = advs.reduce((s,a) => s + Number(a.amount||0), 0);
+  const balance = milkAmt - paysAmt - advsAmt;
+
+  $('supplier-report-output').innerHTML = `
+    <div style="background:var(--bg-700);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px">
+      <h3 style="color:var(--gold);margin-bottom:8px">📋 تقرير المورد: ${sanitize(sup.name)}</h3>
+      <p style="color:var(--text-400);font-size:12px;margin-bottom:16px">الهاتف: ${sanitize(sup.phone||'—')} | المنطقة: ${sanitize(sup.area||'—')}</p>
+      <div class="summary-bar">
+        <div class="summary-item"><div class="val">${fmt(milkQty,1)}</div><div class="lbl">الكمية (لتر)</div></div>
+        <div class="summary-item"><div class="val">${fmt(milkAmt,2)}</div><div class="lbl">قيمة الحليب</div></div>
+        <div class="summary-item"><div class="val" style="color:var(--danger)">${fmt(paysAmt,2)}</div><div class="lbl">المدفوعات</div></div>
+        <div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(advsAmt,2)}</div><div class="lbl">السلف</div></div>
+        <div class="summary-item"><div class="val" style="color:${balance>0?'var(--success)':'var(--danger)'}">${fmt(balance,2)}</div><div class="lbl">الرصيد</div></div>
+      </div>
+    </div>`;
+};
+
+window.generateInventoryReport = function() {
+  const wh1 = Object.entries(state.warehouse1);
+  const wh2 = Object.entries(state.warehouse2);
+
+  const renderWH = (items, title) => {
+    if (!items.length) return `<p style="color:var(--text-400)">المخزن فارغ</p>`;
+    const total = items.reduce((s,[,i]) => s + Number(i.qty||0)*Number(i.price||0), 0);
+    return `
+      <h4 style="color:var(--gold);margin-bottom:10px">${title} — القيمة الإجمالية: ${fmt(total,2)} ج</h4>
+      <div class="table-wrapper" style="margin-bottom:20px">
+        <table><thead><tr><th>الصنف</th><th>الكمية</th><th>الوحدة</th><th>السعر</th><th>القيمة</th><th>الحالة</th></tr></thead>
+        <tbody>${items.map(([,i]) => {
+          const qty = Number(i.qty||0); const min = Number(i.minQty||0);
+          const st = qty===0?'<span class="badge badge-danger">نفد</span>':qty<=min?'<span class="badge badge-warning">منخفض</span>':'<span class="badge badge-success">متوفر</span>';
+          return `<tr><td>${sanitize(i.name)}</td><td>${fmt(qty,2)}</td><td>${sanitize(i.unit||'')}</td><td>${fmt(i.price,2)} ج</td><td>${fmt(qty*Number(i.price||0),2)} ج</td><td>${st}</td></tr>`;
+        }).join('')}</tbody></table>
+      </div>`;
+  };
+
+  $('inventory-report-output').innerHTML = `
+    <div style="background:var(--bg-700);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px">
+      ${renderWH(wh1, '🏭 المخزن الأول')}
+      ${renderWH(wh2, '🏪 المخزن الثاني')}
+    </div>`;
+};
+
+window.printReport = function() { window.print(); };
+
+// ══════════════════════════════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════════════════════════════
+function loadSettingsUI() {
+  const s = state.settings;
+  if (s.factoryName)    $('s-factory-name').value    = s.factoryName;
+  if (s.factoryPhone)   $('s-factory-phone').value   = s.factoryPhone;
+  if (s.factoryAddress) $('s-factory-address').value = s.factoryAddress;
+  if (s.factoryManager) $('s-factory-manager').value = s.factoryManager;
+  if (s.milkPrice)      $('s-milk-price').value      = s.milkPrice;
+  if (s.milkTrips)      $('s-milk-trips').value      = s.milkTrips;
+  if (s.milkMin)        $('s-milk-min').value        = s.milkMin;
+  if (s.payCycle)       $('s-pay-cycle').value       = s.payCycle;
+  if (s.currency)       $('s-currency').value        = s.currency;
+}
+
+function loadSettings() { loadSettingsUI(); }
+
+window.saveSettings = async function() {
+  const data = {
+    factoryName:    sanitize($('s-factory-name').value),
+    factoryPhone:   sanitize($('s-factory-phone').value),
+    factoryAddress: sanitize($('s-factory-address').value),
+    factoryManager: sanitize($('s-factory-manager').value),
+    milkPrice:      parseFloat($('s-milk-price').value) || 0,
+    milkTrips:      parseInt($('s-milk-trips').value)   || 2,
+    milkMin:        parseFloat($('s-milk-min').value)   || 0,
+    payCycle:       parseInt($('s-pay-cycle').value)    || 7,
+    currency:       $('s-currency').value
+  };
+
+  loading(true, 'جارٍ حفظ الإعدادات...');
+  try {
+    await dbSet('settings', data);
+    toast('تم حفظ الإعدادات', 'success');
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// BACKUP
+// ══════════════════════════════════════════════════════════════════
+window.exportBackupUI = async function() {
+  loading(true, 'جارٍ تصدير النسخة الاحتياطية...');
+  try { await exportBackup(); toast('تم تصدير النسخة الاحتياطية', 'success'); }
+  catch(e) { toast('خطأ في التصدير: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.importBackupUI = async function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!confirm('سيتم استبدال جميع البيانات الحالية بالنسخة الاحتياطية. هل أنت متأكد؟')) return;
+  loading(true, 'جارٍ استيراد النسخة الاحتياطية...');
+  try { await importBackup(file); toast('تم استيراد النسخة الاحتياطية بنجاح', 'success'); }
+  catch(e) { toast('خطأ في الاستيراد: ' + e.message, 'error'); }
+  finally { loading(false); e.target.value = ''; }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+// Initialize default date filters
+const firstOfMonth = () => { const d = new Date(); d.setDate(1); return d.toISOString().slice(0,10); };
+['exp-from','sales-from','exports-from'].forEach(id => { const el = $(id); if (el && !el.value) el.value = firstOfMonth(); });
+['exp-to','sales-to','exports-to'].forEach(id => { const el = $(id); if (el && !el.value) el.value = today(); });
+
+// Load dashboard on start
+setTimeout(loadDashboard, 800);
+</script>
+
+<!-- ═══════════════ SERVICE WORKER ═══════════════ -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => {
+        console.log('SW registered:', reg.scope);
+        // Listen for sync messages from SW
+        navigator.serviceWorker.addEventListener('message', e => {
+          if (e.data?.type === 'sync') {
+            console.log('Background sync triggered');
+          }
+        });
+      })
+      .catch(err => console.log('SW registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>

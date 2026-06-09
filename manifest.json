@@ -1,0 +1,22 @@
+{
+  "name": "نظام إدارة مصنع الألبان",
+  "short_name": "مصنع الألبان",
+  "description": "نظام متكامل لإدارة مصانع الألبان",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0C0F",
+  "theme_color": "#D4A843",
+  "orientation": "portrait-primary",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon.svg",     "sizes": "any",     "type": "image/svg+xml" }
+  ],
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    { "name": "لوحة التحكم", "url": "/?page=dashboard", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}] },
+    { "name": "استلام الحليب", "url": "/?page=milk", "icons": [{"src": "icons/icon-192.png", "sizes": "192x192"}] }
+  ]
+}
