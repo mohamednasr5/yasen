@@ -769,31 +769,60 @@ input[type=number] { direction: ltr; text-align: right; }
 /* ══════════════════════════════════════════════════════════════════
    WHATSAPP BUTTON
 ══════════════════════════════════════════════════════════════════ */
+
+/* الأيقونة الدائرية الصغيرة بجانب الاسم في الجداول */
 .wa-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 28px;
   height: 28px;
+  min-width: 28px;
   border-radius: 50%;
   background: #25D366;
-  color: white;
+  color: #fff;
   text-decoration: none;
   transition: all 0.2s ease;
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(37,211,102,0.4);
   animation: waPulse 2.5s ease-in-out infinite;
 }
-
+.wa-btn svg { display: block; flex-shrink: 0; }
 .wa-btn:hover {
   background: #1da851;
   transform: scale(1.15);
   box-shadow: 0 4px 14px rgba(37,211,102,0.6);
 }
+.wa-btn:active { transform: scale(0.95); }
 
-.wa-btn:active {
-  transform: scale(0.95);
+/* زر "إرسال واتساب" الكبير في أسفل النوافذ */
+.btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  background: #25D366;
+  color: #fff;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 10px rgba(37,211,102,0.35);
 }
+.btn-whatsapp svg { display: block; flex-shrink: 0; }
+.btn-whatsapp:hover {
+  background: #1da851;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(37,211,102,0.5);
+  color: #fff;
+}
+.btn-whatsapp:active { transform: scale(0.97); }
 
 @keyframes waPulse {
   0%, 100% { box-shadow: 0 2px 8px rgba(37,211,102,0.4); }
