@@ -158,7 +158,7 @@
         <div class="stat-card" style="--accent:var(--info)">
           <span class="stat-icon">🥛</span>
           <div class="stat-value" id="stat-milk-today">—</div>
-          <div class="stat-label">كمية الحليب اليوم (لتر)</div>
+          <div class="stat-label">كمية الحليب اليوم (كجم)</div>
         </div>
         <div class="stat-card" style="--accent:var(--success)">
           <span class="stat-icon">🏭</span>
@@ -249,7 +249,7 @@
                 <th>اسم المورد</th>
                 <th>رقم الهاتف</th>
                 <th>المنطقة</th>
-                <th>سعر اللتر</th>
+                <th>سعر الكيلو</th>
                 <th>الرصيد</th>
                 <th>الحالة</th>
                 <th>الإجراءات</th>
@@ -294,7 +294,7 @@
       </div>
 
       <div id="milk-summary" class="summary-bar" style="display:none">
-        <div class="summary-item"><div class="val" id="milk-sum-qty">0</div><div class="lbl">إجمالي الكمية (لتر)</div></div>
+        <div class="summary-item"><div class="val" id="milk-sum-qty">0</div><div class="lbl">إجمالي الكمية (كجم)</div></div>
         <div class="summary-item"><div class="val" id="milk-sum-amt">0</div><div class="lbl">إجمالي المبلغ (جنيه)</div></div>
         <div class="summary-item"><div class="val" id="milk-sum-count">0</div><div class="lbl">عدد السجلات</div></div>
       </div>
@@ -308,8 +308,8 @@
                 <th>التاريخ</th>
                 <th>الوقت</th>
                 <th>المورد</th>
-                <th>الكمية (لتر)</th>
-                <th>سعر اللتر</th>
+                <th>الكمية (كجم)</th>
+                <th>سعر الكيلو</th>
                 <th>الإجمالي</th>
                 <th>ملاحظات</th>
                 <th>الإجراءات</th>
@@ -802,9 +802,9 @@
           <div class="card-header"><span>🥛</span><h3>إعدادات الحليب</h3></div>
           <div class="card-body">
             <div class="form-grid">
-              <div class="form-group"><label>سعر اللتر الافتراضي (جنيه)</label><input type="number" id="s-milk-price" placeholder="3.50" min="0" step="0.01"></div>
+              <div class="form-group"><label>سعر الكيلو الافتراضي (جنيه)</label><input type="number" id="s-milk-price" placeholder="3.50" min="0" step="0.01"></div>
               <div class="form-group"><label>عدد رحلات الاستلام اليومية</label><input type="number" id="s-milk-trips" placeholder="2" min="1"></div>
-              <div class="form-group"><label>الحد الأدنى للكمية (لتر)</label><input type="number" id="s-milk-min" placeholder="10" min="0"></div>
+              <div class="form-group"><label>الحد الأدنى للكمية (كجم)</label><input type="number" id="s-milk-min" placeholder="10" min="0"></div>
             </div>
           </div>
         </div>
@@ -936,7 +936,7 @@
         <div class="form-group"><label>اسم المورد *</label><input type="text" id="s-name" placeholder="محمد أحمد"></div>
         <div class="form-group"><label>رقم الهاتف</label><input type="tel" id="s-phone" placeholder="01012345678"></div>
         <div class="form-group"><label>المنطقة / القرية</label><input type="text" id="s-area" placeholder="قرية / مدينة"></div>
-        <div class="form-group"><label>سعر اللتر (جنيه)</label><input type="number" id="s-price" placeholder="3.50" min="0" step="0.01"></div>
+        <div class="form-group"><label>سعر الكيلو (جنيه)</label><input type="number" id="s-price" placeholder="3.50" min="0" step="0.01"></div>
         <div class="form-group"><label>الحالة</label>
           <select id="s-status">
             <option value="active">نشط</option>
@@ -966,8 +966,8 @@
         <div class="form-group"><label>التاريخ *</label><input type="date" id="m-date"></div>
         <div class="form-group"><label>الوقت</label><input type="time" id="m-time"></div>
         <div class="form-group"><label>المورد *</label><select id="m-supplier"><option value="">اختر مورداً...</option></select></div>
-        <div class="form-group"><label>الكمية (لتر) *</label><input type="number" id="m-qty" placeholder="0" min="0" step="0.1" oninput="calcMilkTotal()"></div>
-        <div class="form-group"><label>سعر اللتر</label><input type="number" id="m-price" placeholder="0" min="0" step="0.01" oninput="calcMilkTotal()"></div>
+        <div class="form-group"><label>الكمية (كجم) *</label><input type="number" id="m-qty" placeholder="0" min="0" step="0.1" oninput="calcMilkTotal()"></div>
+        <div class="form-group"><label>سعر الكيلو</label><input type="number" id="m-price" placeholder="0" min="0" step="0.01" oninput="calcMilkTotal()"></div>
         <div class="form-group"><label>الإجمالي</label><input type="number" id="m-total" placeholder="0" readonly style="background:var(--bg-500);color:var(--gold);font-weight:700"></div>
         <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="m-notes" placeholder="ملاحظات اختيارية"></div>
       </div>
@@ -1563,7 +1563,7 @@ window.loadDashboard = function() {
         <div style="font-size:11px;color:var(--text-400)">${r.date} ${r.time||''}</div>
       </div>
       <div style="text-align:left">
-        <div style="color:var(--gold);font-weight:700">${fmt(r.qty,1)} لتر</div>
+        <div style="color:var(--gold);font-weight:700">${fmt(r.qty,1)} كجم</div>
         <div style="font-size:11px;color:var(--success)">${fmt(r.total,2)} ج</div>
       </div>
     </div>`).join('') : '<div class="empty-state"><span class="empty-icon">🥛</span><p>لا توجد سجلات اليوم</p></div>';
@@ -1610,7 +1610,7 @@ window.saveSupplier = async function() {
   const name = sanitize($('s-name').value);
   if (!name) { toast('اسم المورد مطلوب', 'error'); return; }
   const price = parseFloat($('s-price').value) || 0;
-  if (price < 0) { toast('سعر اللتر غير صحيح', 'error'); return; }
+  if (price < 0) { toast('سعر الكيلو غير صحيح', 'error'); return; }
 
   const data = {
     name, phone: sanitize($('s-phone').value), area: sanitize($('s-area').value),
@@ -1733,19 +1733,19 @@ window.showAccountDetail = function(supplierId) {
     <div style="background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(16,185,129,0.05));border:1px solid var(--border-soft);border-radius:10px;padding:14px;margin-bottom:16px">
       <div style="color:var(--gold);font-weight:700;margin-bottom:10px">📅 تفاصيل الأسبوع الحالي (${ws} : ${we})</div>
       <div class="table-wrapper" style="margin:0">
-        <table><thead><tr><th>اليوم</th><th>التاريخ</th><th>الكمية (لتر)</th><th>السعر</th><th>الإجمالي</th></tr></thead>
+        <table><thead><tr><th>اليوم</th><th>التاريخ</th><th>الكمية (كجم)</th><th>السعر</th><th>الإجمالي</th></tr></thead>
         <tbody>${weekRecords.length ? weekRecords.map(([,r]) => {
           const d = new Date(r.date); const dayName = weekDayNames[d.getDay()];
-          return `<tr><td style="color:var(--gold);font-weight:600">${dayName}</td><td>${r.date}</td><td>${fmt(r.qty,1)} لتر</td><td>${fmt(r.price,2)} ج</td><td style="color:var(--success);font-weight:700">${fmt(r.total,2)} ج</td></tr>`;
+          return `<tr><td style="color:var(--gold);font-weight:600">${dayName}</td><td>${r.date}</td><td>${fmt(r.qty,1)} كجم</td><td>${fmt(r.price,2)} ج</td><td style="color:var(--success);font-weight:700">${fmt(r.total,2)} ج</td></tr>`;
         }).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--text-400)">لا توجد سجلات هذا الأسبوع</td></tr>'}
-        ${weekRecords.length ? `<tr style="background:var(--bg-300)"><td colspan="2" style="font-weight:700;color:var(--gold)">الإجمالي</td><td style="font-weight:700">${fmt(weekRecords.reduce((s,[,r])=>s+Number(r.qty||0),0),1)} لتر</td><td></td><td style="font-weight:900;color:var(--success)">${fmt(weekRecords.reduce((s,[,r])=>s+Number(r.total||0),0),2)} ج</td></tr>` : ''}
+        ${weekRecords.length ? `<tr style="background:var(--bg-300)"><td colspan="2" style="font-weight:700;color:var(--gold)">الإجمالي</td><td style="font-weight:700">${fmt(weekRecords.reduce((s,[,r])=>s+Number(r.qty||0),0),1)} كجم</td><td></td><td style="font-weight:900;color:var(--success)">${fmt(weekRecords.reduce((s,[,r])=>s+Number(r.total||0),0),2)} ج</td></tr>` : ''}
         </tbody></table>
       </div>
     </div>
     <h4 style="color:var(--gold);margin-bottom:10px">سجل الحليب الكامل (${milkRecords.length} سجل)</h4>
     <div class="table-wrapper" style="margin-bottom:16px">
       <table><thead><tr><th>التاريخ</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead>
-      <tbody>${milkRecords.slice(0,20).map(([,r]) => `<tr><td>${r.date}</td><td>${fmt(r.qty,1)} لتر</td><td>${fmt(r.price,2)}</td><td style="color:var(--gold)">${fmt(r.total,2)} ج</td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text-400)">لا توجد سجلات</td></tr>'}</tbody>
+      <tbody>${milkRecords.slice(0,20).map(([,r]) => `<tr><td>${r.date}</td><td>${fmt(r.qty,1)} كجم</td><td>${fmt(r.price,2)}</td><td style="color:var(--gold)">${fmt(r.total,2)} ج</td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text-400)">لا توجد سجلات</td></tr>'}</tbody>
       </table>
     </div>
     <h4 style="color:var(--gold);margin-bottom:10px">المدفوعات</h4>
@@ -1762,7 +1762,7 @@ window.showAccountDetail = function(supplierId) {
     const weeklyQty  = weekRecords.reduce((s,[,r])=>s+Number(r.qty||0),0);
     const weeklyAmt  = weekRecords.reduce((s,[,r])=>s+Number(r.total||0),0);
     const dayLines   = weekRecords.map(([,r]) => {
-      const d = new Date(r.date); return `  • ${weekDayNames[d.getDay()]} ${r.date}: ${fmt(r.qty,1)} لتر = ${fmt(r.total,2)} ج`;
+      const d = new Date(r.date); return `  • ${weekDayNames[d.getDay()]} ${r.date}: ${fmt(r.qty,1)} كجم = ${fmt(r.total,2)} ج`;
     }).join('\n');
     const waMsg = encodeURIComponent(
 `السلام عليكم ورحمة الله ${s.name} 🥛
@@ -1775,7 +1775,7 @@ window.showAccountDetail = function(supplierId) {
 ${dayLines || '  لا توجد سجلات هذا الأسبوع'}
 
 📊 *ملخص الأسبوع:*
-  🥛 إجمالي الكمية: ${fmt(weeklyQty,1)} لتر
+  🥛 إجمالي الكمية: ${fmt(weeklyQty,1)} كجم
   💰 إجمالي المبلغ: ${fmt(weeklyAmt,2)} ج
 
 💼 *الحساب الإجمالي:*
@@ -2466,7 +2466,7 @@ window.generateMonthlyReport = function() {
     <div style="background:var(--bg-700);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:20px">
       <h3 style="color:var(--gold);margin-bottom:16px;font-size:18px">📊 التقرير الشهري — ${month}</h3>
       <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
-        <div class="stat-card" style="--accent:var(--info)"><span class="stat-icon">🥛</span><div class="stat-value">${fmt(milkQty,1)}</div><div class="stat-label">كمية الحليب (لتر)</div></div>
+        <div class="stat-card" style="--accent:var(--info)"><span class="stat-icon">🥛</span><div class="stat-value">${fmt(milkQty,1)}</div><div class="stat-label">كمية الحليب (كجم)</div></div>
         <div class="stat-card" style="--accent:var(--gold)"><span class="stat-icon">💰</span><div class="stat-value">${fmt(milkAmt,0)}</div><div class="stat-label">تكلفة الحليب (ج)</div></div>
         <div class="stat-card" style="--accent:var(--success)"><span class="stat-icon">🛒</span><div class="stat-value">${fmt(salesAmt,0)}</div><div class="stat-label">إيرادات المبيعات (ج)</div></div>
         <div class="stat-card" style="--accent:var(--danger)"><span class="stat-icon">💸</span><div class="stat-value">${fmt(expAmt,0)}</div><div class="stat-label">إجمالي المصاريف (ج)</div></div>
@@ -2511,7 +2511,7 @@ window.generateSupplierReport = function() {
       <h3 style="color:var(--gold);margin-bottom:8px">📋 تقرير المورد: ${sanitize(sup.name)}</h3>
       <p style="color:var(--text-400);font-size:12px;margin-bottom:16px">الهاتف: ${sanitize(sup.phone||'—')} | المنطقة: ${sanitize(sup.area||'—')}</p>
       <div class="summary-bar">
-        <div class="summary-item"><div class="val">${fmt(milkQty,1)}</div><div class="lbl">الكمية (لتر)</div></div>
+        <div class="summary-item"><div class="val">${fmt(milkQty,1)}</div><div class="lbl">الكمية (كجم)</div></div>
         <div class="summary-item"><div class="val">${fmt(milkAmt,2)}</div><div class="lbl">قيمة الحليب</div></div>
         <div class="summary-item"><div class="val" style="color:var(--danger)">${fmt(paysAmt,2)}</div><div class="lbl">المدفوعات</div></div>
         <div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(advsAmt,2)}</div><div class="lbl">السلف</div></div>
