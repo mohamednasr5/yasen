@@ -16,6 +16,43 @@
 <!-- ═══════════════ TOAST ═══════════════ -->
 <div id="toast-container"></div>
 
+<!-- ═══════════════ LOGIN SCREEN ═══════════════ -->
+<div id="login-screen" style="position:fixed;inset:0;background:var(--bg-900);z-index:9999;display:flex;align-items:center;justify-content:center">
+  <div style="width:100%;max-width:360px;padding:24px;text-align:center">
+    <div style="font-size:56px;margin-bottom:16px">🥛</div>
+    <div style="font-size:20px;font-weight:800;color:var(--gold);margin-bottom:4px">نظام إدارة مصنع الألبان</div>
+    <div style="font-size:13px;color:var(--text-400);margin-bottom:32px">أدخل كلمة المرور للدخول</div>
+    <div style="position:relative;margin-bottom:16px">
+      <input type="password" id="login-pin" placeholder="••••••"
+        style="width:100%;padding:14px 48px 14px 16px;background:var(--bg-600);border:2px solid var(--border);border-radius:var(--radius);color:var(--text-100);font-size:22px;text-align:center;letter-spacing:8px;font-family:inherit;outline:none;box-sizing:border-box"
+        oninput="loginPinInput()" onkeydown="if(event.key==='Enter')checkLogin()">
+      <button onclick="toggleLoginVis()" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-400);font-size:18px" id="login-eye">👁️</button>
+    </div>
+    <div id="login-error" style="color:var(--danger);font-size:12px;margin-bottom:12px;min-height:18px"></div>
+    <button onclick="checkLogin()" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px">
+      دخول ←
+    </button>
+    <div style="margin-top:24px;font-size:11px;color:var(--text-400)">تم البرمجة بواسطة المهندس محمد حماد</div>
+  </div>
+</div>
+
+<!-- ═══════════════ PIN CONFIRM MODAL ═══════════════ -->
+<div id="pin-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);z-index:8000;display:none;align-items:center;justify-content:center">
+  <div style="background:var(--bg-700);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;width:100%;max-width:320px;text-align:center">
+    <div style="font-size:32px;margin-bottom:12px" id="pin-modal-icon">🔐</div>
+    <div style="font-size:15px;font-weight:700;color:var(--text-100);margin-bottom:6px" id="pin-modal-title">تأكيد العملية</div>
+    <div style="font-size:12px;color:var(--text-400);margin-bottom:20px" id="pin-modal-desc">أدخل كلمة المرور للمتابعة</div>
+    <input type="password" id="pin-input" placeholder="••••••"
+      style="width:100%;padding:12px;background:var(--bg-600);border:2px solid var(--border);border-radius:var(--radius);color:var(--text-100);font-size:20px;text-align:center;letter-spacing:6px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px"
+      onkeydown="if(event.key==='Enter')confirmPin()">
+    <div id="pin-error" style="color:var(--danger);font-size:12px;margin-bottom:12px;min-height:16px"></div>
+    <div style="display:flex;gap:10px">
+      <button onclick="cancelPin()" class="btn btn-secondary" style="flex:1;justify-content:center">إلغاء</button>
+      <button onclick="confirmPin()" class="btn btn-primary" style="flex:1;justify-content:center">تأكيد</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════ LOADING ═══════════════ -->
 <div id="loading-overlay" class="loading-overlay" style="display:none">
   <div style="text-align:center">
@@ -3159,6 +3196,86 @@ window.importBackupUI = async function(e) {
   try { await importBackup(file); toast('تم استيراد النسخة الاحتياطية بنجاح', 'success'); }
   catch(e) { toast('خطأ في الاستيراد: ' + e.message, 'error'); }
   finally { loading(false); e.target.value = ''; }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// PIN / LOGIN SYSTEM
+// ══════════════════════════════════════════════════════════════════
+const APP_PIN = '521988';
+const SESSION_KEY = 'yasen_auth';
+
+function isAuthenticated() {
+  return sessionStorage.getItem(SESSION_KEY) === '1';
+}
+
+function loginPinInput() {
+  $('login-error').textContent = '';
+  $('login-pin').style.borderColor = 'var(--border)';
+}
+
+window.toggleLoginVis = function() {
+  const inp = $('login-pin');
+  const isPass = inp.type === 'password';
+  inp.type = isPass ? 'text' : 'password';
+  $('login-eye').textContent = isPass ? '🙈' : '👁️';
+};
+
+window.checkLogin = function() {
+  const val = $('login-pin').value;
+  if (val === APP_PIN) {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    const screen = $('login-screen');
+    screen.style.transition = 'opacity 0.4s ease';
+    screen.style.opacity = '0';
+    setTimeout(() => screen.style.display = 'none', 400);
+  } else {
+    $('login-error').textContent = '❌ كلمة المرور غير صحيحة';
+    $('login-pin').style.borderColor = 'var(--danger)';
+    $('login-pin').value = '';
+    $('login-pin').focus();
+  }
+};
+
+// Check session on load
+if (isAuthenticated()) {
+  $('login-screen').style.display = 'none';
+} else {
+  setTimeout(() => $('login-pin').focus(), 100);
+}
+
+// ── requirePin: wraps any delete/edit action ────────────────────
+let _pinResolve = null;
+
+function requirePin(icon = '🔐', title = 'تأكيد العملية', desc = 'أدخل كلمة المرور للمتابعة') {
+  return new Promise((resolve) => {
+    _pinResolve = resolve;
+    $('pin-modal-icon').textContent = icon;
+    $('pin-modal-title').textContent = title;
+    $('pin-modal-desc').textContent = desc;
+    $('pin-input').value = '';
+    $('pin-error').textContent = '';
+    $('pin-input').style.borderColor = 'var(--border)';
+    $('pin-modal').style.display = 'flex';
+    setTimeout(() => $('pin-input').focus(), 80);
+  });
+}
+
+window.confirmPin = function() {
+  const val = $('pin-input').value;
+  if (val === APP_PIN) {
+    $('pin-modal').style.display = 'none';
+    if (_pinResolve) { _pinResolve(true); _pinResolve = null; }
+  } else {
+    $('pin-error').textContent = '❌ كلمة المرور غير صحيحة';
+    $('pin-input').style.borderColor = 'var(--danger)';
+    $('pin-input').value = '';
+    $('pin-input').focus();
+  }
+};
+
+window.cancelPin = function() {
+  $('pin-modal').style.display = 'none';
+  if (_pinResolve) { _pinResolve(false); _pinResolve = null; }
 };
 
 // ══════════════════════════════════════════════════════════════════
