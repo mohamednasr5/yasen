@@ -652,6 +652,71 @@
   </div><!-- /main-content -->
 </div><!-- /app-shell -->
 
+<!-- ═══════════════ BOTTOM NAV (Mobile) ═══════════════ -->
+<nav class="bottom-nav" id="bottom-nav">
+  <div class="bn-item active" id="bn-dashboard" onclick="navigate('dashboard')">
+    <span class="bn-icon">📊</span>
+    <span class="bn-label">الرئيسية</span>
+  </div>
+  <div class="bn-item" id="bn-milk" onclick="navigate('milk')">
+    <span class="bn-icon">🥛</span>
+    <span class="bn-label">الحليب</span>
+  </div>
+  <div class="bn-item" id="bn-suppliers" onclick="navigate('suppliers')">
+    <span class="bn-icon">👥</span>
+    <span class="bn-label">الموردون</span>
+  </div>
+  <div class="bn-item" id="bn-accounts" onclick="navigate('accounts')">
+    <span class="bn-icon">💰</span>
+    <span class="bn-label">الحسابات</span>
+  </div>
+  <div class="bn-item" id="bn-more" onclick="toggleBottomMenu()">
+    <span class="bn-icon">☰</span>
+    <span class="bn-label">المزيد</span>
+  </div>
+</nav>
+
+<!-- Bottom "More" Sheet -->
+<div class="bottom-sheet-backdrop" id="bottom-sheet-backdrop" onclick="closeBottomMenu()"></div>
+<div class="bottom-sheet" id="bottom-sheet">
+  <div class="bottom-sheet-handle"></div>
+  <div class="bottom-sheet-title">جميع الأقسام</div>
+  <div class="bottom-sheet-grid">
+    <div class="bs-item" onclick="navigate('warehouse1');closeBottomMenu()">
+      <span class="bs-icon">🏭</span>
+      <span>المخزن الأول</span>
+    </div>
+    <div class="bs-item" onclick="navigate('warehouse2');closeBottomMenu()">
+      <span class="bs-icon">🏪</span>
+      <span>المخزن الثاني</span>
+    </div>
+    <div class="bs-item" onclick="navigate('exports');closeBottomMenu()">
+      <span class="bs-icon">📦</span>
+      <span>الصادرات</span>
+    </div>
+    <div class="bs-item" onclick="navigate('sales');closeBottomMenu()">
+      <span class="bs-icon">🛒</span>
+      <span>المبيعات</span>
+    </div>
+    <div class="bs-item" onclick="navigate('expenses');closeBottomMenu()">
+      <span class="bs-icon">💸</span>
+      <span>المصاريف</span>
+    </div>
+    <div class="bs-item" onclick="navigate('reports');closeBottomMenu()">
+      <span class="bs-icon">📈</span>
+      <span>التقارير</span>
+    </div>
+    <div class="bs-item" onclick="navigate('settings');closeBottomMenu()">
+      <span class="bs-icon">⚙️</span>
+      <span>الإعدادات</span>
+    </div>
+    <div class="bs-item" onclick="exportBackupUI();closeBottomMenu()">
+      <span class="bs-icon">💾</span>
+      <span>نسخ احتياطي</span>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════════ MODALS ═══════════════ -->
 
 <!-- Supplier Modal -->
@@ -978,6 +1043,9 @@ const pageTitles = {
   expenses: 'المصاريف', reports: 'التقارير', settings: 'الإعدادات'
 };
 
+// Bottom nav primary pages
+const bnPrimary = ['dashboard','milk','suppliers','accounts'];
+
 window.navigate = function(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -988,7 +1056,13 @@ window.navigate = function(page) {
   $('page-title').textContent = pageTitles[page] || '';
   closeSidebar();
 
-  // Scroll to top of main content instantly on page switch
+  // Update bottom nav active items
+  document.querySelectorAll('.bn-item').forEach(el => el.classList.remove('active'));
+  const bnEl = $(`bn-${page}`);
+  if (bnEl) bnEl.classList.add('active');
+  else { const m = $('bn-more'); if (m) m.classList.add('active'); }
+
+  // Scroll to top
   const mc = document.querySelector('.main-content');
   if (mc) mc.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -1012,6 +1086,14 @@ window.toggleSidebar = () => {
 window.closeSidebar = () => {
   $('sidebar').classList.remove('open');
   $('sidebar-overlay').classList.remove('open');
+};
+window.toggleBottomMenu = function() {
+  $('bottom-sheet').classList.toggle('open');
+  $('bottom-sheet-backdrop').classList.toggle('open');
+};
+window.closeBottomMenu = function() {
+  $('bottom-sheet').classList.remove('open');
+  $('bottom-sheet-backdrop').classList.remove('open');
 };
 
 // ══════════════════════════════════════════════════════════════════
