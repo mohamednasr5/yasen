@@ -3291,16 +3291,17 @@ function updateUIForRole() {
     document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], input[type="time"], input[type="month"], input[type="email"], input[type="password"], input[type="tel"], textarea, select').forEach(input => {
       // لا تخفي حقول البحث فقط
       if (input.placeholder && input.placeholder.includes('بحث')) {
-        input.style.opacity = '0.7';
+        input.style.opacity = '1';
         input.disabled = false;
       } else {
         input.disabled = true;
-        input.style.opacity = '0.5';
+        input.style.opacity = '0.3';
         input.style.cursor = 'not-allowed';
+        input.style.pointerEvents = 'none';
       }
     });
 
-    // إخفاء جميع مفاتيح action (onclick بها delete, edit, open, remove, save, etc)
+    // إخفاء جميع مفاتيح action
     document.querySelectorAll('[onclick]').forEach(el => {
       const action = el.getAttribute('onclick') || '';
       if (action.includes('delete') || action.includes('remove') || action.includes('openModal') || 
@@ -3309,11 +3310,6 @@ function updateUIForRole() {
           action.includes('Edit') || action.includes('Add') || action.includes('Update')) {
         el.style.display = 'none';
       }
-    });
-
-    // إخفاء جميع روابط البيانات (links للتعديل)
-    document.querySelectorAll('a[href*="edit"], a[href*="delete"], a[href*="add"]').forEach(link => {
-      link.style.display = 'none';
     });
 
     // إخفاء sidebar action buttons
@@ -3327,22 +3323,11 @@ function updateUIForRole() {
       modal.style.display = 'none';
     });
 
-    // إخفاء action columns في الجداول
-    document.querySelectorAll('th, td').forEach(cell => {
-      if (cell.textContent.includes('الإجراءات') || cell.textContent.includes('Actions')) {
-        // إخفاء رؤوس العمود
-        if (cell.tagName === 'TH') {
-          cell.style.display = 'none';
-        }
-      }
-    });
-
-    // إخفاء جميع cells في action columns
+    // إخفاء أعمدة الإجراءات في الجداول
     document.querySelectorAll('tbody tr').forEach(row => {
       const cells = row.querySelectorAll('td');
       if (cells.length > 0) {
         const lastCell = cells[cells.length - 1];
-        // إذا كانت الخلية الأخيرة تحتوي على أزرار action، اخفها
         if (lastCell.innerHTML.includes('btn')) {
           lastCell.style.display = 'none';
         }
@@ -3358,30 +3343,18 @@ function updateUIForRole() {
     document.querySelectorAll('[onclick*="print"], [onclick*="Print"], [onclick*="export"], [onclick*="Export"], [onclick*="PDF"], [onclick*="pdf"]').forEach(el => {
       el.style.display = 'none';
     });
-
-    // رسالة للمستخدم أنه في وضع العرض فقط
-    const banner = document.createElement('div');
-    banner.style.cssText = `
-      position: fixed;
-      top: 0;
-      right: 0;
-      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-      color: white;
-      padding: 12px 20px;
-      font-weight: 600;
-      z-index: 10000;
-      border-radius: 0 0 0 8px;
-      font-size: 14px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    `;
-    banner.innerHTML = '👁️مرحباً بك';
-    document.body.appendChild(banner);
   }
 }
 
 let _pinResolve = null;
 
 function requirePin(icon = '🔐', title = 'تأكيد العملية', desc = 'أدخل كلمة المرور للمتابعة') {
+  // منع أي عمليات حساسة في وضع العرض
+  if (isViewerMode()) {
+    toast('⛔ لا توجد صلاحيات لهذه العملية', 'error');
+    return Promise.reject('Viewer mode');
+  }
+  
   return new Promise((resolve) => {
     _pinResolve = resolve;
     $('pin-modal-icon').textContent = icon;
