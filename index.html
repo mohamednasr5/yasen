@@ -3278,15 +3278,104 @@ if (isAuthenticated()) {
 // ── requirePin: wraps any delete/edit action ────────────────────
 function updateUIForRole() {
   if (isViewerMode()) {
-    // إخفاء جميع أزرار الحذف والإضافة والتعديل
-    document.querySelectorAll('[onclick*="delete"], [onclick*="remove"], [onclick*="openModal"], .btn-danger, .btn-primary').forEach(el => {
-      if (el.textContent.includes('حذ') || el.textContent.includes('إضاف') || el.textContent.includes('تعديل') || el.textContent.includes('🗑️') || el.textContent.includes('➕')) {
+    // إخفاء ALL buttons except back button
+    document.querySelectorAll('button').forEach(btn => {
+      const text = btn.textContent;
+      // إظهار فقط زر العودة إذا كان موجوداً
+      if (!text.includes('العودة') && !text.includes('تأكيد') && !text.includes('إلغاء')) {
+        btn.style.display = 'none';
+      }
+    });
+
+    // إخفاء جميع حقول الإدخال والنماذج
+    document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], input[type="time"], input[type="month"], input[type="email"], input[type="password"], input[type="tel"], textarea, select').forEach(input => {
+      // لا تخفي حقول البحث فقط
+      if (input.placeholder && input.placeholder.includes('بحث')) {
+        input.style.opacity = '0.7';
+        input.disabled = false;
+      } else {
+        input.disabled = true;
+        input.style.opacity = '0.5';
+        input.style.cursor = 'not-allowed';
+      }
+    });
+
+    // إخفاء جميع مفاتيح action (onclick بها delete, edit, open, remove, save, etc)
+    document.querySelectorAll('[onclick]').forEach(el => {
+      const action = el.getAttribute('onclick') || '';
+      if (action.includes('delete') || action.includes('remove') || action.includes('openModal') || 
+          action.includes('open') || action.includes('save') || action.includes('payment') ||
+          action.includes('advance') || action.includes('export') || action.includes('import') ||
+          action.includes('Edit') || action.includes('Add') || action.includes('Update')) {
         el.style.display = 'none';
       }
     });
-    // إخفاء نموذج النسخ الاحتياطية
-    const backup = document.querySelector('[onclick*="exportBackup"]');
-    if (backup) backup.parentElement.style.display = 'none';
+
+    // إخفاء جميع روابط البيانات (links للتعديل)
+    document.querySelectorAll('a[href*="edit"], a[href*="delete"], a[href*="add"]').forEach(link => {
+      link.style.display = 'none';
+    });
+
+    // إخفاء sidebar action buttons
+    const sidebarFooter = document.querySelector('.sidebar-footer');
+    if (sidebarFooter) {
+      sidebarFooter.style.display = 'none';
+    }
+
+    // إخفاء جميع modals والنماذج
+    document.querySelectorAll('[id*="modal"]').forEach(modal => {
+      modal.style.display = 'none';
+    });
+
+    // إخفاء action columns في الجداول
+    document.querySelectorAll('th, td').forEach(cell => {
+      if (cell.textContent.includes('الإجراءات') || cell.textContent.includes('Actions')) {
+        // إخفاء رؤوس العمود
+        if (cell.tagName === 'TH') {
+          cell.style.display = 'none';
+        }
+      }
+    });
+
+    // إخفاء جميع cells في action columns
+    document.querySelectorAll('tbody tr').forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length > 0) {
+        const lastCell = cells[cells.length - 1];
+        // إذا كانت الخلية الأخيرة تحتوي على أزرار action، اخفها
+        if (lastCell.innerHTML.includes('btn')) {
+          lastCell.style.display = 'none';
+        }
+      }
+    });
+
+    // إخفاء أزرار النسخ الاحتياطية والاستعادة
+    document.querySelectorAll('[onclick*="Backup"], [onclick*="Restore"], [onclick*="export"], [onclick*="import"]').forEach(el => {
+      el.style.display = 'none';
+    });
+
+    // إخفاء أزرار الطباعة والتصدير
+    document.querySelectorAll('[onclick*="print"], [onclick*="Print"], [onclick*="export"], [onclick*="Export"], [onclick*="PDF"], [onclick*="pdf"]').forEach(el => {
+      el.style.display = 'none';
+    });
+
+    // رسالة للمستخدم أنه في وضع العرض فقط
+    const banner = document.createElement('div');
+    banner.style.cssText = `
+      position: fixed;
+      top: 0;
+      right: 0;
+      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+      color: white;
+      padding: 12px 20px;
+      font-weight: 600;
+      z-index: 10000;
+      border-radius: 0 0 0 8px;
+      font-size: 14px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    `;
+    banner.innerHTML = '👁️ وضع العرض فقط - لا توجد صلاحيات تعديل';
+    document.body.appendChild(banner);
   }
 }
 
