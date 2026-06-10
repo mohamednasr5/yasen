@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="css/main.css">
   <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -368,6 +370,8 @@
         <div style="display:flex;gap:8px">
           <button class="btn btn-primary" onclick="openPaymentModal()">💳 تسجيل دفعة</button>
           <button class="btn btn-secondary" onclick="openAdvanceModal()">💵 سلفة</button>
+          <button class="btn btn-secondary" onclick="printTable('#accounts-tbody')">🖨️ طباعة</button>
+          <button class="btn btn-secondary" onclick="exportTableToPDF('#accounts-tbody', 'حسابات_الموردين.pdf')">📥 PDF</button>
         </div>
       </div>
 
@@ -620,6 +624,8 @@
         <h2>حسابات المشترين</h2>
         <div style="display:flex;gap:8px">
           <button class="btn btn-primary" onclick="openBuyerPaymentModal()">💳 تسجيل دفعة مشترٍ</button>
+          <button class="btn btn-secondary" onclick="printTable('#buyer-accounts-tbody')">🖨️ طباعة</button>
+          <button class="btn btn-secondary" onclick="exportTableToPDF('#buyer-accounts-tbody', 'حسابات_المشترين.pdf')">📥 PDF</button>
         </div>
       </div>
 
@@ -735,7 +741,10 @@
       <div class="section-header">
         <span class="section-icon">📈</span>
         <h2>التقارير</h2>
-        <button class="btn btn-secondary" onclick="printReport()">🖨️ طباعة</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary" onclick="printReport()">🖨️ طباعة</button>
+          <button class="btn btn-secondary" onclick="exportReportPDF()">📥 تصدير PDF</button>
+        </div>
       </div>
 
       <div class="tabs">
@@ -1682,7 +1691,7 @@ window.filterSuppliers = function() { renderSuppliers($('suppliers-search').valu
 
 function renderSuppliers(search='') {
   const rows = Object.entries(state.suppliers)
-    .filter(([, s]) => !search || s.name?.toLowerCase().includes(search.toLowerCase()) || s.phone?.includes(search));
+    .filter(([, s]) => !search || fuzzyMatch(search, s.name || '') || s.phone?.includes(search));
 
   $('suppliers-count').textContent = `(${rows.length} مورد)`;
 
@@ -1961,7 +1970,7 @@ window.switchAccountTab = function(tab) {
 
 function renderAccounts(search='') {
   const suppliers = Object.entries(state.suppliers)
-    .filter(([,s]) => !search || s.name?.toLowerCase().includes(search.toLowerCase()));
+    .filter(([,s]) => !search || fuzzyMatch(search, s.name || ''));
 
   $('accounts-tbody').innerHTML = suppliers.length ? suppliers.map(([id,s], i) => {
     const milkTotal = Object.values(state.milkRecords).filter(r => r.supplierId === id).reduce((s,r) => s + Number(r.total||0), 0);
@@ -2583,6 +2592,11 @@ window.generateInventoryReport = function() {
     </div>`;
 };
 
+window.exportReportPDF = async function() {
+  const activeTab = document.querySelector('.tab.active')?.textContent || 'تقرير';
+  exportTableToPDF('#monthly-report-output, #supplier-report-output, #inventory-report-output', `تقرير_${activeTab}.pdf`);
+};
+
 window.printReport = function() { window.print(); };
 
 // ══════════════════════════════════════════════════════════════════
@@ -2692,7 +2706,7 @@ function calcBuyerBalance(buyerId) {
 
 function renderBuyers(search='') {
   const rows = Object.entries(state.buyers)
-    .filter(([,b]) => !search || b.name?.toLowerCase().includes(search.toLowerCase()) || b.phone?.includes(search));
+    .filter(([,b]) => !search || fuzzyMatch(search, b.name || '') || b.phone?.includes(search));
   $('buyers-count').textContent = `(${rows.length} مشترٍ)`;
 
   if (!rows.length) {
@@ -2732,7 +2746,7 @@ function renderBuyers(search='') {
 
 function renderBuyerAccounts(search='') {
   const buyers = Object.entries(state.buyers)
-    .filter(([,b]) => !search || b.name?.toLowerCase().includes(search.toLowerCase()));
+    .filter(([,b]) => !search || fuzzyMatch(search, b.name || ''));
 
   let totalSales = 0, totalPaid = 0, totalRemaining = 0;
 
@@ -2906,7 +2920,7 @@ window.filterWorkers = function() { renderWorkers($('workers-search').value); };
 
 function renderWorkers(search='') {
   const rows = Object.entries(state.workers)
-    .filter(([,w]) => !search || w.name?.includes(search) || w.phone?.includes(search));
+    .filter(([,w]) => !search || fuzzyMatch(search, w.name || '') || w.phone?.includes(search));
   $('workers-count').textContent = `(${rows.length} عامل)`;
   const { start: ws, end: we } = getWeekBounds();
   $('workers-tbody').innerHTML = rows.length ? rows.map(([id,w], i) => {
@@ -3199,13 +3213,25 @@ window.importBackupUI = async function(e) {
 };
 
 // ══════════════════════════════════════════════════════════════════
-// PIN / LOGIN SYSTEM
+// PIN / LOGIN SYSTEM WITH ROLES
 // ══════════════════════════════════════════════════════════════════
-const APP_PIN = '521988';
+const AUTH_PINS = {
+  '521988': { role: 'admin', name: 'مسؤول كامل' },
+  '123456': { role: 'viewer', name: 'عرض فقط' }
+};
 const SESSION_KEY = 'yasen_auth';
+const ROLE_KEY = 'yasen_role';
+
+let currentUserRole = null;
 
 function isAuthenticated() {
-  return sessionStorage.getItem(SESSION_KEY) === '1';
+  const auth = sessionStorage.getItem(SESSION_KEY);
+  currentUserRole = sessionStorage.getItem(ROLE_KEY);
+  return auth === '1';
+}
+
+function isViewerMode() {
+  return currentUserRole === 'viewer';
 }
 
 function loginPinInput() {
@@ -3222,12 +3248,18 @@ window.toggleLoginVis = function() {
 
 window.checkLogin = function() {
   const val = $('login-pin').value;
-  if (val === APP_PIN) {
+  const pinData = AUTH_PINS[val];
+  if (pinData) {
     sessionStorage.setItem(SESSION_KEY, '1');
+    sessionStorage.setItem(ROLE_KEY, pinData.role);
+    currentUserRole = pinData.role;
     const screen = $('login-screen');
     screen.style.transition = 'opacity 0.4s ease';
     screen.style.opacity = '0';
-    setTimeout(() => screen.style.display = 'none', 400);
+    setTimeout(() => { 
+      screen.style.display = 'none';
+      updateUIForRole();
+    }, 400);
   } else {
     $('login-error').textContent = '❌ كلمة المرور غير صحيحة';
     $('login-pin').style.borderColor = 'var(--danger)';
@@ -3244,6 +3276,20 @@ if (isAuthenticated()) {
 }
 
 // ── requirePin: wraps any delete/edit action ────────────────────
+function updateUIForRole() {
+  if (isViewerMode()) {
+    // إخفاء جميع أزرار الحذف والإضافة والتعديل
+    document.querySelectorAll('[onclick*="delete"], [onclick*="remove"], [onclick*="openModal"], .btn-danger, .btn-primary').forEach(el => {
+      if (el.textContent.includes('حذ') || el.textContent.includes('إضاف') || el.textContent.includes('تعديل') || el.textContent.includes('🗑️') || el.textContent.includes('➕')) {
+        el.style.display = 'none';
+      }
+    });
+    // إخفاء نموذج النسخ الاحتياطية
+    const backup = document.querySelector('[onclick*="exportBackup"]');
+    if (backup) backup.parentElement.style.display = 'none';
+  }
+}
+
 let _pinResolve = null;
 
 function requirePin(icon = '🔐', title = 'تأكيد العملية', desc = 'أدخل كلمة المرور للمتابعة') {
@@ -3262,7 +3308,8 @@ function requirePin(icon = '🔐', title = 'تأكيد العملية', desc = '
 
 window.confirmPin = function() {
   const val = $('pin-input').value;
-  if (val === APP_PIN) {
+  const pinData = AUTH_PINS[val];
+  if (pinData) {
     $('pin-modal').style.display = 'none';
     if (_pinResolve) { _pinResolve(true); _pinResolve = null; }
   } else {
@@ -3279,8 +3326,104 @@ window.cancelPin = function() {
 };
 
 // ══════════════════════════════════════════════════════════════════
-// INIT
+// SMART SEARCH WITH FUZZY MATCHING
 // ══════════════════════════════════════════════════════════════════
+function normalizeArabic(str) {
+  if (!str) return '';
+  return str
+    .replace(/ا|آ|أ/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى|ي/g, 'ي')
+    .trim()
+    .toLowerCase();
+}
+
+function fuzzyMatch(query, text) {
+  if (!query || !text) return false;
+  const q = normalizeArabic(query);
+  const t = normalizeArabic(text);
+  
+  if (t.includes(q)) return true; // exact match
+  
+  let qIdx = 0;
+  for (let tIdx = 0; tIdx < t.length && qIdx < q.length; tIdx++) {
+    if (q[qIdx] === t[tIdx]) qIdx++;
+  }
+  return qIdx === q.length;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PDF EXPORT & PRINT
+// ══════════════════════════════════════════════════════════════════
+window.exportTableToPDF = async function(tableName, fileName = 'تقرير.pdf') {
+  if (isViewerMode()) {
+    toast('العارض لا يمكنه التصدير', 'warning');
+    return;
+  }
+  
+  loading(true, 'جارٍ تحضير PDF...');
+  try {
+    const element = document.querySelector(tableName) || document.querySelector(`#${tableName}`);
+    if (!element) { toast('لم يتم العثور على الجدول', 'error'); return; }
+    
+    const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#0A0C0F' });
+    const imgData = canvas.toDataURL('image/png');
+    
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    const imgWidth = 190;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    
+    pdf.addFont('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/fonts/HTML-CSS/TeX/woff/MathJax_Main-Regular.woff', 'custom', 'normal');
+    pdf.setFont('courier');
+    pdf.text(fileName.replace('.pdf', ''), 10, 10);
+    pdf.addImage(imgData, 'PNG', 10, 20, imgWidth, imgHeight);
+    pdf.save(fileName);
+    
+    toast('تم التصدير بنجاح', 'success');
+  } catch(e) { 
+    toast('خطأ في التصدير: ' + e.message, 'error'); 
+  }
+  finally { loading(false); }
+};
+
+window.printTable = function(selector) {
+  const element = document.querySelector(selector);
+  if (!element) { toast('لم يتم العثور على العنصر', 'error'); return; }
+  
+  const printWindow = window.open('', '_blank');
+  const clone = element.cloneNode(true);
+  
+  clone.style.direction = 'rtl';
+  clone.style.fontFamily = 'Cairo, Tajawal, Arial';
+  
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html dir="rtl">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: Cairo, Arial; direction: rtl; padding: 20px; background: white; color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: right; }
+        th { background: #D4A843; color: #0A0C0F; font-weight: bold; }
+        .empty-state, button, .btn { display: none; }
+        h2 { text-align: center; color: #D4A843; }
+      </style>
+    </head>
+    <body>
+  `);
+  printWindow.document.write(clone.outerHTML);
+  printWindow.document.write('</body></html>');
+  printWindow.document.close();
+  
+  setTimeout(() => {
+    printWindow.print();
+    printWindow.close();
+  }, 500);
+};
+
+
 // Initialize default date filters
 const firstOfMonth = () => { const d = new Date(); d.setDate(1); return d.toISOString().slice(0,10); };
 ['exp-from','sales-from','exports-from'].forEach(id => { const el = $(id); if (el && !el.value) el.value = firstOfMonth(); });
@@ -3294,10 +3437,9 @@ setTimeout(loadDashboard, 800);
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('/yasen/sw.js', { scope: '/yasen/' })
       .then(reg => {
         console.log('SW registered:', reg.scope);
-        // Listen for sync messages from SW
         navigator.serviceWorker.addEventListener('message', e => {
           if (e.data?.type === 'sync') {
             console.log('Background sync triggered');

@@ -1,15 +1,18 @@
 // Service Worker — نظام إدارة مصنع الألبان
-const CACHE_NAME = 'dairy-v1.0';
+const BASE = '/yasen/';
+const CACHE_NAME = 'dairy-v1.2';
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/css/main.css',
-  '/js/firebase.js',
-  '/manifest.json',
-  '/icons/icon.svg',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
+  BASE,
+  BASE + 'index.html',
+  BASE + 'css/main.css',
+  BASE + 'js/firebase.js',
+  BASE + 'manifest.json',
+  BASE + 'icons/icon.svg',
+  BASE + 'icons/icon-192.png',
+  BASE + 'icons/icon-512.png',
   'https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700&display=swap',
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
 ];
 
 // Install: cache static assets
@@ -35,6 +38,9 @@ self.addEventListener('activate', event => {
 // Fetch: cache-first for static, network-first for Firebase
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
+  
+  // Only handle requests within /yasen/ scope
+  if (!url.pathname.startsWith(BASE)) return;
 
   // Skip non-GET and Firebase requests (real-time DB)
   if (event.request.method !== 'GET') return;
@@ -51,7 +57,7 @@ self.addEventListener('fetch', event => {
           return response;
         });
       })
-      .catch(() => caches.match('/index.html'))
+      .catch(() => caches.match(BASE + 'index.html'))
   );
 });
 
