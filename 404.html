@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الصفحة غير موجودة - 404</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cairo', 'Tajawal', Arial, sans-serif;
+      color: #333;
+      overflow-x: hidden;
+    }
+
+    .container {
+      background: white;
+      border-radius: 30px;
+      padding: 60px 40px;
+      max-width: 800px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      animation: slideIn 0.8s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .error-code {
+      font-size: 120px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 20px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .animation-container {
+      margin: 40px 0;
+      height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .message {
+      font-size: 28px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 30px;
+      line-height: 1.6;
+      animation: fadeIn 0.8s ease-out 0.2s both;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 20px;
+      animation: fadeIn 0.8s ease-out 0.4s both;
+    }
+
+    .countdown {
+      font-size: 16px;
+      color: #764ba2;
+      font-weight: 600;
+      margin-bottom: 20px;
+      animation: fadeIn 0.8s ease-out 0.6s both;
+    }
+
+    .countdown-number {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      line-height: 50px;
+      font-weight: bold;
+      font-size: 24px;
+      margin: 0 5px;
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .button-back {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px 40px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-size: 18px;
+      font-weight: 600;
+      margin-top: 20px;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+      animation: fadeIn 0.8s ease-out 0.8s both;
+    }
+
+    .button-back:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+    }
+
+    .button-back:active {
+      transform: translateY(-1px);
+    }
+
+    .footer {
+      margin-top: 50px;
+      padding-top: 40px;
+      border-top: 2px solid #f0f0f0;
+      animation: fadeIn 0.8s ease-out 1s both;
+    }
+
+    .signature-text {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 15px;
+      line-height: 1.8;
+    }
+
+    .signature-text .heart {
+      display: inline-block;
+      color: #e74c3c;
+      font-size: 18px;
+      margin: 0 5px;
+      animation: heartbeat 0.6s ease-in-out infinite;
+    }
+
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      25% { transform: scale(1.3); }
+      50% { transform: scale(1); }
+    }
+
+    .developer-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .social-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .social-link:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);
+    }
+
+    .social-link svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .facebook-icon {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .whatsapp-icon {
+      background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    }
+
+    .whatsapp-icon:hover {
+      box-shadow: 0 10px 25px rgba(37, 211, 102, 0.5);
+    }
+
+    /* Milk animation */
+    .milk-drop {
+      position: absolute;
+      width: 8px;
+      height: 12px;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.8;
+      animation: milkDrop 2s ease-in infinite;
+    }
+
+    @keyframes milkDrop {
+      0% {
+        opacity: 1;
+        transform: translateY(0) translateX(0);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(200px) translateX(30px);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .container {
+        padding: 40px 20px;
+      }
+
+      .error-code {
+        font-size: 80px;
+      }
+
+      .message {
+        font-size: 22px;
+      }
+
+      .subtitle {
+        font-size: 16px;
+      }
+
+      .animation-container {
+        height: 200px;
+      }
+
+      .button-back {
+        padding: 14px 30px;
+        font-size: 16px;
+      }
+
+      .social-links {
+        gap: 15px;
+      }
+
+      .social-link {
+        width: 45px;
+        height: 45px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Error Code -->
+  <div class="error-code">404</div>
+
+  <!-- Animation -->
+  <div class="animation-container">
+    <svg viewBox="0 0 500 300" width="500" height="300" xmlns="http://www.w3.org/2000/svg">
+      <!-- Ground -->
+      <rect x="0" y="250" width="500" height="50" fill="#8B7355" opacity="0.3"/>
+      <ellipse cx="250" cy="250" rx="200" ry="20" fill="#A0826D" opacity="0.2"/>
+
+      <!-- Cow -->
+      <g id="cow">
+        <!-- Body -->
+        <ellipse cx="150" cy="180" rx="70" ry="55" fill="#FFE4C4" stroke="#8B4513" stroke-width="2"/>
+        
+        <!-- Head -->
+        <circle cx="95" cy="150" r="35" fill="#FFE4C4" stroke="#8B4513" stroke-width="2"/>
+        
+        <!-- Ears -->
+        <ellipse cx="80" cy="115" rx="12" ry="25" fill="#FFE4C4" stroke="#8B4513" stroke-width="2"/>
+        <ellipse cx="110" cy="115" rx="12" ry="25" fill="#FFE4C4" stroke="#8B4513" stroke-width="2"/>
+        <ellipse cx="80" cy="115" rx="6" ry="18" fill="#FFB6C1"/>
+        <ellipse cx="110" cy="115" rx="6" ry="18" fill="#FFB6C1"/>
+        
+        <!-- Eyes -->
+        <circle cx="85" cy="140" r="5" fill="#000"/>
+        <circle cx="105" cy="140" r="5" fill="#000"/>
+        <circle cx="87" cy="138" r="2" fill="#FFF"/>
+        <circle cx="107" cy="138" r="2" fill="#FFF"/>
+        
+        <!-- Horns -->
+        <line x1="75" y1="110" x2="65" y2="85" stroke="#8B4513" stroke-width="3" stroke-linecap="round"/>
+        <line x1="115" y1="110" x2="125" y2="85" stroke="#8B4513" stroke-width="3" stroke-linecap="round"/>
+        
+        <!-- Mouth -->
+        <path d="M 95 165 Q 95 175 105 175" stroke="#000" stroke-width="2" fill="none"/>
+        
+        <!-- Nose -->
+        <ellipse cx="95" cy="155" rx="4" ry="6" fill="#000"/>
+        
+        <!-- Spots -->
+        <ellipse cx="130" cy="160" rx="25" ry="35" fill="#8B4513" opacity="0.4"/>
+        <ellipse cx="170" cy="190" rx="20" ry="30" fill="#8B4513" opacity="0.4"/>
+        
+        <!-- Legs -->
+        <rect x="115" y="230" width="15" height="50" fill="#FFE4C4" stroke="#8B4513" stroke-width="2" rx="7"/>
+        <rect x="145" y="230" width="15" height="50" fill="#FFE4C4" stroke="#8B4513" stroke-width="2" rx="7"/>
+        <rect x="175" y="230" width="15" height="50" fill="#FFE4C4" stroke="#8B4513" stroke-width="2" rx="7"/>
+        <rect x="205" y="230" width="15" height="50" fill="#FFE4C4" stroke="#8B4513" stroke-width="2" rx="7"/>
+        
+        <!-- Hooves -->
+        <rect x="115" y="280" width="15" height="10" fill="#654321" stroke="#000" stroke-width="1" rx="2"/>
+        <rect x="145" y="280" width="15" height="10" fill="#654321" stroke="#000" stroke-width="1" rx="2"/>
+        <rect x="175" y="280" width="15" height="10" fill="#654321" stroke="#000" stroke-width="1" rx="2"/>
+        <rect x="205" y="280" width="15" height="10" fill="#654321" stroke="#000" stroke-width="1" rx="2"/>
+        
+        <!-- Tail -->
+        <path d="M 220 175 Q 250 150 270 130" stroke="#8B4513" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M 270 130 L 275 110" stroke="#FFD700" stroke-width="2" fill="none"/>
+      </g>
+
+      <!-- Bucket/Container -->
+      <g id="bucket">
+        <!-- Bucket body -->
+        <path d="M 350 150 L 380 220 L 420 220 L 450 150 Z" fill="#FFD700" stroke="#B8860B" stroke-width="2"/>
+        <ellipse cx="400" cy="150" rx="50" ry="20" fill="#FFED4E" stroke="#B8860B" stroke-width="2"/>
+        
+        <!-- Handle -->
+        <path d="M 365 150 Q 400 100 435 150" stroke="#8B4513" stroke-width="3" fill="none" stroke-linecap="round"/>
+        
+        <!-- Milk inside bucket -->
+        <ellipse cx="400" cy="200" rx="35" ry="15" fill="#FFFACD" opacity="0.8"/>
+      </g>
+
+      <!-- Spilled Milk -->
+      <g id="spilled-milk">
+        <!-- Milk puddle -->
+        <ellipse cx="380" cy="245" rx="80" ry="20" fill="#FFFACD" opacity="0.6" animation="spread 2s ease-in-out infinite"/>
+        
+        <!-- Milk splashes -->
+        <circle cx="320" cy="240" r="8" fill="#FFFACD" opacity="0.5"/>
+        <circle cx="340" cy="245" r="6" fill="#FFFACD" opacity="0.5"/>
+        <circle cx="450" cy="243" r="7" fill="#FFFACD" opacity="0.5"/>
+        <circle cx="430" cy="248" r="5" fill="#FFFACD" opacity="0.5"/>
+      </g>
+    </svg>
+
+    <!-- Milk drops animation -->
+    <div class="milk-drop" style="left: 50%; animation-delay: 0s;"></div>
+    <div class="milk-drop" style="left: 45%; animation-delay: 0.3s;"></div>
+    <div class="milk-drop" style="left: 55%; animation-delay: 0.6s;"></div>
+    <div class="milk-drop" style="left: 48%; animation-delay: 0.9s;"></div>
+    <div class="milk-drop" style="left: 52%; animation-delay: 1.2s;"></div>
+  </div>
+
+  <!-- Message -->
+  <div class="message">
+    عذرا 😔
+    <br>
+    الصفحة التي طلبتها ربما وقع عليها اللبن 🥛
+  </div>
+
+  <div class="subtitle">
+    سيتم تحويلك إلى الصفحة الرئيسية خلال قليل
+  </div>
+
+  <!-- Countdown -->
+  <div class="countdown">
+    التحويل التلقائي بعد: <span class="countdown-number" id="countdown">10</span> ثواني
+  </div>
+
+  <!-- Back Button -->
+  <a href="https://mohamednasr5.github.io/yasen/" class="button-back">
+    العودة للصفحة الرئيسية
+  </a>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="signature-text">
+      تم البرمجة والتطوير بكل
+      <span class="heart">❤️</span>
+      بواسطة
+    </div>
+    <div class="developer-name">المهندس محمد حماد</div>
+    
+    <div class="social-links">
+      <a href="https://www.facebook.com/en.mohamed.nasr" target="_blank" rel="noopener" class="social-link facebook-icon" title="فيسبوك">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+        </svg>
+      </a>
+      <a href="https://wa.me/201279934735" target="_blank" rel="noopener" class="social-link whatsapp-icon" title="واتساب">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Countdown timer
+  let countdown = 10;
+  const countdownEl = document.getElementById('countdown');
+
+  const interval = setInterval(() => {
+    countdown--;
+    countdownEl.textContent = countdown;
+
+    if (countdown <= 0) {
+      clearInterval(interval);
+      window.location.href = 'https://mohamednasr5.github.io/yasen/';
+    }
+  }, 1000);
+
+  // Allow user to stop countdown on click
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('button-back')) {
+      clearInterval(interval);
+    }
+  });
+</script>
+
+</body>
+</html>
