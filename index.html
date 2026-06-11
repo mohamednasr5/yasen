@@ -177,6 +177,7 @@
           <span id="connection-text">متصل</span>
         </div>
         <span style="font-size:12px;color:var(--text-400)" id="current-date"></span>
+        <button onclick="logout()" style="background:none;border:1px solid var(--border);border-radius:var(--radius);padding:5px 10px;color:var(--text-400);font-size:12px;cursor:pointer;font-family:inherit" title="تسجيل الخروج">🔒 خروج</button>
       </div>
     </header>
 
@@ -3225,8 +3226,8 @@ const ROLE_KEY = 'yasen_role';
 let currentUserRole = null;
 
 function isAuthenticated() {
-  const auth = sessionStorage.getItem(SESSION_KEY);
-  currentUserRole = sessionStorage.getItem(ROLE_KEY);
+  const auth = localStorage.getItem(SESSION_KEY);
+  currentUserRole = localStorage.getItem(ROLE_KEY);
   return auth === '1';
 }
 
@@ -3250,8 +3251,8 @@ window.checkLogin = function() {
   const val = $('login-pin').value;
   const pinData = AUTH_PINS[val];
   if (pinData) {
-    sessionStorage.setItem(SESSION_KEY, '1');
-    sessionStorage.setItem(ROLE_KEY, pinData.role);
+    localStorage.setItem(SESSION_KEY, '1');
+    localStorage.setItem(ROLE_KEY, pinData.role);
     currentUserRole = pinData.role;
     const screen = $('login-screen');
     screen.style.transition = 'opacity 0.4s ease';
@@ -3268,9 +3269,28 @@ window.checkLogin = function() {
   }
 };
 
+window.logout = function() {
+  if (!confirm('هل تريد تسجيل الخروج؟')) return;
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(ROLE_KEY);
+  currentUserRole = null;
+  const screen = $('login-screen');
+  screen.style.opacity = '0';
+  screen.style.display = 'flex';
+  $('login-pin').value = '';
+  $('login-error').textContent = '';
+  $('login-pin').style.borderColor = 'var(--border)';
+  requestAnimationFrame(() => {
+    screen.style.transition = 'opacity 0.3s ease';
+    screen.style.opacity = '1';
+    setTimeout(() => $('login-pin').focus(), 300);
+  });
+};
+
 // Check session on load
 if (isAuthenticated()) {
   $('login-screen').style.display = 'none';
+  updateUIForRole();
 } else {
   setTimeout(() => $('login-pin').focus(), 100);
 }
