@@ -30,11 +30,11 @@
         oninput="loginPinInput()" onkeydown="if(event.key==='Enter')checkLogin()">
       <button onclick="toggleLoginVis()" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-400);font-size:18px" id="login-eye">👁️</button>
     </div>
-    <div id="secret-q" style="display:none;margin-bottom:16px">
-      <label style="display:block;color:var(--gold);font-size:11px;margin-bottom:6px">🔒 الساعة الحالية (HHMM):</label>
-      <input type="text" id="secret-answer" placeholder="مثل 1430" maxlength="4"
+    <div style="margin-bottom:16px">
+      <label style="display:block;color:var(--gold);font-size:11px;margin-bottom:6px;font-weight:600">🔒 الساعة الحالية (HHMM):</label>
+      <input type="text" id="secret-answer" placeholder="0000" maxlength="4"
         style="width:100%;padding:14px 16px;background:var(--bg-600);border:2px solid var(--border);border-radius:var(--radius);color:var(--text-100);font-size:20px;text-align:center;letter-spacing:4px;outline:none;box-sizing:border-box"
-        onkeydown="if(event.key==='Enter')checkLogin()">
+        onkeydown="if(event.key==='Enter')checkLogin()" disabled>
     </div>
     <div id="login-error" style="color:var(--danger);font-size:12px;margin-bottom:12px;min-height:18px"></div>
     <button onclick="checkLogin()" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px">
@@ -3255,12 +3255,20 @@ function loginPinInput() {
   $('login-error').textContent = '';
   $('login-pin').style.borderColor = 'var(--border)';
   const pin = $('login-pin').value;
+  const secretInput = $('secret-answer');
+  
   if (AUTH_PINS[pin] && AUTH_PINS[pin].needsSecret) {
-    $('secret-q').style.display = 'block';
-    $('secret-answer').focus();
+    secretInput.disabled = false;
+    secretInput.style.opacity = '1';
+    secretInput.style.pointerEvents = 'auto';
+    secretInput.style.borderColor = 'var(--gold)';
+    secretInput.focus();
   } else {
-    $('secret-q').style.display = 'none';
-    $('secret-answer').value = '';
+    secretInput.disabled = true;
+    secretInput.style.opacity = '0.5';
+    secretInput.style.pointerEvents = 'none';
+    secretInput.style.borderColor = 'var(--border)';
+    secretInput.value = '';
   }
 }
 
@@ -3282,7 +3290,6 @@ window.checkLogin = function() {
     $('login-pin').style.borderColor = 'var(--danger)';
     $('login-pin').value = '';
     $('secret-answer').value = '';
-    $('secret-q').style.display = 'none';
     $('login-pin').focus();
     return;
   }
@@ -3332,7 +3339,8 @@ window.logout = function() {
   $('secret-answer').value = '';
   $('login-error').textContent = '';
   $('login-pin').style.borderColor = 'var(--border)';
-  $('secret-q').style.display = 'none';
+  $('secret-answer').disabled = true;
+  $('secret-answer').style.opacity = '0.5';
   requestAnimationFrame(() => {
     screen.style.transition = 'opacity 0.3s ease';
     screen.style.opacity = '1';
