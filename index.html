@@ -30,11 +30,11 @@
         oninput="loginPinInput()" onkeydown="if(event.key==='Enter')checkLogin()">
       <button onclick="toggleLoginVis()" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-400);font-size:18px" id="login-eye">👁️</button>
     </div>
-    <div style="position:relative;margin-bottom:16px;display:none" id="secret-question-container">
-      <label style="display:block;font-size:12px;color:var(--text-400);margin-bottom:6px">الساعة الحالية (HHMM)</label>
-      <input type="text" id="login-secret" placeholder="0000"
-        style="width:100%;padding:14px 16px;background:var(--bg-600);border:2px solid var(--border);border-radius:var(--radius);color:var(--text-100);font-size:22px;text-align:center;letter-spacing:4px;font-family:inherit;outline:none;box-sizing:border-box"
-        oninput="loginSecretInput()" onkeydown="if(event.key==='Enter')checkLogin()" maxlength="4">
+    <div id="secret-q" style="display:none;margin-bottom:16px">
+      <label style="display:block;color:var(--gold);font-size:11px;margin-bottom:6px">🔒 الساعة الحالية (HHMM):</label>
+      <input type="text" id="secret-answer" placeholder="مثل 1430" maxlength="4"
+        style="width:100%;padding:14px 16px;background:var(--bg-600);border:2px solid var(--border);border-radius:var(--radius);color:var(--text-100);font-size:20px;text-align:center;letter-spacing:4px;outline:none;box-sizing:border-box"
+        onkeydown="if(event.key==='Enter')checkLogin()">
     </div>
     <div id="login-error" style="color:var(--danger);font-size:12px;margin-bottom:12px;min-height:18px"></div>
     <button onclick="checkLogin()" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px">
@@ -878,13 +878,9 @@
           </div>
         </div>
 
-        <div class="card" id="password-management-card" style="display:none">
+        <div class="card" id="pwd-card" style="display:none">
           <div class="card-header"><span>🔐</span><h3>إدارة كلمات المرور</h3></div>
-          <div class="card-body">
-            <div class="form-grid" id="password-management-content">
-              <!-- Will be populated by JavaScript -->
-            </div>
-          </div>
+          <div class="card-body" id="pwd-box"></div>
         </div>
       </div>
     </div>
@@ -2632,8 +2628,8 @@ function loadSettingsUI() {
 }
 
 function loadSettings() { 
-  loadSettingsUI();
-  loadPasswordManagement();
+  loadSettingsUI(); 
+  showPasswordUI();
 }
 
 window.saveSettings = async function() {
@@ -2655,136 +2651,6 @@ window.saveSettings = async function() {
     toast('تم حفظ الإعدادات', 'success');
   } catch(e) { toast('خطأ: ' + e.message, 'error'); }
   finally { loading(false); }
-};
-
-// ══════════════════════════════════════════════════════════════════
-// PASSWORD MANAGEMENT
-// ══════════════════════════════════════════════════════════════════
-
-function canChangePasswords() {
-  const currentUser = localStorage.getItem(CURRENT_USER);
-  return currentUser === '666666'; // Only owner can change all passwords
-}
-
-function canChangeOwnPassword() {
-  const currentUser = localStorage.getItem(CURRENT_USER);
-  return currentUser === '666666' || currentUser === '521988'; // Owner or admin can change their own
-}
-
-function loadPasswordManagement() {
-  const currentUser = localStorage.getItem(CURRENT_USER);
-  const card = $('password-management-card');
-  const content = $('password-management-content');
-  
-  // Show password card only if user can change passwords
-  if (!canChangePasswords() && !canChangeOwnPassword()) {
-    card.style.display = 'none';
-    return;
-  }
-  
-  card.style.display = 'block';
-  content.innerHTML = '';
-  
-  if (canChangePasswords()) {
-    // Owner can change all passwords
-    content.innerHTML = `
-      <div style="grid-column:1/-1;margin-bottom:16px">
-        <div style="font-size:13px;color:var(--text-400);margin-bottom:12px">أنت مالك البرنامج - يمكنك تغيير جميع كلمات المرور</div>
-      </div>
-      <div class="form-group">
-        <label>تغيير كلمة مرور المالك (666666)</label>
-        <input type="password" id="p-owner-new" placeholder="كلمة مرور جديدة">
-        <button onclick="changePassword('666666')" class="btn btn-primary" style="margin-top:8px;width:100%">تحديث كلمة مرور المالك</button>
-      </div>
-      <div class="form-group">
-        <label>تغيير كلمة مرور الإدارة (521988)</label>
-        <input type="password" id="p-admin-new" placeholder="كلمة مرور جديدة">
-        <button onclick="changePassword('521988')" class="btn btn-primary" style="margin-top:8px;width:100%">تحديث كلمة مرور الإدارة</button>
-      </div>
-      <div class="form-group">
-        <label>تغيير كلمة مرور المشاهد (123456)</label>
-        <input type="password" id="p-viewer-new" placeholder="كلمة مرور جديدة">
-        <button onclick="changePassword('123456')" class="btn btn-primary" style="margin-top:8px;width:100%">تحديث كلمة مرور المشاهد</button>
-      </div>
-    `;
-  } else if (currentUser === '521988') {
-    // Admin can only change their own password
-    content.innerHTML = `
-      <div style="grid-column:1/-1;margin-bottom:16px">
-        <div style="font-size:13px;color:var(--text-400);margin-bottom:12px">يمكنك تغيير كلمة المرور الخاصة بك فقط</div>
-      </div>
-      <div class="form-group">
-        <label>كلمة المرور الحالية</label>
-        <input type="password" id="p-current-password" placeholder="•••••••">
-      </div>
-      <div class="form-group">
-        <label>كلمة المرور الجديدة</label>
-        <input type="password" id="p-new-password" placeholder="•••••••">
-      </div>
-      <div class="form-group">
-        <label>تأكيد كلمة المرور الجديدة</label>
-        <input type="password" id="p-confirm-password" placeholder="•••••••">
-      </div>
-      <button onclick="changeOwnPassword()" class="btn btn-primary" style="width:100%;grid-column:1/-1">تحديث كلمة المرور</button>
-    `;
-  }
-}
-
-window.changePassword = function(userPin) {
-  if (!canChangePasswords()) {
-    toast('❌ ليس لديك صلاحية لتغيير كلمات المرور', 'error');
-    return;
-  }
-  
-  const inputId = userPin === '666666' ? 'p-owner-new' : userPin === '521988' ? 'p-admin-new' : 'p-viewer-new';
-  const newPass = $(inputId).value.trim();
-  
-  if (!newPass || newPass.length < 6) {
-    toast('❌ كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error');
-    return;
-  }
-  
-  if (confirm(`هل تريد تغيير كلمة مرور المستخدم ${userPin}؟`)) {
-    AUTH_PINS[userPin].password = newPass;
-    $(inputId).value = '';
-    toast('✅ تم تحديث كلمة المرور بنجاح', 'success');
-  }
-};
-
-window.changeOwnPassword = function() {
-  if (!canChangeOwnPassword()) {
-    toast('❌ ليس لديك صلاحية لتغيير كلمة المرور', 'error');
-    return;
-  }
-  
-  const currentUser = localStorage.getItem(CURRENT_USER);
-  const current = $('p-current-password').value;
-  const newPass = $('p-new-password').value;
-  const confirm = $('p-confirm-password').value;
-  
-  // Verify current password
-  if (current !== currentUser) {
-    toast('❌ كلمة المرور الحالية غير صحيحة', 'error');
-    return;
-  }
-  
-  if (!newPass || newPass.length < 6) {
-    toast('❌ كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل', 'error');
-    return;
-  }
-  
-  if (newPass !== confirm) {
-    toast('❌ كلمات المرور الجديدة غير متطابقة', 'error');
-    return;
-  }
-  
-  if (confirm('هل تريد تغيير كلمة المرور الخاصة بك؟')) {
-    AUTH_PINS[currentUser].password = newPass;
-    $('p-current-password').value = '';
-    $('p-new-password').value = '';
-    $('p-confirm-password').value = '';
-    toast('✅ تم تحديث كلمة المرور بنجاح', 'success');
-  }
 };
 
 // ══════════════════════════════════════════════════════════════════
@@ -3371,7 +3237,7 @@ const AUTH_PINS = {
 };
 const SESSION_KEY = 'yasen_auth';
 const ROLE_KEY = 'yasen_role';
-const CURRENT_USER = 'yasen_user';
+const USER_KEY = 'yasen_user';
 
 let currentUserRole = null;
 
@@ -3388,82 +3254,54 @@ function isViewerMode() {
 function loginPinInput() {
   $('login-error').textContent = '';
   $('login-pin').style.borderColor = 'var(--border)';
-  const val = $('login-pin').value;
-  const pinData = AUTH_PINS[val];
-  const secretContainer = $('secret-question-container');
-  
-  if (pinData && pinData.needsSecret) {
-    secretContainer.style.display = 'block';
-    $('login-secret').focus();
+  const pin = $('login-pin').value;
+  if (AUTH_PINS[pin] && AUTH_PINS[pin].needsSecret) {
+    $('secret-q').style.display = 'block';
+    $('secret-answer').focus();
   } else {
-    secretContainer.style.display = 'none';
-    $('login-secret').value = '';
+    $('secret-q').style.display = 'none';
+    $('secret-answer').value = '';
   }
 }
 
-function loginSecretInput() {
-  $('login-error').textContent = '';
-  $('login-secret').style.borderColor = 'var(--border)';
-  const val = $('login-secret').value;
-  if (val.length === 4 && /^\d{4}$/.test(val)) {
-    // Auto-validate when user enters 4 digits
-    const event = new KeyboardEvent('keydown', { key: 'Enter' });
-    $('login-secret').dispatchEvent(event);
-  }
-}
-
-window.toggleLoginVis = function() {
-  const inp = $('login-pin');
-  const isPass = inp.type === 'password';
-  inp.type = isPass ? 'text' : 'password';
-  $('login-eye').textContent = isPass ? '🙈' : '👁️';
-};
-
-function getSecretAnswer() {
-  const now = new Date();
-  let hours = now.getHours();
-  let minutes = now.getMinutes();
-  
-  // Convert to 12-hour format
-  if (hours > 12) hours -= 12;
-  if (hours === 0) hours = 12;
-  
-  // Format as HHMM with leading zeros
-  return String(hours).padStart(2, '0') + String(minutes).padStart(2, '0');
+function getTime12() {
+  const d = new Date();
+  let h = d.getHours();
+  let m = d.getMinutes();
+  if (h > 12) h -= 12;
+  if (h === 0) h = 12;
+  return String(h).padStart(2, '0') + String(m).padStart(2, '0');
 }
 
 window.checkLogin = function() {
-  const val = $('login-pin').value;
-  const pinData = AUTH_PINS[val];
+  const pin = $('login-pin').value;
+  const pinData = AUTH_PINS[pin];
   
   if (!pinData) {
     $('login-error').textContent = '❌ كلمة المرور غير صحيحة';
     $('login-pin').style.borderColor = 'var(--danger)';
     $('login-pin').value = '';
-    $('login-secret').value = '';
-    $('secret-question-container').style.display = 'none';
+    $('secret-answer').value = '';
+    $('secret-q').style.display = 'none';
     $('login-pin').focus();
     return;
   }
   
-  // Check if secret answer is needed
   if (pinData.needsSecret) {
-    const secret = $('login-secret').value;
-    const correctSecret = getSecretAnswer();
-    
-    if (secret !== correctSecret) {
-      $('login-error').textContent = '❌ الإجابة غير صحيحة، تحقق من الساعة';
-      $('login-secret').style.borderColor = 'var(--danger)';
-      $('login-secret').value = '';
-      $('login-secret').focus();
+    const ans = $('secret-answer').value;
+    const correct = getTime12();
+    if (ans !== correct) {
+      $('login-error').textContent = '❌ الإجابة خاطئة';
+      $('secret-answer').style.borderColor = 'var(--danger)';
+      $('secret-answer').value = '';
+      $('secret-answer').focus();
       return;
     }
   }
   
-  // Login successful
   localStorage.setItem(SESSION_KEY, '1');
   localStorage.setItem(ROLE_KEY, pinData.role);
-  localStorage.setItem(CURRENT_USER, val);
+  localStorage.setItem(USER_KEY, pin);
   currentUserRole = pinData.role;
   const screen = $('login-screen');
   screen.style.transition = 'opacity 0.4s ease';
@@ -3474,25 +3312,97 @@ window.checkLogin = function() {
   }, 400);
 };
 
+window.toggleLoginVis = function() {
+  const inp = $('login-pin');
+  const isPass = inp.type === 'password';
+  inp.type = isPass ? 'text' : 'password';
+  $('login-eye').textContent = isPass ? '🙈' : '👁️';
+};
+
 window.logout = function() {
   if (!confirm('هل تريد تسجيل الخروج؟')) return;
   localStorage.removeItem(SESSION_KEY);
   localStorage.removeItem(ROLE_KEY);
-  localStorage.removeItem(CURRENT_USER);
+  localStorage.removeItem(USER_KEY);
   currentUserRole = null;
   const screen = $('login-screen');
   screen.style.opacity = '0';
   screen.style.display = 'flex';
   $('login-pin').value = '';
-  $('login-secret').value = '';
+  $('secret-answer').value = '';
   $('login-error').textContent = '';
   $('login-pin').style.borderColor = 'var(--border)';
-  $('secret-question-container').style.display = 'none';
+  $('secret-q').style.display = 'none';
   requestAnimationFrame(() => {
     screen.style.transition = 'opacity 0.3s ease';
     screen.style.opacity = '1';
     setTimeout(() => $('login-pin').focus(), 300);
   });
+};
+
+// PASSWORD MANAGEMENT
+window.showPasswordUI = function() {
+  const user = localStorage.getItem(USER_KEY);
+  const card = $('pwd-card');
+  const box = $('pwd-box');
+  
+  if (!user || (user !== '666666' && user !== '521988')) {
+    card.style.display = 'none';
+    return;
+  }
+  
+  card.style.display = 'block';
+  
+  if (user === '666666') {
+    box.innerHTML = `
+    <div style="margin-bottom:16px">
+      <p style="color:var(--gold);font-size:12px;margin-bottom:12px">👑 أنت المالك - تغيير كل كلمات المرور</p>
+      <input type="text" id="p1" placeholder="كلمة مرور جديدة للمالك" style="width:100%;padding:10px;background:var(--bg-600);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;color:var(--text-100)">
+      <button onclick="savePwd('666666','p1')" class="btn btn-primary" style="width:100%;margin-bottom:12px">حفظ كلمة المالك</button>
+      
+      <input type="text" id="p2" placeholder="كلمة مرور جديدة للإدارة" style="width:100%;padding:10px;background:var(--bg-600);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;color:var(--text-100)">
+      <button onclick="savePwd('521988','p2')" class="btn btn-primary" style="width:100%;margin-bottom:12px">حفظ كلمة الإدارة</button>
+      
+      <input type="text" id="p3" placeholder="كلمة مرور جديدة للمشاهد" style="width:100%;padding:10px;background:var(--bg-600);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;color:var(--text-100)">
+      <button onclick="savePwd('123456','p3')" class="btn btn-primary" style="width:100%">حفظ كلمة المشاهد</button>
+    </div>`;
+  } else if (user === '521988') {
+    box.innerHTML = `
+    <div style="margin-bottom:16px">
+      <p style="color:var(--gold);font-size:12px;margin-bottom:12px">👤 تغيير كلمتك الخاصة فقط</p>
+      <input type="password" id="old" placeholder="كلمة المرور الحالية" style="width:100%;padding:10px;background:var(--bg-600);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;color:var(--text-100)">
+      <input type="password" id="new1" placeholder="كلمة مرور جديدة" style="width:100%;padding:10px;background:var(--bg-600);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;color:var(--text-100)">
+      <input type="password" id="new2" placeholder="تأكيد كلمة المرور" style="width:100%;padding:10px;background:var(--bg-600);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;color:var(--text-100)">
+      <button onclick="changeOwnPwd()" class="btn btn-primary" style="width:100%">تحديث كلمة المرور</button>
+    </div>`;
+  }
+};
+
+window.savePwd = function(pin, id) {
+  const v = $(id).value;
+  if (!v) { toast('أدخل كلمة مرور', 'error'); return; }
+  if (confirm('تغيير كلمة مرور ' + pin + '؟')) {
+    AUTH_PINS[pin].pwd = v;
+    $(id).value = '';
+    toast('✅ تم التحديث', 'success');
+  }
+};
+
+window.changeOwnPwd = function() {
+  const user = localStorage.getItem(USER_KEY);
+  const old = $('old').value;
+  const n1 = $('new1').value;
+  const n2 = $('new2').value;
+  if (old !== user) { toast('❌ كلمة المرور الحالية خطأ', 'error'); return; }
+  if (!n1) { toast('❌ أدخل كلمة جديدة', 'error'); return; }
+  if (n1 !== n2) { toast('❌ كلمات المرور غير متطابقة', 'error'); return; }
+  if (confirm('تحديث كلمة المرور؟')) {
+    AUTH_PINS[user].pwd = n1;
+    $('old').value = '';
+    $('new1').value = '';
+    $('new2').value = '';
+    toast('✅ تم التحديث', 'success');
+  }
 };
 
 // Check session on load
