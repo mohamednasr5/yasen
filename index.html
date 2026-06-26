@@ -876,6 +876,14 @@
             <label>إلى تاريخ</label>
             <input type="date" id="inv-report-to" onchange="generateFilteredReport()">
           </div>
+          <div class="form-group" style="min-width:150px;margin:0;">
+            <label>المخزن</label>
+            <select id="inv-report-warehouse" onchange="generateFilteredReport()" style="width:100%">
+              <option value="all">🏭 كلا المخزنين</option>
+              <option value="warehouse1">📦 المخزن الأول فقط</option>
+              <option value="warehouse2">🏪 المخزن الثاني فقط</option>
+            </select>
+          </div>
           <button class="btn btn-primary btn-sm" style="margin-top:22px" onclick="generateFilteredReport()">🔍 تطبيق</button>
         </div>
       <!-- ===== CHARTS SECTION ===== -->
@@ -5243,6 +5251,7 @@ if ('serviceWorker' in navigator) {
     window.generateFilteredReport = function() {
       const from = document.getElementById('inv-report-from')?.value || '';
       const to   = document.getElementById('inv-report-to')?.value   || '';
+      const whFilter = document.getElementById('inv-report-warehouse')?.value || 'all';
 
       // --- فلتر المبيعات ---
       const salesRows = Object.entries(state.sales || {}).filter(([, s]) => {
@@ -5259,7 +5268,7 @@ if ('serviceWorker' in navigator) {
       });
 
       // --- فلتر الصادرات مخزن 1 ---
-      const exp1Rows = Object.entries(state.exports || {}).filter(([, e]) => {
+      const exp1Rows = (whFilter === 'warehouse2') ? [] : Object.entries(state.exports || {}).filter(([, e]) => {
         if (e.warehouse !== 'warehouse1') return false;
         if (from && e.date < from) return false;
         if (to   && e.date > to)   return false;
@@ -5267,7 +5276,7 @@ if ('serviceWorker' in navigator) {
       });
 
       // --- فلتر الصادرات مخزن 2 ---
-      const exp2Rows = Object.entries(state.exports || {}).filter(([, e]) => {
+      const exp2Rows = (whFilter === 'warehouse1') ? [] : Object.entries(state.exports || {}).filter(([, e]) => {
         if (e.warehouse !== 'warehouse2') return false;
         if (from && e.date < from) return false;
         if (to   && e.date > to)   return false;
@@ -5287,8 +5296,8 @@ if ('serviceWorker' in navigator) {
         expByCategory[cat] = (expByCategory[cat] || 0) + Number(e.amount || 0);
       });
 
-      const wh1Entries = Object.entries(state.warehouse1 || {});
-      const wh2Entries = Object.entries(state.warehouse2 || {});
+      const wh1Entries = (whFilter === 'warehouse2') ? [] : Object.entries(state.warehouse1 || {});
+      const wh2Entries = (whFilter === 'warehouse1') ? [] : Object.entries(state.warehouse2 || {});
 
       const periodLabel = from && to
         ? `${from} ← ${to}`
@@ -5378,7 +5387,7 @@ if ('serviceWorker' in navigator) {
       outputEl.innerHTML = `
         <div style="background:var(--bg-700);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
-            <h3 style="color:var(--gold);margin:0">📊 تقرير المخزن والمصاريف</h3>
+            <h3 style="color:var(--gold);margin:0">📊 ${whFilter === 'warehouse1' ? 'تقرير المخزن الأول' : whFilter === 'warehouse2' ? 'تقرير المخزن الثاني' : 'تقرير المخزنين والمصاريف'}</h3>
             <span style="background:var(--bg-500);padding:6px 14px;border-radius:20px;font-size:13px;color:var(--text-300)">📅 ${periodLabel}</span>
           </div>
           <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:24px">
@@ -5393,19 +5402,21 @@ if ('serviceWorker' in navigator) {
               <div class="stat-label">صافي الربح</div>
             </div>
           </div>
+          ${whFilter !== 'warehouse2' ? `
           <h3 style="color:var(--gold);border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:16px">🏭 المخزن الأول</h3>
           ${renderWH(wh1Entries, 'المخزن الأول')}
-          ${renderExports(exp1Rows, 'صادرات المخزن الأول في الفترة')}
+          ${renderExports(exp1Rows, 'صادرات المخزن الأول في الفترة')}` : ''}
+          ${whFilter !== 'warehouse1' ? `
           <h3 style="color:var(--gold);border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:16px;margin-top:8px">🏪 المخزن الثاني</h3>
           ${renderWH(wh2Entries, 'المخزن الثاني')}
-          ${renderExports(exp2Rows, 'صادرات المخزن الثاني في الفترة')}
+          ${renderExports(exp2Rows, 'صادرات المخزن الثاني في الفترة')}` : ''}
           <h3 style="color:var(--danger);border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:16px;margin-top:8px">💸 المصاريف حسب الفئة</h3>
           <p style="color:var(--text-400);font-size:13px;margin-bottom:12px">عدد العمليات: ${expRows.length} | الإجمالي: ${fmt(expTotal, 2)}</p>
           ${expByCatHtml}
         </div>`;
 
       // ===== تشغيل الرسوم البيانية =====
-      window.renderReportCharts(from, to, salesRows, expRows, exp1Rows, exp2Rows);
+      window.renderReportCharts(from, to, salesRows, expRows, exp1Rows, exp2Rows, whFilter);
     };
 
     // =============================================
@@ -5539,10 +5550,17 @@ if ('serviceWorker' in navigator) {
       });
     }
 
-    function renderExportsBarChart(from, to, exports1, exports2) {
+    function renderExportsBarChart(from, to, exports1, exports2, whFilter) {
       destroyChart('exports-bar');
       const canvas = document.getElementById('chart-exports-bar');
       if (!canvas || !window.Chart) return;
+      // تحديث عنوان الرسم حسب المخزن المختار
+      const chartTitle = canvas.closest('div[style*="background:var(--bg-700)"]')?.querySelector('h4');
+      if (chartTitle) {
+        if (whFilter === 'warehouse1') chartTitle.textContent = '📦 صادرات المخزن الأول يومياً';
+        else if (whFilter === 'warehouse2') chartTitle.textContent = '🏪 صادرات المخزن الثاني يومياً';
+        else chartTitle.textContent = '📦 صادرات المخزن 1 و 2 يومياً';
+      }
       const labels = (from && to) ? generateDateRange(from, to) : [];
       const exp1ByDay = {}, exp2ByDay = {};
       labels.forEach(d => { exp1ByDay[d] = 0; exp2ByDay[d] = 0; });
@@ -5637,20 +5655,24 @@ if ('serviceWorker' in navigator) {
       });
     }
 
-    window.renderReportCharts = function(from, to, salesRows, expRows, exp1Rows, exp2Rows) {
+    window.renderReportCharts = function(from, to, salesRows, expRows, exp1Rows, exp2Rows, whFilter) {
       setupChartDefaults();
       const section = document.getElementById('report-charts-section');
+
+      // أخفِ رسم الصادرات إذا تم اختيار مخزن واحد فقط (لتوضيح الفارق)
+      const exportsCanvas = document.getElementById('chart-exports-bar');
+      const exportsCard = exportsCanvas?.closest('div[style*="background:var(--bg-700)"]');
+
       if (from && to && section) {
         section.style.display = 'block';
       } else {
         if (section) section.style.display = 'none';
         return;
       }
-      // رسم تلقائي بعد تحديث DOM
       setTimeout(() => {
         renderSalesExpensesChart(from, to, salesRows, expRows);
         renderExpensesPieChart(expRows);
-        renderExportsBarChart(from, to, exp1Rows, exp2Rows);
+        renderExportsBarChart(from, to, exp1Rows, exp2Rows, whFilter);
         renderProfitAreaChart(from, to, salesRows, expRows);
       }, 50);
     };
