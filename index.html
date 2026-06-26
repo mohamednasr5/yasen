@@ -12,6 +12,7 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style id="ticker-enhancements">
 /* ══════════════════════════════════════════
    TICKER BAR — Numbers White+Big, Icons Animated
@@ -854,7 +855,52 @@
       <!-- Inventory Report -->
       <div id="report-inventory" style="display:none">
         <button class="btn btn-primary" style="margin-bottom:20px" onclick="generateInventoryReport()">📊 إنشاء تقرير المخزون</button>
-        <div id="inventory-report-output"></div>
+        
+
+        <!-- أزرار الفلتر السريع -->
+        <div id="report-quick-filters" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+          <span style="color:var(--text-400);font-size:13px;font-weight:600">⚡ فلتر سريع:</span>
+          <button class="btn btn-secondary btn-sm" onclick="applyReportQuickFilter(7)">آخر 7 أيام</button>
+          <button class="btn btn-secondary btn-sm" onclick="applyReportQuickFilter(14)">آخر 14 يوم</button>
+          <button class="btn btn-secondary btn-sm" onclick="applyReportQuickFilter(22)">آخر 22 يوم</button>
+          <button class="btn btn-secondary btn-sm" onclick="applyReportQuickFilter(30)">آخر شهر</button>
+          <button class="btn btn-secondary btn-sm" onclick="applyReportQuickFilter(0)">📋 الكل</button>
+        </div>
+        <!-- حقول التاريخ اليدوية -->
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:20px;">
+          <div class="form-group" style="min-width:150px;margin:0;">
+            <label>من تاريخ</label>
+            <input type="date" id="inv-report-from" onchange="generateFilteredReport()">
+          </div>
+          <div class="form-group" style="min-width:150px;margin:0;">
+            <label>إلى تاريخ</label>
+            <input type="date" id="inv-report-to" onchange="generateFilteredReport()">
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:22px" onclick="generateFilteredReport()">🔍 تطبيق</button>
+        </div>
+      <!-- ===== CHARTS SECTION ===== -->
+      <div id="report-charts-section" style="display:none;margin-bottom:24px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-bottom:20px">
+          <div style="background:var(--bg-700);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px">
+            <h4 style="color:var(--gold);margin:0 0 16px;font-size:14px">📈 المبيعات مقابل المصاريف يومياً</h4>
+            <div style="position:relative;height:220px"><canvas id="chart-sales-expenses"></canvas></div>
+          </div>
+          <div style="background:var(--bg-700);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px">
+            <h4 style="color:var(--gold);margin:0 0 16px;font-size:14px">🥧 توزيع المصاريف حسب الفئة</h4>
+            <div style="position:relative;height:220px"><canvas id="chart-expenses-pie"></canvas></div>
+          </div>
+          <div style="background:var(--bg-700);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px">
+            <h4 style="color:var(--gold);margin:0 0 16px;font-size:14px">📦 صادرات المخزن 1 و 2 يومياً</h4>
+            <div style="position:relative;height:220px"><canvas id="chart-exports-bar"></canvas></div>
+          </div>
+          <div style="background:var(--bg-700);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px">
+            <h4 style="color:var(--gold);margin:0 0 16px;font-size:14px">💰 صافي الربح التراكمي</h4>
+            <div style="position:relative;height:220px"><canvas id="chart-profit-area"></canvas></div>
+          </div>
+        </div>
+      </div>
+      <!-- ===== END CHARTS SECTION ===== -->
+      <div id="inventory-report-output"></div>
       </div>
     </div>
 
@@ -5157,6 +5203,458 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.log('SW registration failed:', err));
   });
 }
+
+
+    // =============================================
+    // QUICK DATE FILTER FOR INVENTORY & EXPENSES REPORTS
+    // =============================================
+
+    window.applyReportQuickFilter = function(days) {
+      const fromEl = document.getElementById('inv-report-from');
+      const toEl   = document.getElementById('inv-report-to');
+      if (!fromEl || !toEl) return;
+
+      const today = new Date();
+      const toStr = today.toISOString().slice(0, 10);
+
+      if (days === 0) {
+        fromEl.value = '';
+        toEl.value   = '';
+      } else {
+        const from = new Date(today);
+        from.setDate(today.getDate() - days + 1);
+        fromEl.value = from.toISOString().slice(0, 10);
+        toEl.value   = toStr;
+      }
+
+      // تحديث حالة الأزرار
+      document.querySelectorAll('#report-quick-filters .btn').forEach(btn => {
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-secondary');
+      });
+      if (event && event.target) {
+        event.target.classList.remove('btn-secondary');
+        event.target.classList.add('btn-primary');
+      }
+
+      generateFilteredReport();
+    };
+
+    window.generateFilteredReport = function() {
+      const from = document.getElementById('inv-report-from')?.value || '';
+      const to   = document.getElementById('inv-report-to')?.value   || '';
+
+      // --- فلتر المبيعات ---
+      const salesRows = Object.entries(state.sales || {}).filter(([, s]) => {
+        if (from && s.date < from) return false;
+        if (to   && s.date > to)   return false;
+        return true;
+      });
+
+      // --- فلتر المصاريف ---
+      const expRows = Object.entries(state.expenses || {}).filter(([, e]) => {
+        if (from && e.date < from) return false;
+        if (to   && e.date > to)   return false;
+        return true;
+      });
+
+      // --- فلتر الصادرات مخزن 1 ---
+      const exp1Rows = Object.entries(state.exports || {}).filter(([, e]) => {
+        if (e.warehouse !== 'warehouse1') return false;
+        if (from && e.date < from) return false;
+        if (to   && e.date > to)   return false;
+        return true;
+      });
+
+      // --- فلتر الصادرات مخزن 2 ---
+      const exp2Rows = Object.entries(state.exports || {}).filter(([, e]) => {
+        if (e.warehouse !== 'warehouse2') return false;
+        if (from && e.date < from) return false;
+        if (to   && e.date > to)   return false;
+        return true;
+      });
+
+      const expTotal   = expRows.reduce((s, [, e]) => s + Number(e.amount || 0), 0);
+      const salesTotal = salesRows.reduce((s, [, r]) => s + Number(r.total  || 0), 0);
+      const exp1Total  = exp1Rows.reduce((s, [, e]) => s + Number(e.qty || 0), 0);
+      const exp2Total  = exp2Rows.reduce((s, [, e]) => s + Number(e.qty || 0), 0);
+      const netProfit  = salesTotal - expTotal;
+
+      // مصاريف حسب الفئة
+      const expByCategory = {};
+      expRows.forEach(([, e]) => {
+        const cat = e.category || 'أخرى';
+        expByCategory[cat] = (expByCategory[cat] || 0) + Number(e.amount || 0);
+      });
+
+      const wh1Entries = Object.entries(state.warehouse1 || {});
+      const wh2Entries = Object.entries(state.warehouse2 || {});
+
+      const periodLabel = from && to
+        ? `${from} ← ${to}`
+        : from ? `من ${from}` : to ? `حتى ${to}` : 'كامل الفترة';
+
+      // جدول المخزن
+      const renderWH = (items, title) => {
+        if (!items.length) return `<p style="color:var(--text-400)">${title}: لا توجد بيانات</p>`;
+        const total = items.reduce((s, [, i]) => s + Number(i.qty || 0) * Number(i.price || 0), 0);
+        return `
+          <h4 style="color:var(--gold);margin-bottom:10px">${title} — إجمالي القيمة: ${fmt(total, 2)}</h4>
+          <div class="table-wrapper" style="margin-bottom:20px">
+            <table>
+              <thead><tr><th>المنتج</th><th>الكمية</th><th>الوحدة</th><th>السعر</th><th>الإجمالي</th><th>الحالة</th></tr></thead>
+              <tbody>
+                ${items.map(([, i]) => {
+                  const qty = Number(i.qty || 0);
+                  const min = Number(i.minQty || 0);
+                  const st  = qty <= 0
+                    ? `<span class="badge badge-danger">نفذ</span>`
+                    : qty < min
+                      ? `<span class="badge badge-warning">منخفض</span>`
+                      : `<span class="badge badge-success">جيد</span>`;
+                  return `<tr>
+                    <td>${sanitize(i.name)}</td>
+                    <td>${fmt(qty, 2)}</td>
+                    <td>${sanitize(i.unit)}</td>
+                    <td>${fmt(i.price, 2)}</td>
+                    <td>${fmt(qty * Number(i.price || 0), 2)}</td>
+                    <td>${st}</td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>`;
+      };
+
+      // جدول الصادرات
+      const renderExports = (rows, title) => {
+        if (!rows.length) return `<p style="color:var(--text-400);font-size:13px">${title}: لا توجد حركة في هذه الفترة</p>`;
+        const totalQty = rows.reduce((s, [, e]) => s + Number(e.qty || 0), 0);
+        return `
+          <h5 style="color:var(--text-300);margin:10px 0 8px">${title} — ${rows.length} عملية | ${fmt(totalQty, 2)} وحدة</h5>
+          <div class="table-wrapper" style="margin-bottom:16px">
+            <table>
+              <thead><tr><th>التاريخ</th><th>المنتج</th><th>الكمية</th><th>العميل</th></tr></thead>
+              <tbody>
+                ${rows.slice(0, 100).map(([, e]) => `
+                  <tr>
+                    <td>${e.date}</td>
+                    <td>${sanitize(state.warehouse1?.[e.itemId]?.name || state.warehouse2?.[e.itemId]?.name || e.itemId || '')}</td>
+                    <td>${fmt(e.qty, 2)}</td>
+                    <td>${sanitize(e.client || '')}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>`;
+      };
+
+      // جدول المصاريف حسب الفئة
+      const expByCatHtml = Object.keys(expByCategory).length
+        ? `<div class="table-wrapper" style="margin-bottom:20px">
+            <table>
+              <thead><tr><th>الفئة</th><th>المبلغ</th><th>النسبة</th></tr></thead>
+              <tbody>
+                ${Object.entries(expByCategory)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([cat, amt]) => `
+                  <tr>
+                    <td>${sanitize(cat)}</td>
+                    <td style="color:var(--danger);font-weight:700">${fmt(amt, 2)}</td>
+                    <td>${expTotal ? fmt(amt / expTotal * 100, 1) + '%' : '0%'}</td>
+                  </tr>`).join('')}
+                <tr style="font-weight:700;border-top:2px solid var(--border)">
+                  <td>الإجمالي</td>
+                  <td style="color:var(--danger)">${fmt(expTotal, 2)}</td>
+                  <td>100%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>`
+        : `<p style="color:var(--text-400)">لا توجد مصاريف في هذه الفترة</p>`;
+
+      const outputEl = document.getElementById('inventory-report-output');
+      if (!outputEl) return;
+
+      outputEl.innerHTML = `
+        <div style="background:var(--bg-700);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+            <h3 style="color:var(--gold);margin:0">📊 تقرير المخزن والمصاريف</h3>
+            <span style="background:var(--bg-500);padding:6px 14px;border-radius:20px;font-size:13px;color:var(--text-300)">📅 ${periodLabel}</span>
+          </div>
+          <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:24px">
+            <div class="stat-card" style="--accent:var(--success)"><span class="stat-icon">📦</span><div class="stat-value">${wh1Entries.length}</div><div class="stat-label">منتجات المخزن 1</div></div>
+            <div class="stat-card" style="--accent:var(--info)"><span class="stat-icon">🏪</span><div class="stat-value">${wh2Entries.length}</div><div class="stat-label">منتجات المخزن 2</div></div>
+            <div class="stat-card" style="--accent:var(--gold)"><span class="stat-icon">📤</span><div class="stat-value">${fmt(exp1Total + exp2Total, 1)}</div><div class="stat-label">إجمالي الصادرات</div></div>
+            <div class="stat-card" style="--accent:var(--success)"><span class="stat-icon">💰</span><div class="stat-value">${fmt(salesTotal, 0)}</div><div class="stat-label">إجمالي المبيعات</div></div>
+            <div class="stat-card" style="--accent:var(--danger)"><span class="stat-icon">💸</span><div class="stat-value">${fmt(expTotal, 0)}</div><div class="stat-label">إجمالي المصاريف</div></div>
+            <div class="stat-card" style="--accent:${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'}">
+              <span class="stat-icon">${netProfit >= 0 ? '📈' : '📉'}</span>
+              <div class="stat-value" style="color:${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'}">${fmt(netProfit, 0)}</div>
+              <div class="stat-label">صافي الربح</div>
+            </div>
+          </div>
+          <h3 style="color:var(--gold);border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:16px">🏭 المخزن الأول</h3>
+          ${renderWH(wh1Entries, 'المخزن الأول')}
+          ${renderExports(exp1Rows, 'صادرات المخزن الأول في الفترة')}
+          <h3 style="color:var(--gold);border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:16px;margin-top:8px">🏪 المخزن الثاني</h3>
+          ${renderWH(wh2Entries, 'المخزن الثاني')}
+          ${renderExports(exp2Rows, 'صادرات المخزن الثاني في الفترة')}
+          <h3 style="color:var(--danger);border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:16px;margin-top:8px">💸 المصاريف حسب الفئة</h3>
+          <p style="color:var(--text-400);font-size:13px;margin-bottom:12px">عدد العمليات: ${expRows.length} | الإجمالي: ${fmt(expTotal, 2)}</p>
+          ${expByCatHtml}
+        </div>`;
+
+      // ===== تشغيل الرسوم البيانية =====
+      window.renderReportCharts(from, to, salesRows, expRows, exp1Rows, exp2Rows);
+    };
+
+    // =============================================
+    // REPORT CHARTS ENGINE (Chart.js)
+    // =============================================
+
+    const _chartInstances = {};
+
+    function destroyChart(id) {
+      if (_chartInstances[id]) {
+        _chartInstances[id].destroy();
+        delete _chartInstances[id];
+      }
+    }
+
+    function setupChartDefaults() {
+      if (!window.Chart) return;
+      Chart.defaults.color = '#8892a4';
+      Chart.defaults.font.family = 'inherit';
+      Chart.defaults.font.size   = 11;
+      Chart.defaults.plugins.legend.labels.boxWidth = 12;
+      Chart.defaults.plugins.legend.labels.padding  = 10;
+    }
+
+    function generateDateRange(from, to) {
+      const dates = [];
+      const cur = new Date(from + 'T00:00:00');
+      const end = new Date(to   + 'T00:00:00');
+      while (cur <= end) {
+        dates.push(cur.toISOString().slice(0, 10));
+        cur.setDate(cur.getDate() + 1);
+      }
+      return dates;
+    }
+
+    const CHART_COLORS = {
+      sales:   { line: '#22c55e', fill: 'rgba(34,197,94,0.15)'  },
+      expense: { line: '#ef4444', fill: 'rgba(239,68,68,0.15)'  },
+      wh1:     { bar: 'rgba(212,168,67,0.8)',  border: '#d4a843' },
+      wh2:     { bar: 'rgba(59,130,246,0.8)',  border: '#3b82f6' },
+      pie: ['#d4a843','#3b82f6','#22c55e','#ef4444','#a855f7',
+            '#f97316','#06b6d4','#ec4899','#84cc16','#f59e0b','#6366f1','#14b8a6']
+    };
+
+    function renderSalesExpensesChart(from, to, salesData, expData) {
+      destroyChart('sales-expenses');
+      const canvas = document.getElementById('chart-sales-expenses');
+      if (!canvas || !window.Chart) return;
+      const labels = (from && to) ? generateDateRange(from, to) : [];
+      const salesByDay = {}, expByDay = {};
+      labels.forEach(d => { salesByDay[d] = 0; expByDay[d] = 0; });
+      salesData.forEach(([, s]) => { if (salesByDay[s.date] !== undefined) salesByDay[s.date] += Number(s.total  || 0); });
+      expData.forEach  (([, e]) => { if (expByDay  [e.date] !== undefined) expByDay  [e.date] += Number(e.amount || 0); });
+
+      const useWeekly = labels.length > 21;
+      let finalLabels, finalSales, finalExp;
+      if (useWeekly) {
+        const weeks = {};
+        labels.forEach(d => {
+          const wk = d.slice(0, 7);
+          if (!weeks[wk]) weeks[wk] = { s: 0, e: 0 };
+          weeks[wk].s += salesByDay[d] || 0;
+          weeks[wk].e += expByDay[d]   || 0;
+        });
+        finalLabels = Object.keys(weeks);
+        finalSales  = finalLabels.map(w => weeks[w].s);
+        finalExp    = finalLabels.map(w => weeks[w].e);
+      } else {
+        finalLabels = labels.map(d => d.slice(5));
+        finalSales  = labels.map(d => salesByDay[d]);
+        finalExp    = labels.map(d => expByDay[d]);
+      }
+
+      _chartInstances['sales-expenses'] = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: finalLabels,
+          datasets: [
+            { label: 'المبيعات',  data: finalSales, borderColor: CHART_COLORS.sales.line,   backgroundColor: CHART_COLORS.sales.fill,   borderWidth: 2, pointRadius: finalLabels.length > 15 ? 2 : 4, fill: true, tension: 0.4 },
+            { label: 'المصاريف', data: finalExp,   borderColor: CHART_COLORS.expense.line, backgroundColor: CHART_COLORS.expense.fill, borderWidth: 2, pointRadius: finalLabels.length > 15 ? 2 : 4, fill: true, tension: 0.4 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y, 2)}` } }
+          },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { maxRotation: 45 } },
+            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => fmt(v, 0) } }
+          }
+        }
+      });
+    }
+
+    function renderExpensesPieChart(expData) {
+      destroyChart('expenses-pie');
+      const canvas = document.getElementById('chart-expenses-pie');
+      if (!canvas || !window.Chart) return;
+      const byCategory = {};
+      expData.forEach(([, e]) => {
+        const cat = e.category || 'أخرى';
+        byCategory[cat] = (byCategory[cat] || 0) + Number(e.amount || 0);
+      });
+      const labels = Object.keys(byCategory);
+      const values = labels.map(k => byCategory[k]);
+      if (!labels.length) return;
+      _chartInstances['expenses-pie'] = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{ data: values, backgroundColor: CHART_COLORS.pie.slice(0, labels.length), borderColor: '#1a1d23', borderWidth: 2, hoverOffset: 8 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'right', labels: { font: { size: 10 } } },
+            tooltip: {
+              callbacks: {
+                label: ctx => {
+                  const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                  const pct = total ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+                  return ` ${ctx.label}: ${fmt(ctx.parsed, 2)} (${pct}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderExportsBarChart(from, to, exports1, exports2) {
+      destroyChart('exports-bar');
+      const canvas = document.getElementById('chart-exports-bar');
+      if (!canvas || !window.Chart) return;
+      const labels = (from && to) ? generateDateRange(from, to) : [];
+      const exp1ByDay = {}, exp2ByDay = {};
+      labels.forEach(d => { exp1ByDay[d] = 0; exp2ByDay[d] = 0; });
+      exports1.forEach(([, e]) => { if (exp1ByDay[e.date] !== undefined) exp1ByDay[e.date] += Number(e.qty || 0); });
+      exports2.forEach(([, e]) => { if (exp2ByDay[e.date] !== undefined) exp2ByDay[e.date] += Number(e.qty || 0); });
+      const useWeekly = labels.length > 21;
+      let finalLabels, finalExp1, finalExp2;
+      if (useWeekly) {
+        const weeks = {};
+        labels.forEach(d => {
+          const wk = d.slice(0, 7);
+          if (!weeks[wk]) weeks[wk] = { e1: 0, e2: 0 };
+          weeks[wk].e1 += exp1ByDay[d] || 0;
+          weeks[wk].e2 += exp2ByDay[d] || 0;
+        });
+        finalLabels = Object.keys(weeks);
+        finalExp1   = finalLabels.map(w => weeks[w].e1);
+        finalExp2   = finalLabels.map(w => weeks[w].e2);
+      } else {
+        finalLabels = labels.map(d => d.slice(5));
+        finalExp1   = labels.map(d => exp1ByDay[d]);
+        finalExp2   = labels.map(d => exp2ByDay[d]);
+      }
+      _chartInstances['exports-bar'] = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels: finalLabels,
+          datasets: [
+            { label: 'مخزن 1', data: finalExp1, backgroundColor: CHART_COLORS.wh1.bar, borderColor: CHART_COLORS.wh1.border, borderWidth: 1, borderRadius: 4 },
+            { label: 'مخزن 2', data: finalExp2, backgroundColor: CHART_COLORS.wh2.bar, borderColor: CHART_COLORS.wh2.border, borderWidth: 1, borderRadius: 4 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y, 2)} وحدة` } }
+          },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { maxRotation: 45 } },
+            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => fmt(v, 0) } }
+          }
+        }
+      });
+    }
+
+    function renderProfitAreaChart(from, to, salesData, expData) {
+      destroyChart('profit-area');
+      const canvas = document.getElementById('chart-profit-area');
+      if (!canvas || !window.Chart) return;
+      const labels = (from && to) ? generateDateRange(from, to) : [];
+      const profitByDay = {};
+      labels.forEach(d => { profitByDay[d] = 0; });
+      salesData.forEach(([, s]) => { if (profitByDay[s.date] !== undefined) profitByDay[s.date] += Number(s.total  || 0); });
+      expData.forEach  (([, e]) => { if (profitByDay[e.date] !== undefined) profitByDay[e.date] -= Number(e.amount || 0); });
+      let cumulative = 0;
+      const cumulativeData = labels.map(d => { cumulative += profitByDay[d]; return cumulative; });
+      const finalLabels = labels.map(d => d.slice(5));
+      const lastVal     = cumulativeData[cumulativeData.length - 1] || 0;
+      const lineColor   = lastVal >= 0 ? '#22c55e' : '#ef4444';
+      const fillColor   = lastVal >= 0 ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)';
+      _chartInstances['profit-area'] = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: finalLabels,
+          datasets: [{
+            label: 'صافي الربح التراكمي', data: cumulativeData,
+            borderColor: lineColor, backgroundColor: fillColor,
+            borderWidth: 2, pointRadius: finalLabels.length > 15 ? 0 : 3,
+            fill: true, tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ` صافي الربح: ${fmt(ctx.parsed.y, 2)}` } }
+          },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { maxRotation: 45, maxTicksLimit: 10 } },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { callback: v => fmt(v, 0) },
+              afterDataLimits(scale) {
+                scale.max = Math.max(scale.max, 0);
+                scale.min = Math.min(scale.min, 0);
+              }
+            }
+          }
+        }
+      });
+    }
+
+    window.renderReportCharts = function(from, to, salesRows, expRows, exp1Rows, exp2Rows) {
+      setupChartDefaults();
+      const section = document.getElementById('report-charts-section');
+      if (from && to && section) {
+        section.style.display = 'block';
+      } else {
+        if (section) section.style.display = 'none';
+        return;
+      }
+      // رسم تلقائي بعد تحديث DOM
+      setTimeout(() => {
+        renderSalesExpensesChart(from, to, salesRows, expRows);
+        renderExpensesPieChart(expRows);
+        renderExportsBarChart(from, to, exp1Rows, exp2Rows);
+        renderProfitAreaChart(from, to, salesRows, expRows);
+      }, 50);
+    };
+
 </script>
 </body>
 </html>
