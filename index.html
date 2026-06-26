@@ -12,6 +12,65 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style id="ticker-enhancements">
+/* ══════════════════════════════════════════
+   TICKER BAR — Numbers White+Big, Icons Animated
+   ══════════════════════════════════════════ */
+
+/* الأرقام: أبيض + حجم أكبر + توهج */
+.ticker-val {
+  color: #ffffff !important;
+  font-size: 1.2em !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.5px;
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.6),
+    0 0 18px rgba(212, 168, 67, 0.4);
+  display: inline-block;
+  padding: 0 2px;
+}
+
+/* الإيموجي: نبضة + دوران خفيف */
+.ticker-emoji {
+  display: inline-block;
+  animation: emojiPulse 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 5px rgba(212, 168, 67, 0.7));
+  transform-origin: center bottom;
+}
+.ticker-emoji:nth-of-type(3n+2) { animation-delay: 0.7s;  }
+.ticker-emoji:nth-of-type(3n+3) { animation-delay: 1.4s;  }
+
+@keyframes emojiPulse {
+  0%,100% { transform: scale(1)    rotate(0deg);    opacity: 1;   }
+  25%     { transform: scale(1.3)  rotate(-10deg);  opacity: 0.9; }
+  50%     { transform: scale(1.05) rotate(0deg);    opacity: 1;   }
+  75%     { transform: scale(1.2)  rotate(6deg);    opacity: 0.9; }
+}
+
+/* الفاصل ◆ يدور */
+.ticker-sep {
+  display: inline-block;
+  color: var(--gold, #D4A843) !important;
+  margin: 0 8px;
+  opacity: 0.8;
+  animation: sepSpin 4s linear infinite;
+}
+@keyframes sepSpin {
+  0%   { transform: rotate(0deg)   scale(1);   opacity: 0.5; }
+  50%  { transform: rotate(180deg) scale(1.4); opacity: 1;   }
+  100% { transform: rotate(360deg) scale(1);   opacity: 0.5; }
+}
+
+/* النص العادي في الشريط */
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-200, #c0c8d8);
+  font-size: 13px;
+  white-space: nowrap;
+}
+</style>
 </head>
 <body>
 
@@ -3731,7 +3790,66 @@ window.printTable = function(selector) {
         .empty-state, button, .btn { display: none; }
         h2 { text-align: center; color: #D4A843; }
       </style>
-    </head>
+    <style id="ticker-enhancements">
+/* ══════════════════════════════════════════
+   TICKER BAR — Numbers White+Big, Icons Animated
+   ══════════════════════════════════════════ */
+
+/* الأرقام: أبيض + حجم أكبر + توهج */
+.ticker-val {
+  color: #ffffff !important;
+  font-size: 1.2em !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.5px;
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.6),
+    0 0 18px rgba(212, 168, 67, 0.4);
+  display: inline-block;
+  padding: 0 2px;
+}
+
+/* الإيموجي: نبضة + دوران خفيف */
+.ticker-emoji {
+  display: inline-block;
+  animation: emojiPulse 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 5px rgba(212, 168, 67, 0.7));
+  transform-origin: center bottom;
+}
+.ticker-emoji:nth-of-type(3n+2) { animation-delay: 0.7s;  }
+.ticker-emoji:nth-of-type(3n+3) { animation-delay: 1.4s;  }
+
+@keyframes emojiPulse {
+  0%,100% { transform: scale(1)    rotate(0deg);    opacity: 1;   }
+  25%     { transform: scale(1.3)  rotate(-10deg);  opacity: 0.9; }
+  50%     { transform: scale(1.05) rotate(0deg);    opacity: 1;   }
+  75%     { transform: scale(1.2)  rotate(6deg);    opacity: 0.9; }
+}
+
+/* الفاصل ◆ يدور */
+.ticker-sep {
+  display: inline-block;
+  color: var(--gold, #D4A843) !important;
+  margin: 0 8px;
+  opacity: 0.8;
+  animation: sepSpin 4s linear infinite;
+}
+@keyframes sepSpin {
+  0%   { transform: rotate(0deg)   scale(1);   opacity: 0.5; }
+  50%  { transform: rotate(180deg) scale(1.4); opacity: 1;   }
+  100% { transform: rotate(360deg) scale(1);   opacity: 0.5; }
+}
+
+/* النص العادي في الشريط */
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-200, #c0c8d8);
+  font-size: 13px;
+  white-space: nowrap;
+}
+</style>
+</head>
     <body>
   `);
   printWindow.document.write(clone.outerHTML);
@@ -3914,7 +4032,66 @@ function generateThermalReceiptHTML(type, data) {
           }
         }
       </style>
-    </head>
+    <style id="ticker-enhancements">
+/* ══════════════════════════════════════════
+   TICKER BAR — Numbers White+Big, Icons Animated
+   ══════════════════════════════════════════ */
+
+/* الأرقام: أبيض + حجم أكبر + توهج */
+.ticker-val {
+  color: #ffffff !important;
+  font-size: 1.2em !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.5px;
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.6),
+    0 0 18px rgba(212, 168, 67, 0.4);
+  display: inline-block;
+  padding: 0 2px;
+}
+
+/* الإيموجي: نبضة + دوران خفيف */
+.ticker-emoji {
+  display: inline-block;
+  animation: emojiPulse 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 5px rgba(212, 168, 67, 0.7));
+  transform-origin: center bottom;
+}
+.ticker-emoji:nth-of-type(3n+2) { animation-delay: 0.7s;  }
+.ticker-emoji:nth-of-type(3n+3) { animation-delay: 1.4s;  }
+
+@keyframes emojiPulse {
+  0%,100% { transform: scale(1)    rotate(0deg);    opacity: 1;   }
+  25%     { transform: scale(1.3)  rotate(-10deg);  opacity: 0.9; }
+  50%     { transform: scale(1.05) rotate(0deg);    opacity: 1;   }
+  75%     { transform: scale(1.2)  rotate(6deg);    opacity: 0.9; }
+}
+
+/* الفاصل ◆ يدور */
+.ticker-sep {
+  display: inline-block;
+  color: var(--gold, #D4A843) !important;
+  margin: 0 8px;
+  opacity: 0.8;
+  animation: sepSpin 4s linear infinite;
+}
+@keyframes sepSpin {
+  0%   { transform: rotate(0deg)   scale(1);   opacity: 0.5; }
+  50%  { transform: rotate(180deg) scale(1.4); opacity: 1;   }
+  100% { transform: rotate(360deg) scale(1);   opacity: 0.5; }
+}
+
+/* النص العادي في الشريط */
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-200, #c0c8d8);
+  font-size: 13px;
+  white-space: nowrap;
+}
+</style>
+</head>
     <body>
       <div class="receipt-container">
         ${content}
@@ -4452,7 +4629,15 @@ window.updateTicker = function() {
   const tickerEl = $('ticker-content');
   if (tickerEl) {
     const items = `🥛 متوسط سعر الحليب (آخر 7 أيام): ${avgMilkPrice.toFixed(2)} ج/كجم  ◆  🧀 متوسط تكلفة الجبنة (آخر 7 أيام): ${cheeseCost.toFixed(2)} ج/كجم  ◆  📊 إجمالي الحليب (آخر 7 أيام): ${fmt(totalMilkQty,1)} كجم  ◆  `;
-    tickerEl.innerHTML = `<span class="ticker-item"><strong style="color:var(--gold)">${items}</strong></span><span class="ticker-item"><strong style="color:var(--gold)">${items}</strong></span>`;
+    // تمييز الأرقام والأيقونات في الشريط
+    const enhanceTicker = (t) => t
+      .replace(/([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F02F}])/gu,
+               '<span class="ticker-emoji">$1</span>')
+      .replace(/(\d[\d,.]*)/g, '<span class="ticker-val">$1</span>')
+      .replace(/\u25C6/g, '<span class="ticker-sep">\u25C6</span>');
+    const ei = enhanceTicker(items);
+    tickerEl.innerHTML =
+      `<span class="ticker-item">${ei}</span><span class="ticker-item">${ei}</span>`;
   }
   const autoEl = $('auto-cheese-value');
   if (autoEl) autoEl.textContent = cheeseWeight > 0 ? cheeseCost.toFixed(2) : '—';
@@ -4516,7 +4701,66 @@ window.printSupplierStatement = function() {
   const balance = milkSum - paySum - advSum - purSum;
   const nowStr = new Date().toLocaleString('ar-EG', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
   const pw = window.open('','_blank');
-  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#333;padding:20px}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:8px;text-align:center}td{border:1px solid #ddd;padding:6px 8px;text-align:center}.totals{margin-top:16px;padding:12px;border:2px solid #D4A843;border-radius:8px}.total-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:8px}.footer{text-align:center;margin-top:24px;color:#999;font-size:11px}</style></head><body>${printA4Header('كشف حساب مورد', {factoryName: state.settings.factoryName || 'مصنع الألبان', rows: [['المورد',s.name],['الهاتف',s.phone||'—'],['الفترة',(df.from||'الكل')+' ← '+(df.to||'الكل')],['تاريخ الطباعة',nowStr]]})}<h3 style="color:#D4A843">سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي الحليب:</span><span>${fmt(milkSum,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${balance>0?'green':'red'}">${fmt(balance,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
+  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#333;padding:20px}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:8px;text-align:center}td{border:1px solid #ddd;padding:6px 8px;text-align:center}.totals{margin-top:16px;padding:12px;border:2px solid #D4A843;border-radius:8px}.total-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:8px}.footer{text-align:center;margin-top:24px;color:#999;font-size:11px}</style><style id="ticker-enhancements">
+/* ══════════════════════════════════════════
+   TICKER BAR — Numbers White+Big, Icons Animated
+   ══════════════════════════════════════════ */
+
+/* الأرقام: أبيض + حجم أكبر + توهج */
+.ticker-val {
+  color: #ffffff !important;
+  font-size: 1.2em !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.5px;
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.6),
+    0 0 18px rgba(212, 168, 67, 0.4);
+  display: inline-block;
+  padding: 0 2px;
+}
+
+/* الإيموجي: نبضة + دوران خفيف */
+.ticker-emoji {
+  display: inline-block;
+  animation: emojiPulse 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 5px rgba(212, 168, 67, 0.7));
+  transform-origin: center bottom;
+}
+.ticker-emoji:nth-of-type(3n+2) { animation-delay: 0.7s;  }
+.ticker-emoji:nth-of-type(3n+3) { animation-delay: 1.4s;  }
+
+@keyframes emojiPulse {
+  0%,100% { transform: scale(1)    rotate(0deg);    opacity: 1;   }
+  25%     { transform: scale(1.3)  rotate(-10deg);  opacity: 0.9; }
+  50%     { transform: scale(1.05) rotate(0deg);    opacity: 1;   }
+  75%     { transform: scale(1.2)  rotate(6deg);    opacity: 0.9; }
+}
+
+/* الفاصل ◆ يدور */
+.ticker-sep {
+  display: inline-block;
+  color: var(--gold, #D4A843) !important;
+  margin: 0 8px;
+  opacity: 0.8;
+  animation: sepSpin 4s linear infinite;
+}
+@keyframes sepSpin {
+  0%   { transform: rotate(0deg)   scale(1);   opacity: 0.5; }
+  50%  { transform: rotate(180deg) scale(1.4); opacity: 1;   }
+  100% { transform: rotate(360deg) scale(1);   opacity: 0.5; }
+}
+
+/* النص العادي في الشريط */
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-200, #c0c8d8);
+  font-size: 13px;
+  white-space: nowrap;
+}
+</style>
+</head><body>${printA4Header('كشف حساب مورد', {factoryName: state.settings.factoryName || 'مصنع الألبان', rows: [['المورد',s.name],['الهاتف',s.phone||'—'],['الفترة',(df.from||'الكل')+' ← '+(df.to||'الكل')],['تاريخ الطباعة',nowStr]]})}<h3 style="color:#D4A843">سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي الحليب:</span><span>${fmt(milkSum,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${balance>0?'green':'red'}">${fmt(balance,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
   pw.document.close(); setTimeout(()=>pw.print(), 600);
 };
 
@@ -4539,7 +4783,66 @@ window.printWorkerStatement = function() {
   const remaining = totalEarned - paySum - advSum - purSum;
   const nowStr = new Date().toLocaleString('ar-EG',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
   const pw = window.open('','_blank');
-  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#333;padding:20px}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:8px;text-align:center}td{border:1px solid #ddd;padding:6px 8px;text-align:center}.totals{margin-top:16px;padding:12px;border:2px solid #D4A843;border-radius:8px}.total-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:8px}.footer{text-align:center;margin-top:24px;color:#999;font-size:11px}</style></head><body>${printA4Header('كشف حساب عامل',{factoryName:state.settings.factoryName||'مصنع الألبان',rows:[['العامل',w.name],['اليومية',fmt(dailyRate,2)+' ج'],['الفترة',(df.from||'الكل')+' ← '+(df.to||'الكل')],['تاريخ الطباعة',nowStr]]})}<h3 style="color:#D4A843">سجل الحضور (${totalDays} يوم)</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${att.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>المستحق (${totalDays} يوم):</span><span>${fmt(totalEarned,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
+  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#333;padding:20px}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:8px;text-align:center}td{border:1px solid #ddd;padding:6px 8px;text-align:center}.totals{margin-top:16px;padding:12px;border:2px solid #D4A843;border-radius:8px}.total-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:8px}.footer{text-align:center;margin-top:24px;color:#999;font-size:11px}</style><style id="ticker-enhancements">
+/* ══════════════════════════════════════════
+   TICKER BAR — Numbers White+Big, Icons Animated
+   ══════════════════════════════════════════ */
+
+/* الأرقام: أبيض + حجم أكبر + توهج */
+.ticker-val {
+  color: #ffffff !important;
+  font-size: 1.2em !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.5px;
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.6),
+    0 0 18px rgba(212, 168, 67, 0.4);
+  display: inline-block;
+  padding: 0 2px;
+}
+
+/* الإيموجي: نبضة + دوران خفيف */
+.ticker-emoji {
+  display: inline-block;
+  animation: emojiPulse 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 5px rgba(212, 168, 67, 0.7));
+  transform-origin: center bottom;
+}
+.ticker-emoji:nth-of-type(3n+2) { animation-delay: 0.7s;  }
+.ticker-emoji:nth-of-type(3n+3) { animation-delay: 1.4s;  }
+
+@keyframes emojiPulse {
+  0%,100% { transform: scale(1)    rotate(0deg);    opacity: 1;   }
+  25%     { transform: scale(1.3)  rotate(-10deg);  opacity: 0.9; }
+  50%     { transform: scale(1.05) rotate(0deg);    opacity: 1;   }
+  75%     { transform: scale(1.2)  rotate(6deg);    opacity: 0.9; }
+}
+
+/* الفاصل ◆ يدور */
+.ticker-sep {
+  display: inline-block;
+  color: var(--gold, #D4A843) !important;
+  margin: 0 8px;
+  opacity: 0.8;
+  animation: sepSpin 4s linear infinite;
+}
+@keyframes sepSpin {
+  0%   { transform: rotate(0deg)   scale(1);   opacity: 0.5; }
+  50%  { transform: rotate(180deg) scale(1.4); opacity: 1;   }
+  100% { transform: rotate(360deg) scale(1);   opacity: 0.5; }
+}
+
+/* النص العادي في الشريط */
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-200, #c0c8d8);
+  font-size: 13px;
+  white-space: nowrap;
+}
+</style>
+</head><body>${printA4Header('كشف حساب عامل',{factoryName:state.settings.factoryName||'مصنع الألبان',rows:[['العامل',w.name],['اليومية',fmt(dailyRate,2)+' ج'],['الفترة',(df.from||'الكل')+' ← '+(df.to||'الكل')],['تاريخ الطباعة',nowStr]]})}<h3 style="color:#D4A843">سجل الحضور (${totalDays} يوم)</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${att.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>المستحق (${totalDays} يوم):</span><span>${fmt(totalEarned,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
   pw.document.close(); setTimeout(()=>pw.print(), 600);
 };
 
@@ -4560,7 +4863,66 @@ window.printBuyerStatement = function() {
   const remaining = salesTotal - salesPaid - paySum - purSum;
   const nowStr = new Date().toLocaleString('ar-EG',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
   const pw = window.open('','_blank');
-  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#333;padding:20px}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:8px;text-align:center}td{border:1px solid #ddd;padding:6px 8px;text-align:center}.totals{margin-top:16px;padding:12px;border:2px solid #D4A843;border-radius:8px}.total-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:8px}.footer{text-align:center;margin-top:24px;color:#999;font-size:11px}</style></head><body>${printA4Header('كشف حساب مشترٍ',{factoryName:state.settings.factoryName||'مصنع الألبان',rows:[['المشتري',b.name],['الهاتف',b.phone||'—'],['الفترة',(df.from||'الكل')+' ← '+(df.to||'الكل')],['تاريخ الطباعة',nowStr]]})}<h3 style="color:#D4A843">المبيعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${sales.map(([,s],i)=>{const pd=Number(s.paidNow??s.total??0);return`<tr><td>${i+1}</td><td>${s.date}</td><td>${sanitize(s.product)}</td><td>${fmt(s.qty,2)}</td><td>${fmt(s.total,2)}</td><td>${fmt(pd,2)}</td><td>${fmt(Number(s.total||0)-pd,2)}</td></tr>`;}).join('')||'<tr><td colspan="7">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي المبيعات:</span><span>${fmt(salesTotal,2)} ج</span></div><div class="total-row"><span>المدفوع:</span><span>${fmt(salesPaid+paySum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
+  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#333;padding:20px}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:8px;text-align:center}td{border:1px solid #ddd;padding:6px 8px;text-align:center}.totals{margin-top:16px;padding:12px;border:2px solid #D4A843;border-radius:8px}.total-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:8px}.footer{text-align:center;margin-top:24px;color:#999;font-size:11px}</style><style id="ticker-enhancements">
+/* ══════════════════════════════════════════
+   TICKER BAR — Numbers White+Big, Icons Animated
+   ══════════════════════════════════════════ */
+
+/* الأرقام: أبيض + حجم أكبر + توهج */
+.ticker-val {
+  color: #ffffff !important;
+  font-size: 1.2em !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.5px;
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.6),
+    0 0 18px rgba(212, 168, 67, 0.4);
+  display: inline-block;
+  padding: 0 2px;
+}
+
+/* الإيموجي: نبضة + دوران خفيف */
+.ticker-emoji {
+  display: inline-block;
+  animation: emojiPulse 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 5px rgba(212, 168, 67, 0.7));
+  transform-origin: center bottom;
+}
+.ticker-emoji:nth-of-type(3n+2) { animation-delay: 0.7s;  }
+.ticker-emoji:nth-of-type(3n+3) { animation-delay: 1.4s;  }
+
+@keyframes emojiPulse {
+  0%,100% { transform: scale(1)    rotate(0deg);    opacity: 1;   }
+  25%     { transform: scale(1.3)  rotate(-10deg);  opacity: 0.9; }
+  50%     { transform: scale(1.05) rotate(0deg);    opacity: 1;   }
+  75%     { transform: scale(1.2)  rotate(6deg);    opacity: 0.9; }
+}
+
+/* الفاصل ◆ يدور */
+.ticker-sep {
+  display: inline-block;
+  color: var(--gold, #D4A843) !important;
+  margin: 0 8px;
+  opacity: 0.8;
+  animation: sepSpin 4s linear infinite;
+}
+@keyframes sepSpin {
+  0%   { transform: rotate(0deg)   scale(1);   opacity: 0.5; }
+  50%  { transform: rotate(180deg) scale(1.4); opacity: 1;   }
+  100% { transform: rotate(360deg) scale(1);   opacity: 0.5; }
+}
+
+/* النص العادي في الشريط */
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-200, #c0c8d8);
+  font-size: 13px;
+  white-space: nowrap;
+}
+</style>
+</head><body>${printA4Header('كشف حساب مشترٍ',{factoryName:state.settings.factoryName||'مصنع الألبان',rows:[['المشتري',b.name],['الهاتف',b.phone||'—'],['الفترة',(df.from||'الكل')+' ← '+(df.to||'الكل')],['تاريخ الطباعة',nowStr]]})}<h3 style="color:#D4A843">المبيعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${sales.map(([,s],i)=>{const pd=Number(s.paidNow??s.total??0);return`<tr><td>${i+1}</td><td>${s.date}</td><td>${sanitize(s.product)}</td><td>${fmt(s.qty,2)}</td><td>${fmt(s.total,2)}</td><td>${fmt(pd,2)}</td><td>${fmt(Number(s.total||0)-pd,2)}</td></tr>`;}).join('')||'<tr><td colspan="7">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي المبيعات:</span><span>${fmt(salesTotal,2)} ج</span></div><div class="total-row"><span>المدفوع:</span><span>${fmt(salesPaid+paySum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
   pw.document.close(); setTimeout(()=>pw.print(), 600);
 };
 
