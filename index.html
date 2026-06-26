@@ -568,8 +568,9 @@
             <div class="form-group" style="min-width:180px"><label>المخزن</label>
               <select id="exports-wh-filter" onchange="loadExports()">
                 <option value="">كل المخازن</option>
-                <option value="warehouse1">المخزن الأول</option>
-                <option value="warehouse2">المخزن الثاني</option>
+                <option value="factory">🏭 خارج من المعمل</option>
+                <option value="warehouse1">📦 المخزن الأول</option>
+                <option value="warehouse2">🏪 المخزن الثاني</option>
               </select>
             </div>
           </div>
@@ -580,7 +581,7 @@
         <div class="table-wrapper">
           <table>
             <thead>
-              <tr><th>#</th><th>التاريخ</th><th>المخزن</th><th>الصنف</th><th>الكمية</th><th>العميل/الجهة</th><th>ملاحظات</th><th>حذف</th></tr>
+              <tr><th>#</th><th>التاريخ</th><th>المخزن</th><th>الصنف</th><th>الوزن (كجم)</th><th>العدد</th><th>العميل/الجهة</th><th>ملاحظات</th><th>حذف</th></tr>
             </thead>
             <tbody id="exports-tbody"></tbody>
           </table>
@@ -879,7 +880,8 @@
           <div class="form-group" style="min-width:150px;margin:0;">
             <label>المخزن</label>
             <select id="inv-report-warehouse" onchange="generateFilteredReport()" style="width:100%">
-              <option value="all">🏭 كلا المخزنين</option>
+              <option value="all">📊 الكل (معمل + مخازن)</option>
+              <option value="factory">🏭 خارج من المعمل فقط</option>
               <option value="warehouse1">📦 المخزن الأول فقط</option>
               <option value="warehouse2">🏪 المخزن الثاني فقط</option>
             </select>
@@ -1395,12 +1397,15 @@
         <div class="form-group"><label>التاريخ *</label><input type="date" id="ex-date"></div>
         <div class="form-group"><label>المخزن *</label>
           <select id="ex-warehouse" onchange="loadExportItems()">
-            <option value="warehouse1">المخزن الأول</option>
-            <option value="warehouse2">المخزن الثاني</option>
+            <option value="factory">🏭 خارج من المعمل</option>
+            <option value="warehouse1">📦 المخزن الأول</option>
+            <option value="warehouse2">🏪 المخزن الثاني</option>
           </select>
         </div>
         <div class="form-group"><label>الصنف *</label><select id="ex-item"><option value="">اختر صنفاً...</option></select></div>
-        <div class="form-group"><label>الكمية *</label><input type="number" id="ex-qty" placeholder="0" min="0" step="0.01"></div>
+        <div class="form-group"><label>الوزن (كجم) *</label><input type="number" id="ex-qty" placeholder="0.00" min="0" step="0.01" oninput="calcExportTotal()"></div>
+        <div class="form-group"><label>العدد (اختياري)</label><input type="number" id="ex-count" placeholder="مثال: 5 أقراص" min="0" step="1"></div>
+        <div class="form-group"><label>وحدة العدد</label><input type="text" id="ex-count-unit" placeholder="قرص / كيس / علبة ..."></div>
         <div class="form-group"><label>العميل / الجهة</label><input type="text" id="ex-client" placeholder="اسم العميل"></div>
         <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="ex-notes" placeholder="ملاحظات"></div>
       </div>
@@ -2438,9 +2443,15 @@ window.deleteWHItem = async function(wh, id) {
 // ══════════════════════════════════════════════════════════════════
 window.openExportModal = function() {
   $('ex-date').value = today();
-  $('ex-qty').value  = '';
+  $('ex-qty').value = '';
+  $('ex-count').value = '';
+  $('ex-count-unit').value = '';
   $('ex-client').value = '';
-  $('ex-notes').value  = '';
+  $('ex-notes').value = '';
+  // reset free input
+  const fi = document.getElementById('ex-item-free');
+  if (fi) { fi.style.display = 'none'; fi.value = ''; }
+  $('ex-item').style.display = 'block';
   loadExportItems();
   openModal('modal-export');
 };
@@ -2448,8 +2459,29 @@ window.openExportModal = function() {
 window.loadExportItems = function() {
   const wh  = $('ex-warehouse').value;
   const sel = $('ex-item');
-  sel.innerHTML = '<option value="">اختر صنفاً...</option>' +
-    Object.entries(state[wh]).map(([id,i]) => `<option value="${id}">${sanitize(i.name)} (${fmt(i.qty||0,2)} ${i.unit||''})</option>`).join('');
+  // إدارة حقل النص الحر لـ "خارج من المعمل"
+  let freeInput = document.getElementById('ex-item-free');
+  if (wh === 'factory') {
+    sel.style.display = 'none';
+    if (!freeInput) {
+      freeInput = document.createElement('input');
+      freeInput.type = 'text';
+      freeInput.id = 'ex-item-free';
+      freeInput.placeholder = 'مثال: جبنة بيضاء، زبدة، لبنة...';
+      freeInput.style.cssText = 'width:100%;padding:10px 12px;background:var(--bg-600);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text-100);font-family:inherit;font-size:14px;box-sizing:border-box';
+      sel.parentNode.insertBefore(freeInput, sel.nextSibling);
+    }
+    freeInput.style.display = 'block';
+    freeInput.value = '';
+    sel.value = '';
+  } else {
+    sel.style.display = 'block';
+    if (freeInput) freeInput.style.display = 'none';
+    sel.innerHTML = '<option value="">اختر صنفاً...</option>' +
+      Object.entries(state[wh] || {}).map(([id,i]) =>
+        `<option value="${id}">${sanitize(i.name)} — ${fmt(i.qty||0,2)} ${i.unit||'كجم'}</option>`
+      ).join('');
+  }
 };
 
 window.loadExports = function() {
@@ -2465,39 +2497,68 @@ window.loadExports = function() {
   }).sort((a,b) => b[1].date > a[1].date ? 1 : -1);
 
   $('exports-tbody').innerHTML = rows.length ? rows.map(([id,e], i) => {
-    const whn = e.warehouse === 'warehouse1' ? 'المخزن الأول' : 'المخزن الثاني';
-    const itemName = state[e.warehouse]?.[e.itemId]?.name || e.itemId || '—';
+    const whn = e.warehouse === 'factory' ? '🏭 خارج من المعمل'
+              : e.warehouse === 'warehouse1' ? '📦 المخزن الأول' : '🏪 المخزن الثاني';
+    const badgeClass = e.warehouse === 'factory' ? 'badge-warning'
+                     : e.warehouse === 'warehouse1' ? 'badge-info' : 'badge-success';
+    const itemName = e.warehouse === 'factory'
+      ? sanitize(e.itemName || e.itemId || '—')
+      : state[e.warehouse]?.[e.itemId]?.name || e.itemId || '—';
+    const countStr = e.count ? `${fmt(e.count,0)} ${sanitize(e.countUnit||'')}` : '—';
     return `<tr>
       <td>${i+1}</td><td>${e.date}</td>
-      <td><span class="badge badge-info">${whn}</span></td>
+      <td><span class="badge ${badgeClass}">${whn}</span></td>
       <td>${sanitize(itemName)}</td>
-      <td style="color:var(--gold);font-weight:700">${fmt(e.qty,2)}</td>
+      <td style="color:var(--gold);font-weight:700">${fmt(e.qty,2)} كجم</td>
+      <td style="color:var(--info)">${countStr}</td>
       <td>${sanitize(e.client||'—')}</td>
       <td>${sanitize(e.notes||'—')}</td>
       <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteExport('${id}','${e.warehouse}','${e.itemId}',${e.qty})">🗑️</button></td>
     </tr>`;
-  }).join('') : `<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">📦</span><p>لا توجد صادرات</p></div></td></tr>`;
+  }).join('') : `<tr><td colspan="9"><div class="empty-state"><span class="empty-icon">📦</span><p>لا توجد صادرات</p></div></td></tr>`;
 };
 
 window.saveExport = async function() {
-  const wh     = $('ex-warehouse').value;
-  const itemId = $('ex-item').value;
-  const qty    = parseFloat($('ex-qty').value);
-  if (!itemId) { toast('اختر الصنف', 'error'); return; }
-  if (!qty || qty <= 0) { toast('الكمية يجب أن تكون أكبر من صفر', 'error'); return; }
+  const wh        = $('ex-warehouse').value;
+  const qty       = parseFloat($('ex-qty').value);
+  const count     = parseFloat($('ex-count').value) || 0;
+  const countUnit = sanitize($('ex-count-unit').value || '');
 
-  const item = state[wh][itemId];
-  if (!item) { toast('الصنف غير موجود', 'error'); return; }
-  if (Number(item.qty||0) < qty) { toast('الكمية المطلوبة أكبر من المتاح في المخزن', 'error'); return; }
+  if (!qty || qty <= 0) { toast('الوزن يجب أن يكون أكبر من صفر', 'error'); return; }
 
   loading(true);
   try {
-    await dbPush('exports', { date: $('ex-date').value, warehouse: wh, itemId, qty, client: sanitize($('ex-client').value), notes: sanitize($('ex-notes').value) });
-    await dbUpdate(`${wh}/${itemId}`, { qty: Number(item.qty) - qty });
-    toast('تم تسجيل الصادر وخصم الكمية من المخزن', 'success');
-    track('export_create', { wh, itemId, qty });
+    if (wh === 'factory') {
+      const freeInput = document.getElementById('ex-item-free');
+      const itemName  = sanitize(freeInput ? freeInput.value : $('ex-item').value);
+      if (!itemName) { toast('أدخل اسم المنتج', 'error'); loading(false); return; }
+      await dbPush('exports', {
+        date: $('ex-date').value, warehouse: 'factory',
+        itemId: itemName, itemName,
+        qty, count, countUnit,
+        client: sanitize($('ex-client').value),
+        notes: sanitize($('ex-notes').value)
+      });
+      toast('تم تسجيل الصادر من المعمل ✅', 'success');
+    } else {
+      const itemId = $('ex-item').value;
+      if (!itemId) { toast('اختر الصنف', 'error'); loading(false); return; }
+      const item = state[wh][itemId];
+      if (!item) { toast('الصنف غير موجود', 'error'); loading(false); return; }
+      if (Number(item.qty||0) < qty) { toast('الوزن المطلوب أكبر من المتاح في المخزن', 'error'); loading(false); return; }
+      await dbPush('exports', {
+        date: $('ex-date').value, warehouse: wh, itemId,
+        itemName: item.name, qty, count, countUnit,
+        client: sanitize($('ex-client').value),
+        notes: sanitize($('ex-notes').value)
+      });
+      await dbUpdate(`${wh}/${itemId}`, { qty: Number(item.qty) - qty });
+      renderWarehouse(wh);
+      toast('تم تسجيل الصادر وخصم الوزن من المخزن ✅', 'success');
+    }
+    track('export_create', { wh, qty });
     closeModal('modal-export');
-    loadExports(); renderWarehouse(wh);
+    loadExports();
   } catch(e) { toast('خطأ: ' + e.message, 'error'); }
   finally { loading(false); }
 };
@@ -5268,7 +5329,7 @@ if ('serviceWorker' in navigator) {
       });
 
       // --- فلتر الصادرات مخزن 1 ---
-      const exp1Rows = (whFilter === 'warehouse2') ? [] : Object.entries(state.exports || {}).filter(([, e]) => {
+      const exp1Rows = (whFilter === 'warehouse2' || whFilter === 'factory') ? [] : Object.entries(state.exports || {}).filter(([, e]) => {
         if (e.warehouse !== 'warehouse1') return false;
         if (from && e.date < from) return false;
         if (to   && e.date > to)   return false;
@@ -5276,12 +5337,22 @@ if ('serviceWorker' in navigator) {
       });
 
       // --- فلتر الصادرات مخزن 2 ---
-      const exp2Rows = (whFilter === 'warehouse1') ? [] : Object.entries(state.exports || {}).filter(([, e]) => {
+      const exp2Rows = (whFilter === 'warehouse1' || whFilter === 'factory') ? [] : Object.entries(state.exports || {}).filter(([, e]) => {
         if (e.warehouse !== 'warehouse2') return false;
         if (from && e.date < from) return false;
         if (to   && e.date > to)   return false;
         return true;
       });
+
+      // --- فلتر خارج من المعمل ---
+      const factoryRows = (whFilter === 'warehouse1' || whFilter === 'warehouse2') ? [] :
+        Object.entries(state.exports || {}).filter(([, e]) => {
+          if (e.warehouse !== 'factory') return false;
+          if (from && e.date < from) return false;
+          if (to   && e.date > to)   return false;
+          return true;
+        });
+      const factoryTotal = factoryRows.reduce((s,[,e]) => s + Number(e.qty||0), 0);
 
       const expTotal   = expRows.reduce((s, [, e]) => s + Number(e.amount || 0), 0);
       const salesTotal = salesRows.reduce((s, [, r]) => s + Number(r.total  || 0), 0);
@@ -5296,8 +5367,8 @@ if ('serviceWorker' in navigator) {
         expByCategory[cat] = (expByCategory[cat] || 0) + Number(e.amount || 0);
       });
 
-      const wh1Entries = (whFilter === 'warehouse2') ? [] : Object.entries(state.warehouse1 || {});
-      const wh2Entries = (whFilter === 'warehouse1') ? [] : Object.entries(state.warehouse2 || {});
+      const wh1Entries = (whFilter === 'warehouse2' || whFilter === 'factory') ? [] : Object.entries(state.warehouse1 || {});
+      const wh2Entries = (whFilter === 'warehouse1' || whFilter === 'factory') ? [] : Object.entries(state.warehouse2 || {});
 
       const periodLabel = from && to
         ? `${from} ← ${to}`
@@ -5387,13 +5458,14 @@ if ('serviceWorker' in navigator) {
       outputEl.innerHTML = `
         <div style="background:var(--bg-700);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
-            <h3 style="color:var(--gold);margin:0">📊 ${whFilter === 'warehouse1' ? 'تقرير المخزن الأول' : whFilter === 'warehouse2' ? 'تقرير المخزن الثاني' : 'تقرير المخزنين والمصاريف'}</h3>
+            <h3 style="color:var(--gold);margin:0">📊 ${whFilter === 'warehouse1' ? '📦 تقرير المخزن الأول' : whFilter === 'warehouse2' ? '🏪 تقرير المخزن الثاني' : whFilter === 'factory' ? '🏭 تقرير خارج من المعمل' : '📊 تقرير شامل (معمل + مخازن)'}</h3>
             <span style="background:var(--bg-500);padding:6px 14px;border-radius:20px;font-size:13px;color:var(--text-300)">📅 ${periodLabel}</span>
           </div>
           <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:24px">
             <div class="stat-card" style="--accent:var(--success)"><span class="stat-icon">📦</span><div class="stat-value">${wh1Entries.length}</div><div class="stat-label">منتجات المخزن 1</div></div>
             <div class="stat-card" style="--accent:var(--info)"><span class="stat-icon">🏪</span><div class="stat-value">${wh2Entries.length}</div><div class="stat-label">منتجات المخزن 2</div></div>
-            <div class="stat-card" style="--accent:var(--gold)"><span class="stat-icon">📤</span><div class="stat-value">${fmt(exp1Total + exp2Total, 1)}</div><div class="stat-label">إجمالي الصادرات</div></div>
+            <div class="stat-card" style="--accent:var(--gold)"><span class="stat-icon">📤</span><div class="stat-value">${fmt(exp1Total + exp2Total, 1)}</div><div class="stat-label">صادرات المخازن (كجم)</div></div>
+            <div class="stat-card" style="--accent:var(--warning)"><span class="stat-icon">🏭</span><div class="stat-value">${fmt(factoryTotal, 1)}</div><div class="stat-label">خارج من المعمل (كجم)</div></div>
             <div class="stat-card" style="--accent:var(--success)"><span class="stat-icon">💰</span><div class="stat-value">${fmt(salesTotal, 0)}</div><div class="stat-label">إجمالي المبيعات</div></div>
             <div class="stat-card" style="--accent:var(--danger)"><span class="stat-icon">💸</span><div class="stat-value">${fmt(expTotal, 0)}</div><div class="stat-label">إجمالي المصاريف</div></div>
             <div class="stat-card" style="--accent:${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'}">
@@ -5410,6 +5482,26 @@ if ('serviceWorker' in navigator) {
           <h3 style="color:var(--gold);border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:16px;margin-top:8px">🏪 المخزن الثاني</h3>
           ${renderWH(wh2Entries, 'المخزن الثاني')}
           ${renderExports(exp2Rows, 'صادرات المخزن الثاني في الفترة')}` : ''}
+          ${whFilter !== 'warehouse1' && whFilter !== 'warehouse2' ? `
+          <h3 style="color:var(--warning);border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:16px;margin-top:8px">🏭 خارج من المعمل</h3>
+          ${factoryRows.length ? `
+          <p style="color:var(--text-400);font-size:13px;margin-bottom:12px">عدد العمليات: ${factoryRows.length} | إجمالي الوزن: ${fmt(factoryTotal,2)} كجم</p>
+          <div class="table-wrapper" style="margin-bottom:20px">
+            <table>
+              <thead><tr><th>التاريخ</th><th>المنتج</th><th>الوزن (كجم)</th><th>العدد</th><th>العميل/الجهة</th></tr></thead>
+              <tbody>
+                ${factoryRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,e]) => `
+                  <tr>
+                    <td>${e.date}</td>
+                    <td style="font-weight:600">${sanitize(e.itemName||e.itemId||'')}</td>
+                    <td style="color:var(--gold);font-weight:700">${fmt(e.qty,2)} كجم</td>
+                    <td style="color:var(--info)">${e.count ? fmt(e.count,0)+' '+(e.countUnit||'') : '—'}</td>
+                    <td>${sanitize(e.client||'—')}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>` : '<p style="color:var(--text-400);font-size:13px;margin-bottom:16px">لا توجد صادرات من المعمل في هذه الفترة</p>'}
+          ` : ''}
           <h3 style="color:var(--danger);border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:16px;margin-top:8px">💸 المصاريف حسب الفئة</h3>
           <p style="color:var(--text-400);font-size:13px;margin-bottom:12px">عدد العمليات: ${expRows.length} | الإجمالي: ${fmt(expTotal, 2)}</p>
           ${expByCatHtml}
@@ -5675,6 +5767,183 @@ if ('serviceWorker' in navigator) {
         renderExportsBarChart(from, to, exp1Rows, exp2Rows, whFilter);
         renderProfitAreaChart(from, to, salesRows, expRows);
       }, 50);
+    };
+
+
+    // ══════════════════════════════════════════════════════════
+    // PRINT FULL REPORT & SUMMARY REPORT
+    // ══════════════════════════════════════════════════════════
+
+    function getPrintStyles() {
+      return `
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { font-family: 'Cairo', 'Tajawal', Arial, sans-serif; direction: rtl; background: #fff; color: #222; padding: 20px; font-size: 13px; }
+          h1 { color: #b8860b; font-size: 18px; margin-bottom: 4px; }
+          h2 { color: #b8860b; font-size: 15px; margin: 16px 0 8px; border-bottom: 2px solid #b8860b; padding-bottom: 4px; }
+          h3 { color: #555; font-size: 13px; margin: 12px 0 6px; }
+          .meta { color: #888; font-size: 11px; margin-bottom: 16px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 12px; }
+          th { background: #b8860b; color: #fff; padding: 6px 8px; text-align: right; }
+          td { border: 1px solid #ddd; padding: 5px 8px; text-align: right; }
+          tr:nth-child(even) td { background: #fafafa; }
+          .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 16px 0; }
+          .summary-card { border: 1px solid #ddd; border-radius: 6px; padding: 10px; text-align: center; }
+          .summary-card .val { font-size: 18px; font-weight: 900; color: #b8860b; }
+          .summary-card .lbl { font-size: 10px; color: #888; margin-top: 2px; }
+          .summary-card.green .val { color: #16a34a; }
+          .summary-card.red .val { color: #dc2626; }
+          .summary-card.blue .val { color: #2563eb; }
+          .section-factory .val { color: #d97706; }
+          .footer { margin-top: 20px; text-align: center; font-size: 10px; color: #aaa; border-top: 1px solid #eee; padding-top: 8px; }
+          @media print { body { padding: 8px; } }
+        </style>`;
+    }
+
+    function getReportData() {
+      const from = document.getElementById('inv-report-from')?.value || '';
+      const to   = document.getElementById('inv-report-to')?.value   || '';
+      const whFilter = document.getElementById('inv-report-warehouse')?.value || 'all';
+      const periodLabel = from && to ? `${from} ← ${to}` : from ? `من ${from}` : to ? `حتى ${to}` : 'كامل الفترة';
+      const factoryName = state.settings?.factoryName || 'نظام إدارة المصنع';
+
+      const salesRows   = Object.entries(state.sales || {}).filter(([,s]) => (!from||s.date>=from)&&(!to||s.date<=to));
+      const expRows     = Object.entries(state.expenses || {}).filter(([,e]) => (!from||e.date>=from)&&(!to||e.date<=to));
+      const milkRows    = Object.entries(state.milkRecords || {}).filter(([,r]) => (!from||r.date>=from)&&(!to||r.date<=to));
+      const factoryRows = whFilter==='warehouse1'||whFilter==='warehouse2' ? [] :
+        Object.entries(state.exports||{}).filter(([,e])=>e.warehouse==='factory'&&(!from||e.date>=from)&&(!to||e.date<=to));
+      const exp1Rows    = whFilter==='warehouse2'||whFilter==='factory' ? [] :
+        Object.entries(state.exports||{}).filter(([,e])=>e.warehouse==='warehouse1'&&(!from||e.date>=from)&&(!to||e.date<=to));
+      const exp2Rows    = whFilter==='warehouse1'||whFilter==='factory' ? [] :
+        Object.entries(state.exports||{}).filter(([,e])=>e.warehouse==='warehouse2'&&(!from||e.date>=from)&&(!to||e.date<=to));
+
+      const salesTotal   = salesRows.reduce((s,[,r])=>s+Number(r.total||0),0);
+      const expTotal     = expRows.reduce((s,[,e])=>s+Number(e.amount||0),0);
+      const milkQty      = milkRows.reduce((s,[,r])=>s+Number(r.qty||0),0);
+      const milkAmt      = milkRows.reduce((s,[,r])=>s+Number(r.total||0),0);
+      const factoryTot   = factoryRows.reduce((s,[,e])=>s+Number(e.qty||0),0);
+      const exp1Tot      = exp1Rows.reduce((s,[,e])=>s+Number(e.qty||0),0);
+      const exp2Tot      = exp2Rows.reduce((s,[,e])=>s+Number(e.qty||0),0);
+      const netProfit    = salesTotal - expTotal;
+
+      const expByCat = {};
+      expRows.forEach(([,e])=>{ expByCat[e.category]=(expByCat[e.category]||0)+Number(e.amount||0); });
+
+      return { from, to, whFilter, periodLabel, factoryName,
+               salesRows, expRows, milkRows, factoryRows, exp1Rows, exp2Rows,
+               salesTotal, expTotal, milkQty, milkAmt, factoryTot, exp1Tot, exp2Tot,
+               netProfit, expByCat };
+    }
+
+    window.printFullFilteredReport = function() {
+      const d = getReportData();
+      const pw = window.open('','_blank');
+      pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">
+        <title>تقرير كامل — ${d.factoryName}</title>${getPrintStyles()}</head><body>
+        <h1>🏭 ${d.factoryName}</h1>
+        <div class="meta">📅 الفترة: ${d.periodLabel} | 🖨️ طُبع: ${new Date().toLocaleString('ar-EG')}</div>
+        <div class="summary-grid">
+          <div class="summary-card green"><div class="val">${fmt(d.salesTotal,2)}</div><div class="lbl">إجمالي المبيعات</div></div>
+          <div class="summary-card red"><div class="val">${fmt(d.expTotal,2)}</div><div class="lbl">إجمالي المصاريف</div></div>
+          <div class="summary-card ${d.netProfit>=0?'green':'red'}"><div class="val">${fmt(d.netProfit,2)}</div><div class="lbl">صافي الربح</div></div>
+          <div class="summary-card blue"><div class="val">${fmt(d.milkQty,1)} كجم</div><div class="lbl">استلام الحليب</div></div>
+          <div class="summary-card"><div class="val" style="color:#d97706">${fmt(d.factoryTot,2)} كجم</div><div class="lbl">خارج من المعمل</div></div>
+          <div class="summary-card"><div class="val">${fmt(d.exp1Tot,2)} كجم</div><div class="lbl">صادرات المخزن 1</div></div>
+          <div class="summary-card"><div class="val">${fmt(d.exp2Tot,2)} كجم</div><div class="lbl">صادرات المخزن 2</div></div>
+        </div>
+
+        <h2>🥛 سجل استلام الحليب (${d.milkRows.length} سجل)</h2>
+        ${d.milkRows.length ? `<table><thead><tr><th>التاريخ</th><th>المورد</th><th>الكمية (كجم)</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>
+          ${d.milkRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,r])=>`<tr>
+            <td>${r.date}</td><td>${sanitize(state.suppliers?.[r.supplierId]?.name||'')}</td>
+            <td>${fmt(r.qty,2)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td>
+          </tr>`).join('')}
+          <tr><td colspan="2"><strong>الإجمالي</strong></td><td><strong>${fmt(d.milkQty,2)}</strong></td><td></td><td><strong>${fmt(d.milkAmt,2)}</strong></td></tr>
+        </tbody></table>` : '<p>لا توجد بيانات</p>'}
+
+        <h2>🏭 خارج من المعمل (${d.factoryRows.length} عملية)</h2>
+        ${d.factoryRows.length ? `<table><thead><tr><th>التاريخ</th><th>المنتج</th><th>الوزن (كجم)</th><th>العدد</th><th>العميل</th></tr></thead><tbody>
+          ${d.factoryRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,e])=>`<tr>
+            <td>${e.date}</td><td>${sanitize(e.itemName||e.itemId||'')}</td>
+            <td>${fmt(e.qty,2)}</td><td>${e.count?fmt(e.count,0)+' '+(e.countUnit||''):'—'}</td>
+            <td>${sanitize(e.client||'—')}</td>
+          </tr>`).join('')}
+          <tr><td colspan="2"><strong>الإجمالي</strong></td><td><strong>${fmt(d.factoryTot,2)} كجم</strong></td><td colspan="2"></td></tr>
+        </tbody></table>` : '<p>لا توجد بيانات في هذه الفترة</p>'}
+
+        <h2>📦 صادرات المخزن الأول (${d.exp1Rows.length} عملية)</h2>
+        ${d.exp1Rows.length ? `<table><thead><tr><th>التاريخ</th><th>الصنف</th><th>الوزن (كجم)</th><th>العدد</th><th>العميل</th></tr></thead><tbody>
+          ${d.exp1Rows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,e])=>`<tr>
+            <td>${e.date}</td><td>${sanitize(state.warehouse1?.[e.itemId]?.name||e.itemName||'')}</td>
+            <td>${fmt(e.qty,2)}</td><td>${e.count?fmt(e.count,0)+' '+(e.countUnit||''):'—'}</td>
+            <td>${sanitize(e.client||'—')}</td>
+          </tr>`).join('')}
+          <tr><td colspan="2"><strong>الإجمالي</strong></td><td><strong>${fmt(d.exp1Tot,2)} كجم</strong></td><td colspan="2"></td></tr>
+        </tbody></table>` : '<p>لا توجد بيانات</p>'}
+
+        <h2>🏪 صادرات المخزن الثاني (${d.exp2Rows.length} عملية)</h2>
+        ${d.exp2Rows.length ? `<table><thead><tr><th>التاريخ</th><th>الصنف</th><th>الوزن (كجم)</th><th>العدد</th><th>العميل</th></tr></thead><tbody>
+          ${d.exp2Rows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,e])=>`<tr>
+            <td>${e.date}</td><td>${sanitize(state.warehouse2?.[e.itemId]?.name||e.itemName||'')}</td>
+            <td>${fmt(e.qty,2)}</td><td>${e.count?fmt(e.count,0)+' '+(e.countUnit||''):'—'}</td>
+            <td>${sanitize(e.client||'—')}</td>
+          </tr>`).join('')}
+          <tr><td colspan="2"><strong>الإجمالي</strong></td><td><strong>${fmt(d.exp2Tot,2)} كجم</strong></td><td colspan="2"></td></tr>
+        </tbody></table>` : '<p>لا توجد بيانات</p>'}
+
+        <h2>💰 المبيعات (${d.salesRows.length} فاتورة)</h2>
+        ${d.salesRows.length ? `<table><thead><tr><th>التاريخ</th><th>العميل</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th></tr></thead><tbody>
+          ${d.salesRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,s])=>`<tr>
+            <td>${s.date}</td><td>${sanitize(s.client||'')}</td><td>${sanitize(s.product||'')}</td>
+            <td>${fmt(s.qty,2)}</td><td>${fmt(s.total,2)}</td>
+          </tr>`).join('')}
+          <tr><td colspan="4"><strong>الإجمالي</strong></td><td><strong>${fmt(d.salesTotal,2)}</strong></td></tr>
+        </tbody></table>` : '<p>لا توجد بيانات</p>'}
+
+        <h2>💸 المصاريف (${d.expRows.length} عملية)</h2>
+        ${d.expRows.length ? `<table><thead><tr><th>التاريخ</th><th>البيان</th><th>الفئة</th><th>المبلغ</th></tr></thead><tbody>
+          ${d.expRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,e])=>`<tr>
+            <td>${e.date}</td><td>${sanitize(e.desc||'')}</td><td>${sanitize(e.category||'')}</td><td>${fmt(e.amount,2)}</td>
+          </tr>`).join('')}
+          <tr><td colspan="3"><strong>الإجمالي</strong></td><td><strong>${fmt(d.expTotal,2)}</strong></td></tr>
+        </tbody></table>` : '<p>لا توجد بيانات</p>'}
+
+        <div class="footer">نظام إدارة مصنع الألبان | ${new Date().toLocaleDateString('ar-EG')}</div>
+      </body></html>`);
+      pw.document.close();
+      setTimeout(()=>pw.print(), 600);
+    };
+
+    window.printSummaryReport = function() {
+      const d = getReportData();
+      const pw = window.open('','_blank');
+      pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">
+        <title>إجماليات — ${d.factoryName}</title>${getPrintStyles()}</head><body>
+        <h1>🏭 ${d.factoryName}</h1>
+        <h2 style="color:#555;border:none;font-size:14px">ملخص إجماليات الفترة</h2>
+        <div class="meta">📅 الفترة: ${d.periodLabel} | 🖨️ طُبع: ${new Date().toLocaleString('ar-EG')}</div>
+        <div class="summary-grid">
+          <div class="summary-card blue"><div class="val">${fmt(d.milkQty,1)} كجم</div><div class="lbl">إجمالي الحليب</div></div>
+          <div class="summary-card blue"><div class="val">${fmt(d.milkAmt,2)}</div><div class="lbl">قيمة الحليب</div></div>
+          <div class="summary-card"><div class="val" style="color:#d97706">${fmt(d.factoryTot,2)} كجم</div><div class="lbl">خارج من المعمل</div></div>
+          <div class="summary-card"><div class="val">${fmt(d.exp1Tot,2)} كجم</div><div class="lbl">صادرات المخزن 1</div></div>
+          <div class="summary-card"><div class="val">${fmt(d.exp2Tot,2)} كجم</div><div class="lbl">صادرات المخزن 2</div></div>
+          <div class="summary-card green"><div class="val">${fmt(d.salesTotal,2)}</div><div class="lbl">إجمالي المبيعات</div></div>
+          <div class="summary-card red"><div class="val">${fmt(d.expTotal,2)}</div><div class="lbl">إجمالي المصاريف</div></div>
+          <div class="summary-card ${d.netProfit>=0?'green':'red'}"><div class="val">${fmt(d.netProfit,2)}</div><div class="lbl">صافي الربح</div></div>
+        </div>
+        <h2>💸 المصاريف حسب الفئة</h2>
+        ${Object.keys(d.expByCat).length ? `<table><thead><tr><th>الفئة</th><th>المبلغ</th><th>النسبة</th></tr></thead><tbody>
+          ${Object.entries(d.expByCat).sort((a,b)=>b[1]-a[1]).map(([cat,amt])=>`<tr>
+            <td>${sanitize(cat)}</td><td>${fmt(amt,2)}</td>
+            <td>${d.expTotal?fmt(amt/d.expTotal*100,1)+'%':'—'}</td>
+          </tr>`).join('')}
+          <tr><td><strong>الإجمالي</strong></td><td><strong>${fmt(d.expTotal,2)}</strong></td><td>100%</td></tr>
+        </tbody></table>` : '<p>لا توجد بيانات</p>'}
+        <div class="footer">نظام إدارة مصنع الألبان | ${new Date().toLocaleDateString('ar-EG')}</div>
+      </body></html>`);
+      pw.document.close();
+      setTimeout(()=>pw.print(), 600);
     };
 
 </script>
