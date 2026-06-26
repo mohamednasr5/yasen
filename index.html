@@ -165,14 +165,17 @@
 
       <div class="nav-group">
         <div class="nav-label">المخازن</div>
+        <div class="nav-item" onclick="navigate('factory-out')">
+          <span class="icon">🏭</span> خارج من المعمل
+        </div>
         <div class="nav-item" onclick="navigate('warehouse1')">
-          <span class="icon">🏭</span> المخزن الأول
+          <span class="icon">📦</span> المخزن الأول
         </div>
         <div class="nav-item" onclick="navigate('warehouse2')">
           <span class="icon">🏪</span> المخزن الثاني
         </div>
         <div class="nav-item" onclick="navigate('exports')">
-          <span class="icon">📦</span> الصادرات
+          <span class="icon">📤</span> الصادرات
         </div>
       </div>
 
@@ -513,7 +516,56 @@
     </div>
 
     <!-- ════ PAGE: WAREHOUSE 1 ════ -->
-    <div class="page" id="page-warehouse1">
+    
+    <!-- ════ PAGE: FACTORY OUT ════ -->
+    <div class="page" id="page-factory-out">
+      <div class="section-header">
+        <span class="section-icon">🏭</span>
+        <h2>خارج من المعمل</h2>
+        <button class="btn btn-primary" onclick="openFactoryOutModal()">➕ تسجيل صادر من المعمل</button>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-body">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+            <div class="form-group" style="min-width:160px"><label>من تاريخ</label><input type="date" id="fo-from" onchange="loadFactoryOut()"></div>
+            <div class="form-group" style="min-width:160px"><label>إلى تاريخ</label><input type="date" id="fo-to" onchange="loadFactoryOut()"></div>
+            <div class="form-group" style="min-width:180px"><label>بحث بالمنتج</label>
+              <input type="text" id="fo-search" placeholder="اسم المنتج..." oninput="loadFactoryOut()">
+            </div>
+            <button class="btn btn-secondary" style="margin-top:22px"
+              onclick="['fo-from','fo-to','fo-search'].forEach(id=>{document.getElementById(id).value='';});loadFactoryOut()">
+              🔄 مسح
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="fo-summary" class="summary-bar" style="display:none;margin-bottom:20px">
+        <div class="summary-item"><div class="val" id="fo-sum-qty" style="color:var(--gold)">0</div><div class="lbl">إجمالي الوزن (كجم)</div></div>
+        <div class="summary-item"><div class="val" id="fo-sum-count" style="color:var(--info)">0</div><div class="lbl">إجمالي العدد</div></div>
+        <div class="summary-item"><div class="val" id="fo-sum-records" style="color:var(--success)">0</div><div class="lbl">عدد العمليات</div></div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>التاريخ</th><th>المنتج</th>
+                <th>الوزن (كجم)</th><th>العدد</th><th>الوحدة</th>
+                <th>العميل / الجهة</th><th>ملاحظات</th><th>حذف</th>
+              </tr>
+            </thead>
+            <tbody id="fo-tbody">
+              <tr><td colspan="9"><div class="empty-state"><span class="empty-icon">🏭</span><p>لا توجد بيانات</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+<div class="page" id="page-warehouse1">
       <div class="section-header">
         <span class="section-icon">🏭</span>
         <h2>المخزن الأول</h2>
@@ -1384,6 +1436,48 @@
   </div>
 </div>
 
+
+  <!-- ════ MODAL: FACTORY OUT ════ -->
+  <div class="modal-backdrop" id="modal-factory-out">
+    <div class="modal" style="max-width:500px">
+      <div class="modal-header">
+        <span style="font-size:22px">🏭</span>
+        <h3>تسجيل صادر من المعمل</h3>
+        <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-factory-out')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group"><label>التاريخ *</label><input type="date" id="fo-date"></div>
+          <div class="form-group"><label>المنتج *</label>
+            <input type="text" id="fo-item-name" placeholder="مثال: جبنة بيضاء، زبدة، لبنة...">
+          </div>
+          <div class="form-group">
+            <label>الوزن (كجم) *</label>
+            <input type="number" id="fo-qty" placeholder="0.00" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>العدد <span style="color:var(--text-400);font-size:11px">(اختياري)</span></label>
+            <input type="number" id="fo-count" placeholder="مثال: 5" min="0" step="1">
+          </div>
+          <div class="form-group">
+            <label>وحدة العدد <span style="color:var(--text-400);font-size:11px">(اختياري)</span></label>
+            <input type="text" id="fo-count-unit" placeholder="قرص / كيس / علبة / باكيت ...">
+          </div>
+          <div class="form-group"><label>العميل / الجهة</label>
+            <input type="text" id="fo-client" placeholder="اسم العميل أو الجهة">
+          </div>
+          <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label>
+            <input type="text" id="fo-notes" placeholder="ملاحظات إضافية">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-factory-out')">إلغاء</button>
+        <button class="btn btn-primary" onclick="saveFactoryOut()">💾 حفظ</button>
+      </div>
+    </div>
+  </div>
+
 <!-- Export Modal -->
 <div class="modal-backdrop" id="modal-export">
   <div class="modal" style="max-width:480px">
@@ -1691,6 +1785,7 @@ $('current-date').textContent = new Date().toLocaleDateString('ar-EG', { weekday
 const pageTitles = {
   dashboard: 'لوحة التحكم', suppliers: 'إدارة الموردين',
   milk: 'استلام الحليب', accounts: 'حسابات الموردين',
+  'factory-out': '🏭 خارج من المعمل',
   warehouse1: 'المخزن الأول', warehouse2: 'المخزن الثاني',
   exports: 'الصادرات', sales: 'المبيعات',
   buyers: 'إدارة المشترين', 'buyer-accounts': 'حسابات المشترين',
@@ -1727,6 +1822,7 @@ window.navigate = function(page) {
   if (page === 'accounts') { renderAccounts(); loadPayments(); loadAdvances(); }
   if (page === 'warehouse1') renderWarehouse('warehouse1');
   if (page === 'warehouse2') renderWarehouse('warehouse2');
+  if (page === 'factory-out') loadFactoryOut();
   if (page === 'exports') loadExports();
   if (page === 'sales') loadSales();
   if (page === 'buyers') renderBuyers();
@@ -5944,6 +6040,108 @@ if ('serviceWorker' in navigator) {
       </body></html>`);
       pw.document.close();
       setTimeout(()=>pw.print(), 600);
+    };
+
+
+    // ══════════════════════════════════════════════════════════
+    // FACTORY OUT — خارج من المعمل
+    // ══════════════════════════════════════════════════════════
+
+    window.openFactoryOutModal = function() {
+      document.getElementById('fo-date').value = typeof today === 'function' ? today() : new Date().toISOString().slice(0,10);
+      ['fo-item-name','fo-qty','fo-count','fo-count-unit','fo-client','fo-notes'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      openModal('modal-factory-out');
+    };
+
+    window.saveFactoryOut = async function() {
+      const itemName  = document.getElementById('fo-item-name').value.trim();
+      const qty       = parseFloat(document.getElementById('fo-qty').value);
+      const count     = parseFloat(document.getElementById('fo-count').value) || 0;
+      const countUnit = sanitize(document.getElementById('fo-count-unit').value || '');
+      const client    = sanitize(document.getElementById('fo-client').value || '');
+      const notes     = sanitize(document.getElementById('fo-notes').value || '');
+      const date      = document.getElementById('fo-date').value;
+
+      if (!itemName) { toast('أدخل اسم المنتج', 'error'); return; }
+      if (!qty || qty <= 0) { toast('الوزن يجب أن يكون أكبر من صفر', 'error'); return; }
+      if (!date) { toast('اختر التاريخ', 'error'); return; }
+
+      loading(true);
+      try {
+        await dbPush('exports', {
+          date,
+          warehouse: 'factory',
+          itemId: itemName,
+          itemName: sanitize(itemName),
+          qty, count, countUnit, client, notes
+        });
+        toast('تم تسجيل الصادر من المعمل ✅', 'success');
+        closeModal('modal-factory-out');
+        loadFactoryOut();
+      } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+      finally { loading(false); }
+    };
+
+    window.loadFactoryOut = function() {
+      const from   = document.getElementById('fo-from')?.value   || '';
+      const to     = document.getElementById('fo-to')?.value     || '';
+      const search = (document.getElementById('fo-search')?.value || '').trim().toLowerCase();
+
+      const rows = Object.entries(state.exports || {}).filter(([, e]) => {
+        if (e.warehouse !== 'factory') return false;
+        if (from && e.date < from) return false;
+        if (to   && e.date > to)   return false;
+        if (search && !(e.itemName || e.itemId || '').toLowerCase().includes(search)) return false;
+        return true;
+      }).sort((a, b) => b[1].date > a[1].date ? 1 : -1);
+
+      const totalQty   = rows.reduce((s, [, e]) => s + Number(e.qty   || 0), 0);
+      const totalCount = rows.reduce((s, [, e]) => s + Number(e.count || 0), 0);
+
+      const sumEl = document.getElementById('fo-summary');
+      if (sumEl) {
+        sumEl.style.display = rows.length ? 'flex' : 'none';
+        document.getElementById('fo-sum-qty').textContent     = fmt(totalQty, 2) + ' كجم';
+        document.getElementById('fo-sum-count').textContent   = fmt(totalCount, 0);
+        document.getElementById('fo-sum-records').textContent = rows.length;
+      }
+
+      const tbody = document.getElementById('fo-tbody');
+      if (!tbody) return;
+
+      tbody.innerHTML = rows.length ? rows.map(([id, e], i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${e.date}</td>
+          <td style="font-weight:600;color:var(--gold)">${sanitize(e.itemName || e.itemId || '—')}</td>
+          <td style="color:var(--gold);font-weight:700">${fmt(e.qty, 2)} كجم</td>
+          <td style="color:var(--info)">${e.count ? fmt(e.count, 0) : '—'}</td>
+          <td style="color:var(--text-300)">${sanitize(e.countUnit || '—')}</td>
+          <td>${sanitize(e.client || '—')}</td>
+          <td style="color:var(--text-400)">${sanitize(e.notes || '—')}</td>
+          <td>
+            <button class="btn btn-danger btn-sm btn-icon"
+              onclick="deleteFactoryOut('${id}')">🗑️</button>
+          </td>
+        </tr>`).join('')
+        : `<tr><td colspan="9"><div class="empty-state">
+            <span class="empty-icon">🏭</span>
+            <p>لا توجد بيانات خارج من المعمل</p>
+           </div></td></tr>`;
+    };
+
+    window.deleteFactoryOut = async function(id) {
+      if (!confirm('حذف هذا السجل؟')) return;
+      loading(true);
+      try {
+        await dbRemove('exports/' + id);
+        toast('تم الحذف ✅', 'success');
+        loadFactoryOut();
+      } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+      finally { loading(false); }
     };
 
 </script>
