@@ -127,6 +127,9 @@
         <div class="nav-item" onclick="navigate('buyer-accounts')">
           <span class="icon">💳</span> حسابات المشترين
         </div>
+        <div class="nav-item" onclick="navigate('advances')">
+          <span class="icon">💵</span> السلف
+        </div>
         <div class="nav-item" onclick="navigate('expenses')">
           <span class="icon">💸</span> المصاريف
         </div>
@@ -139,6 +142,9 @@
         <div class="nav-label">التقارير والإعدادات</div>
         <div class="nav-item" onclick="navigate('reports')">
           <span class="icon">📈</span> التقارير
+        </div>
+        <div class="nav-item" onclick="navigate('cheese-calc')">
+          <span class="icon">🧀</span> حاسبة تكلفة الجبنة
         </div>
         <div class="nav-item" onclick="navigate('settings')">
           <span class="icon">⚙️</span> الإعدادات
@@ -630,6 +636,7 @@
         <h2>حسابات المشترين</h2>
         <div style="display:flex;gap:8px">
           <button class="btn btn-primary" onclick="openBuyerPaymentModal()">💳 تسجيل دفعة مشترٍ</button>
+          <button class="btn btn-secondary" onclick="openPurchaseModal('buyer')">🛍️ مشتريات</button>
           <button class="btn btn-secondary" onclick="printTable('#buyer-accounts-tbody')">🖨️ طباعة</button>
           <button class="btn btn-secondary" onclick="exportTableToPDF('#buyer-accounts-tbody', 'حسابات_المشترين.pdf')">📥 PDF</button>
         </div>
@@ -884,6 +891,75 @@
       </div>
     </div>
 
+    <!-- ════ PAGE: ADVANCES ════ -->
+    <div class="page" id="page-advances">
+      <div class="section-header">
+        <span class="section-icon">💵</span>
+        <h2>السلف</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="openWorkerAdvanceModal()">➕ سلفة عامل</button>
+          <button class="btn btn-secondary" onclick="openSupplierAdvanceModalNew()">➕ سلفة مورد</button>
+        </div>
+      </div>
+      <div class="tabs">
+        <div class="tab active" onclick="switchAdvancesTab('workers')">سلف العمال</div>
+        <div class="tab" onclick="switchAdvancesTab('suppliers')">سلف الموردين</div>
+      </div>
+      <div id="adv-tab-workers">
+        <div class="card">
+          <div class="card-header"><h3>سلف العمال</h3><span style="color:var(--text-400);font-size:13px" id="worker-advances-count"></span></div>
+          <div class="table-wrapper"><table><thead><tr><th>#</th><th>التاريخ</th><th>العامل</th><th>المبلغ</th><th>الوصف</th><th>ملاحظات</th><th>الحالة</th><th>حذف</th></tr></thead>
+          <tbody id="worker-advances-tbody"><tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💵</span><p>لا توجد سلف</p></div></td></tr></tbody></table></div>
+        </div>
+      </div>
+      <div id="adv-tab-suppliers" style="display:none">
+        <div class="card">
+          <div class="card-header"><h3>سلف الموردين</h3><span style="color:var(--text-400);font-size:13px" id="supplier-advances-new-count"></span></div>
+          <div class="table-wrapper"><table><thead><tr><th>#</th><th>التاريخ</th><th>المورد</th><th>المبلغ</th><th>الوصف</th><th>ملاحظات</th><th>الحالة</th><th>حذف</th></tr></thead>
+          <tbody id="supplier-advances-new-tbody"><tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💵</span><p>لا توجد سلف</p></div></td></tr></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE: CHEESE COST CALCULATOR ════ -->
+    <div class="page" id="page-cheese-calc">
+      <div class="section-header"><span class="section-icon">🧀</span><h2>حاسبة تكلفة الجبنة</h2></div>
+      <div style="max-width:560px;margin:0 auto">
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header"><span>🧀</span><h3>حساب يدوي</h3></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group"><label>إجمالي تكلفة الحليب (جنيه) *</label><input type="number" id="cc-milk-cost" placeholder="مثال: 18000" min="0" step="0.01" oninput="calcCheeseCost()"></div>
+              <div class="form-group"><label>إجمالي المصاريف (جنيه) *</label><input type="number" id="cc-expenses" placeholder="مثال: 2000" min="0" step="0.01" oninput="calcCheeseCost()"></div>
+              <div class="form-group"><label>وزن الجبنة المنتجة (كجم) *</label><input type="number" id="cc-cheese-weight" placeholder="مثال: 150" min="0" step="0.01" oninput="calcCheeseCost()"></div>
+            </div>
+            <div id="cc-error" style="color:var(--danger);font-size:12px;margin-top:8px;min-height:18px"></div>
+            <div id="cc-result-card" style="display:none;margin-top:16px;background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05));border:2px solid var(--gold);border-radius:var(--radius-lg);padding:24px;text-align:center">
+              <div style="color:var(--text-400);font-size:13px;margin-bottom:8px">تكلفة الجبنة لكل كجم</div>
+              <div id="cc-result-value" style="font-size:36px;font-weight:900;color:var(--gold)">0.00</div>
+              <div style="color:var(--text-400);font-size:13px;margin-top:4px">جنيه / كجم</div>
+            </div>
+            <div style="margin-top:16px;display:flex;gap:10px">
+              <button class="btn btn-primary" onclick="calcCheeseCost()">🔄 إعادة الحساب</button>
+              <button class="btn btn-secondary" onclick="resetCheeseCalc()">🗑️ مسح</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span>📊</span><h3>تكلفة الجبنة التلقائية (آخر 7 أيام)</h3></div>
+          <div class="card-body">
+            <div id="auto-cheese-result" style="text-align:center;padding:16px">
+              <div style="color:var(--text-400);font-size:13px;margin-bottom:8px">متوسط تكلفة الجبنة (آخر 7 أيام)</div>
+              <div id="auto-cheese-value" style="font-size:32px;font-weight:900;color:var(--gold)">—</div>
+              <div style="color:var(--text-400);font-size:13px;margin-top:4px">جنيه / كجم</div>
+              <div id="auto-cheese-details" style="margin-top:16px;font-size:12px;color:var(--text-400);text-align:right;line-height:2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
     <!-- ════ APP FOOTER ════ -->
     <footer class="app-footer">
       <div class="app-footer-inner">
@@ -904,6 +980,12 @@
         </div>
       </div>
     </footer>
+
+    <!-- ════ BOTTOM TICKER BAR ════ -->
+    <div class="ticker-bar" id="ticker-bar">
+      <div class="ticker-content" id="ticker-content"><span>جارٍ تحميل البيانات...</span></div>
+    </div>
+
 
   </div><!-- /main-content -->
 </div><!-- /app-shell -->
@@ -966,6 +1048,14 @@
       <span class="bs-icon">📈</span>
       <span>التقارير</span>
     </div>
+    <div class="bs-item" onclick="navigate('advances');closeBottomMenu()">
+      <span class="bs-icon">💵</span>
+      <span>السلف</span>
+    </div>
+    <div class="bs-item" onclick="navigate('cheese-calc');closeBottomMenu()">
+      <span class="bs-icon">🧀</span>
+      <span>تكلفة الجبنة</span>
+    </div>
     <div class="bs-item" onclick="navigate('settings');closeBottomMenu()">
       <span class="bs-icon">⚙️</span>
       <span>الإعدادات</span>
@@ -1015,7 +1105,7 @@
   <div class="modal" style="max-width:520px">
     <div class="modal-header">
       <span style="font-size:22px">🥛</span>
-      <h3>تسجيل استلام حليب</h3>
+      <h3 id="milk-modal-title">تسجيل استلام حليب</h3>
       <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-milk')">✕</button>
     </div>
     <div class="modal-body">
@@ -1026,6 +1116,8 @@
         <div class="form-group"><label>الكمية (كجم) *</label><input type="number" id="m-qty" placeholder="0" min="0" step="0.1" oninput="calcMilkTotal()"></div>
         <div class="form-group"><label>سعر الكيلو</label><input type="number" id="m-price" placeholder="0" min="0" step="0.01" oninput="calcMilkTotal()"></div>
         <div class="form-group"><label>الإجمالي</label><input type="number" id="m-total" placeholder="0" readonly style="background:var(--bg-500);color:var(--gold);font-weight:700"></div>
+        <div class="form-group"><label>الفترة</label><select id="m-period"><option value="صباحي">صباحي</option><option value="مسائي">مسائي</option></select></div>
+        <input type="hidden" id="m-record-id" value="">
         <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="m-notes" placeholder="ملاحظات اختيارية"></div>
       </div>
     </div>
@@ -1297,7 +1389,13 @@
       <button class="btn btn-secondary btn-icon" type="button" onclick="closeModal('modal-account-detail')">✕</button>
     </div>
     <div class="modal-body" id="account-detail-body"></div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px;padding:0 4px">
+        <div class="form-group" style="min-width:150px;margin:0"><label>من تاريخ</label><input type="date" id="stmt-from" onchange="showAccountDetail(currentStmtSupplierId)"></div>
+        <div class="form-group" style="min-width:150px;margin:0"><label>إلى تاريخ</label><input type="date" id="stmt-to" onchange="showAccountDetail(currentStmtSupplierId)"></div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="document.getElementById('stmt-from').value='';document.getElementById('stmt-to').value='';showAccountDetail(currentStmtSupplierId)">الكل</button>
+      </div>
     <div class="modal-footer">
+      <button class="btn btn-primary" onclick="printSupplierStatement()">🖨️ طباعة</button>
       <button class="btn btn-secondary" type="button" onclick="closeModal('modal-account-detail')">إغلاق</button>
       <button class="btn-whatsapp" type="button" id="wa-send-btn" style="display:none">
         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -1380,7 +1478,13 @@
       <button class="btn btn-secondary btn-icon" type="button" onclick="closeModal('modal-worker-account')">✕</button>
     </div>
     <div class="modal-body" id="worker-account-body"></div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px;padding:0 4px">
+        <div class="form-group" style="min-width:150px;margin:0"><label>من تاريخ</label><input type="date" id="wstmt-from" onchange="showWorkerAccount(currentWorkerStmtId)"></div>
+        <div class="form-group" style="min-width:150px;margin:0"><label>إلى تاريخ</label><input type="date" id="wstmt-to" onchange="showWorkerAccount(currentWorkerStmtId)"></div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="document.getElementById('wstmt-from').value='';document.getElementById('wstmt-to').value='';showWorkerAccount(currentWorkerStmtId)">الكل</button>
+      </div>
     <div class="modal-footer">
+      <button class="btn btn-primary" onclick="printWorkerStatement()">🖨️ طباعة</button>
       <button class="btn btn-secondary" type="button" onclick="closeModal('modal-worker-account')">إغلاق</button>
       <button class="btn-whatsapp" type="button" id="worker-wa-btn" style="display:none">
         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -1550,6 +1654,10 @@ dbListen('buyerPayments', v => { state.buyerPayments = v || {}; });
 dbListen('workers', v => { state.workers = v || {}; });
 dbListen('workerAttendance', v => { state.workerAttendance = v || {}; });
 dbListen('workerPayments', v => { state.workerPayments = v || {}; });
+dbListen('workerAdvances', v => { state.workerAdvances = v || {}; });
+dbListen('workerPurchases', v => { state.workerPurchases = v || {}; });
+dbListen('supplierPurchases', v => { state.supplierPurchases = v || {}; });
+dbListen('buyerPurchases', v => { state.buyerPurchases = v || {}; });
 
 // ══════════════════════════════════════════════════════════════════
 // DASHBOARD
@@ -1617,7 +1725,7 @@ window.loadDashboard = function() {
     <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-soft)">
       <div>
         <div style="font-weight:600;font-size:13px">${sanitize(state.suppliers[r.supplierId]?.name || 'غير محدد')}</div>
-        <div style="font-size:11px;color:var(--text-400)">${r.date} ${r.time||''}</div>
+        <div style="font-size:11px;color:var(--text-400)">${r.date} ${to12Hour(r.time||'')} ${r.period||''}</div>
       </div>
       <div style="text-align:left">
         <div style="color:var(--gold);font-weight:700">${fmt(r.qty,1)} كجم</div>
@@ -1894,13 +2002,13 @@ window.loadMilkRecords = function() {
     <tr>
       <td>${i+1}</td>
       <td>${r.date}</td>
-      <td>${r.time||'—'}</td>
+      <td>${to12Hour(r.time||'')}<br><small style="color:var(--text-400)">${r.period||getPeriodLabel(r.time)||''}</small></td>
       <td>${sanitize(state.suppliers[r.supplierId]?.name || 'غير محدد')}</td>
       <td><strong style="color:var(--gold)">${fmt(r.qty,1)}</strong></td>
       <td>${fmt(r.price,2)} ج</td>
       <td style="color:var(--success);font-weight:700">${fmt(r.total,2)} ج</td>
       <td>${sanitize(r.notes||'—')}</td>
-      <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteMilkRecord('${id}')">🗑️</button></td>
+      <td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm btn-icon" onclick="editMilkRecord('${id}')">✏️</button><button class="btn btn-danger btn-sm btn-icon" onclick="deleteMilkRecord('${id}')">🗑️</button></div></td>
     </tr>`).join('') :
     `<tr><td colspan="9"><div class="empty-state"><span class="empty-icon">🥛</span><p>لا توجد سجلات في الفترة المحددة</p></div></td></tr>`;
 };
@@ -4047,6 +4155,556 @@ function generateDailyReceipt(data) {
 }
 
 
+
+// ══════════════════════════════════════════════════════════════════
+// 12-HOUR CLOCK HELPERS
+// ══════════════════════════════════════════════════════════════════
+window.to12Hour = function(time24) {
+  if (!time24) return '';
+  const [h, m] = (time24||'').split(':');
+  const hour = parseInt(h) || 0;
+  const min = m || '00';
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const h12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  return String(h12).padStart(2, '0') + ':' + min + ' ' + ampm;
+};
+window.getPeriodLabel = function(time24) {
+  if (!time24) return '';
+  const hour = parseInt((time24||'').split(':')[0]) || 0;
+  return hour < 12 ? 'صباحي' : 'مسائي';
+};
+
+// ══════════════════════════════════════════════════════════════════
+// GLOBAL VARIABLES FOR STATEMENTS
+// ══════════════════════════════════════════════════════════════════
+let currentStmtSupplierId = '';
+let currentWorkerStmtId = '';
+let currentBuyerStmtId = '';
+
+// ══════════════════════════════════════════════════════════════════
+// DATE FILTER HELPER
+// ══════════════════════════════════════════════════════════════════
+function getDateFilter(prefix) {
+  const fromEl = $(prefix + '-from');
+  const toEl = $(prefix + '-to');
+  return { from: fromEl ? fromEl.value : '', to: toEl ? toEl.value : '' };
+}
+function filterByDate(records, dateField, from, to) {
+  return records.filter(([, r]) => {
+    const d = r[dateField] || r.date || '';
+    if (from && d < from) return false;
+    if (to && d > to) return false;
+    return true;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ADVANCES (Workers & Suppliers Separate)
+// ══════════════════════════════════════════════════════════════════
+window.switchAdvancesTab = function(tab) {
+  ['workers','suppliers'].forEach(t => {
+    const el = document.getElementById('adv-tab-' + t);
+    if (el) el.style.display = 'none';
+  });
+  const target = document.getElementById('adv-tab-' + tab);
+  if (target) target.style.display = 'block';
+  document.querySelectorAll('#page-advances .tab').forEach((el, i) => {
+    el.classList.toggle('active', ['workers','suppliers'][i] === tab);
+  });
+};
+
+window.openWorkerAdvanceModal = function(workerId) {
+  const sel = $('wa-worker');
+  sel.innerHTML = '<option value="">اختر عاملاً...</option>' +
+    Object.entries(state.workers).map(([id,w]) => `<option value="${id}" ${id===workerId?'selected':''}>${sanitize(w.name)}</option>`).join('');
+  $('wa-date').value = today();
+  $('wa-amount').value = '';
+  $('wa-desc').value = '';
+  $('wa-notes').value = '';
+  openModal('modal-worker-advance');
+};
+
+window.saveWorkerAdvance = async function() {
+  const workerId = $('wa-worker').value;
+  const amount = parseFloat($('wa-amount').value);
+  if (!workerId) { toast('اختر العامل', 'error'); return; }
+  if (!amount || amount <= 0) { toast('المبلغ يجب أن يكون أكبر من صفر', 'error'); return; }
+  loading(true);
+  try {
+    await dbPush('workerAdvances', { workerId, date: $('wa-date').value, amount, description: sanitize($('wa-desc').value), notes: sanitize($('wa-notes').value), status: 'pending' });
+    toast('تم تسجيل سلفة العامل', 'success');
+    closeModal('modal-worker-advance');
+    loadWorkerAdvancesTable();
+    recalcAll();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.openSupplierAdvanceModalNew = function(supplierId) {
+  const sel = $('sadv-supplier');
+  sel.innerHTML = '<option value="">اختر مورداً...</option>' +
+    Object.entries(state.suppliers).map(([id,s]) => `<option value="${id}" ${id===supplierId?'selected':''}>${sanitize(s.name)}</option>`).join('');
+  $('sadv-date').value = today();
+  $('sadv-amount').value = '';
+  $('sadv-desc').value = '';
+  $('sadv-notes').value = '';
+  openModal('modal-supplier-advance-new');
+};
+
+window.saveSupplierAdvanceNew = async function() {
+  const supplierId = $('sadv-supplier').value;
+  const amount = parseFloat($('sadv-amount').value);
+  if (!supplierId) { toast('اختر المورد', 'error'); return; }
+  if (!amount || amount <= 0) { toast('المبلغ يجب أن يكون أكبر من صفر', 'error'); return; }
+  loading(true);
+  try {
+    await dbPush('supplierAdvances', { supplierId, date: $('sadv-date').value, amount, description: sanitize($('sadv-desc').value), notes: sanitize($('sadv-notes').value), status: 'pending' });
+    toast('تم تسجيل سلفة المورد', 'success');
+    closeModal('modal-supplier-advance-new');
+    loadSupplierAdvancesTable();
+    renderAccounts(); loadAdvances();
+    recalcAll();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+function loadWorkerAdvancesTable() {
+  const rows = Object.entries(state.workerAdvances || {}).sort((a,b) => (b[1].date||'') > (a[1].date||'') ? 1 : -1);
+  $('worker-advances-count').textContent = `(${rows.length} سلفة)`;
+  $('worker-advances-tbody').innerHTML = rows.length ? rows.map(([id,a], i) => `<tr><td>${i+1}</td><td>${a.date}</td><td>${sanitize(state.workers[a.workerId]?.name||'—')}</td><td style="color:var(--warning);font-weight:700">${fmt(a.amount,2)} ج</td><td>${sanitize(a.description||'—')}</td><td>${sanitize(a.notes||'—')}</td><td><span class="badge ${a.status==='deducted'?'badge-success':'badge-warning'}">${a.status==='deducted'?'تم الخصم':'معلقة'}</span></td><td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteWorkerAdvance('${id}')">🗑️</button></td></tr>`).join('') : '<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💵</span><p>لا توجد سلف</p></div></td></tr>';
+}
+
+function loadSupplierAdvancesTable() {
+  const rows = Object.entries(state.supplierAdvances || {}).sort((a,b) => (b[1].date||'') > (a[1].date||'') ? 1 : -1);
+  $('supplier-advances-new-count').textContent = `(${rows.length} سلفة)`;
+  $('supplier-advances-new-tbody').innerHTML = rows.length ? rows.map(([id,a], i) => `<tr><td>${i+1}</td><td>${a.date}</td><td>${sanitize(state.suppliers[a.supplierId]?.name||'—')}</td><td style="color:var(--warning);font-weight:700">${fmt(a.amount,2)} ج</td><td>${sanitize(a.description||a.reason||'—')}</td><td>${sanitize(a.notes||'—')}</td><td><span class="badge ${a.status==='deducted'?'badge-success':'badge-warning'}">${a.status==='deducted'?'تم الخصم':'معلقة'}</span></td><td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteAdvance('${id}')">🗑️</button></td></tr>`).join('') : '<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💵</span><p>لا توجد سلف</p></div></td></tr>';
+}
+
+window.deleteWorkerAdvance = async function(id) {
+  if (!confirm('حذف هذه السلفة؟')) return;
+  await dbRemove('workerAdvances/' + id);
+  toast('تم الحذف', 'success');
+  loadWorkerAdvancesTable(); renderWorkers(); recalcAll();
+};
+
+window.openWorkerAdvanceModalFor = function(workerId) { openWorkerAdvanceModal(workerId); };
+
+// ══════════════════════════════════════════════════════════════════
+// EDIT MILK RECORD
+// ══════════════════════════════════════════════════════════════════
+window.editMilkRecord = function(id) {
+  const r = state.milkRecords[id];
+  if (!r) return;
+  openMilkModal();
+  const sel = $('m-supplier');
+  sel.innerHTML = '<option value="">اختر مورداً...</option>' +
+    Object.entries(state.suppliers).map(([sid,s]) => `<option value="${sid}" ${sid===r.supplierId?'selected':''}>${sanitize(s.name)}</option>`).join('');
+  $('milk-modal-title').textContent = 'تعديل سجل الحليب';
+  $('m-record-id').value = id;
+  $('m-date').value = r.date || today();
+  $('m-time').value = r.time || now();
+  $('m-qty').value = r.qty || '';
+  $('m-price').value = r.price || '';
+  $('m-total').value = r.total || '';
+  $('m-period').value = r.period || 'صباحي';
+  $('m-notes').value = r.notes || '';
+};
+
+// Override saveMilkRecord
+window.saveMilkRecord = async function() {
+  const supplierId = $('m-supplier').value;
+  const qty = parseFloat($('m-qty').value);
+  if (!supplierId) { toast('اختر المورد', 'error'); return; }
+  if (!qty || qty <= 0) { toast('الكمية يجب أن تكون أكبر من صفر', 'error'); return; }
+  const price = parseFloat($('m-price').value) || 0;
+  if (price < 0) { toast('السعر لا يمكن أن يكون سالباً', 'error'); return; }
+  const data = { supplierId, date: $('m-date').value, time: $('m-time').value, qty, price, total: qty * price, period: $('m-period').value, notes: sanitize($('m-notes').value) };
+  loading(true, 'جارٍ حفظ سجل الحليب...');
+  try {
+    const editId = $('m-record-id').value;
+    if (editId) { await dbUpdate('milkRecords/' + editId, data); toast('تم تحديث السجل', 'success'); }
+    else { await dbPush('milkRecords', data); toast('تم تسجيل استلام الحليب', 'success'); track('milk_receive', { supplierId, qty }); }
+    closeModal('modal-milk'); loadMilkRecords(); recalcAll();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+// Fix openMilkModal to reset edit state
+const __origOpenMilkModal = window.openMilkModal;
+window.openMilkModal = function() {
+  __origOpenMilkModal();
+  $('milk-modal-title').textContent = 'تسجيل استلام حليب';
+  $('m-record-id').value = '';
+  $('m-period').value = 'صباحي';
+};
+
+// ══════════════════════════════════════════════════════════════════
+// PURCHASES
+// ══════════════════════════════════════════════════════════════════
+window.openPurchaseModal = function(type, personId) {
+  $('pur-type').value = type || '';
+  $('pur-person-id').value = personId || '';
+  const titles = { worker: 'تسجيل مشتريات عامل', supplier: 'تسجيل مشتريات مورد', buyer: 'تسجيل مشتريات مشترٍ' };
+  $('purchase-modal-title').textContent = titles[type] || 'تسجيل مشتريات';
+  $('pur-date').value = today();
+  ['pur-desc','pur-qty','pur-unit-price','pur-total','pur-notes'].forEach(f => $(f).value = '');
+  openModal('modal-purchase');
+};
+
+window.calcPurchaseTotal = function() {
+  const qty = parseFloat($('pur-qty').value) || 0;
+  const price = parseFloat($('pur-unit-price').value) || 0;
+  $('pur-total').value = (qty * price).toFixed(2);
+};
+
+window.savePurchase = async function() {
+  const type = $('pur-type').value;
+  const personId = $('pur-person-id').value;
+  const desc = sanitize($('pur-desc').value);
+  const qty = parseFloat($('pur-qty').value);
+  const unitPrice = parseFloat($('pur-unit-price').value);
+  if (!desc) { toast('وصف المشتريات مطلوب', 'error'); return; }
+  if (!qty || qty <= 0) { toast('الكمية يجب أن تكون أكبر من صفر', 'error'); return; }
+  if (!unitPrice || unitPrice < 0) { toast('سعر الوحدة غير صحيح', 'error'); return; }
+  const data = { date: $('pur-date').value, desc, qty, unit: $('pur-unit').value, unitPrice, totalPrice: qty * unitPrice, notes: sanitize($('pur-notes').value) };
+  if (personId) data[type + 'Id'] = personId;
+  loading(true);
+  try {
+    await dbPush(type + 'Purchases', data);
+    toast('تم تسجيل المشتريات', 'success');
+    closeModal('modal-purchase');
+    recalcAll();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// BALANCE CALCULATIONS (with purchases & advances)
+// ══════════════════════════════════════════════════════════════════
+window.calcSupplierBalance = function(supplierId) {
+  const milkTotal = Object.values(state.milkRecords).filter(r => r.supplierId === supplierId).reduce((s,r) => s + Number(r.total||0), 0);
+  const payments = Object.values(state.supplierPayments).filter(p => p.supplierId === supplierId).reduce((s,p) => s + Number(p.amount||0), 0);
+  const advances = Object.values(state.supplierAdvances).filter(a => a.supplierId === supplierId).reduce((s,a) => s + Number(a.amount||0), 0);
+  const purchases = Object.values(state.supplierPurchases || {}).filter(p => p.supplierId === supplierId).reduce((s,p) => s + Number(p.totalPrice||0), 0);
+  return milkTotal - payments - advances - purchases;
+};
+
+window.calcWorkerBalance = function(workerId) {
+  const dailyRate = Number(state.workers[workerId]?.daily || 0);
+  const totalDays = Object.values(state.workerAttendance || {}).filter(a => a.workerId === workerId && a.present).length;
+  const totalEarned = totalDays * dailyRate;
+  const paid = Object.values(state.workerPayments || {}).filter(p => p.workerId === workerId).reduce((s,p) => s + Number(p.amount||0), 0);
+  const advances = Object.values(state.workerAdvances || {}).filter(a => a.workerId === workerId).reduce((s,a) => s + Number(a.amount||0), 0);
+  const purchases = Object.values(state.workerPurchases || {}).filter(p => p.workerId === workerId).reduce((s,p) => s + Number(p.totalPrice||0), 0);
+  return totalEarned - paid - advances - purchases;
+};
+
+window.calcBuyerBalance = function(buyerId) {
+  const buyer = state.buyers[buyerId];
+  if (!buyer) return 0;
+  const buyerName = (buyer.name || '').trim().toLowerCase();
+  const sales = Object.values(state.sales).filter(s => (s.client||'').trim().toLowerCase() === buyerName);
+  const salesTotal = sales.reduce((s,r) => s + Number(r.total||0), 0);
+  const salesPaid = sales.reduce((s,r) => s + Number(r.paidNow ?? r.total ?? 0), 0);
+  const payments = Object.values(state.buyerPayments || {}).filter(p => p.buyerId === buyerId).reduce((s,p) => s + Number(p.amount||0), 0);
+  const purchases = Object.values(state.buyerPurchases || {}).filter(p => p.buyerId === buyerId).reduce((s,p) => s + Number(p.totalPrice||0), 0);
+  return salesTotal - salesPaid - payments - purchases;
+};
+
+// ══════════════════════════════════════════════════════════════════
+// CHEESE COST CALCULATOR
+// ══════════════════════════════════════════════════════════════════
+window.calcCheeseCost = function() {
+  const milkCost = parseFloat($('cc-milk-cost').value) || 0;
+  const expenses = parseFloat($('cc-expenses').value) || 0;
+  const weight = parseFloat($('cc-cheese-weight').value) || 0;
+  const errEl = $('cc-error');
+  const resCard = $('cc-result-card');
+  if (weight <= 0) { errEl.textContent = 'وزن الجبنة يجب أن يكون أكبر من صفر'; resCard.style.display = 'none'; return; }
+  errEl.textContent = '';
+  const cost = (milkCost + expenses) / weight;
+  $('cc-result-value').textContent = cost.toFixed(2);
+  resCard.style.display = 'block';
+};
+
+window.resetCheeseCalc = function() {
+  ['cc-milk-cost','cc-expenses','cc-cheese-weight'].forEach(f => $(f).value = '');
+  $('cc-error').textContent = '';
+  $('cc-result-card').style.display = 'none';
+};
+
+// ══════════════════════════════════════════════════════════════════
+// AUTO CHEESE COST + TICKER
+// ══════════════════════════════════════════════════════════════════
+window.updateTicker = function() {
+  const nowD = new Date();
+  const last7 = new Date(nowD); last7.setDate(last7.getDate() - 7);
+  const last7Str = last7.toISOString().slice(0, 10);
+  const recentMilk = Object.values(state.milkRecords).filter(r => r.date >= last7Str && r.date <= today());
+  const totalMilkQty = recentMilk.reduce((s,r) => s + Number(r.qty||0), 0);
+  const totalMilkCost = recentMilk.reduce((s,r) => s + Number(r.total||0), 0);
+  const avgMilkPrice = totalMilkQty > 0 ? totalMilkCost / totalMilkQty : 0;
+  const recentExp = Object.values(state.expenses).filter(e => e.date >= last7Str && e.date <= today());
+  const totalExpenses = recentExp.reduce((s,e) => s + Number(e.amount||0), 0);
+  let cheeseWeight = 0;
+  ['warehouse1','warehouse2'].forEach(wh => { Object.values(state[wh]||{}).forEach(item => { if ((item.name||'').includes('جبنة')) cheeseWeight += Number(item.qty||0); }); });
+  const cheeseCost = cheeseWeight > 0 ? (totalMilkCost + totalExpenses) / cheeseWeight : 0;
+  const tickerEl = $('ticker-content');
+  if (tickerEl) {
+    tickerEl.innerHTML = `<span style="margin-left:40px">🥛 متوسط سعر الحليب (آخر 7 أيام): <strong style="color:var(--gold)">${avgMilkPrice.toFixed(2)}</strong> ج/كجم</span><span style="margin-left:40px">🧀 متوسط تكلفة الجبنة (آخر 7 أيام): <strong style="color:var(--gold)">${cheeseCost.toFixed(2)}</strong> ج/كجم</span><span style="margin-left:40px">📊 إجمالي الحليب (آخر 7 أيام): <strong>${fmt(totalMilkQty,1)}</strong> كجم</span>`;
+  }
+  const autoEl = $('auto-cheese-value');
+  if (autoEl) autoEl.textContent = cheeseWeight > 0 ? cheeseCost.toFixed(2) : '—';
+  const detailsEl = $('auto-cheese-details');
+  if (detailsEl) detailsEl.innerHTML = `<div>تكلفة الحليب (7 أيام): <strong style="color:var(--gold)">${fmt(totalMilkCost,2)} ج</strong></div><div>المصاريف (7 أيام): <strong style="color:var(--danger)">${fmt(totalExpenses,2)} ج</strong></div><div>وزن الجبنة الحالي: <strong style="color:var(--success)">${fmt(cheeseWeight,1)} كجم</strong></div><div>كمية الحليب (7 أيام): <strong>${fmt(totalMilkQty,1)} كجم</strong></div>`;
+};
+
+window.loadAutoCheeseCost = function() { updateTicker(); };
+
+// ══════════════════════════════════════════════════════════════════
+// AUTOMATIC RECALCULATION
+// ══════════════════════════════════════════════════════════════════
+let _recalcTimer = null;
+window.recalcAll = function() {
+  if (_recalcTimer) clearTimeout(_recalcTimer);
+  _recalcTimer = setTimeout(() => {
+    const dp = $('page-dashboard'); if (dp && dp.classList.contains('active')) loadDashboard();
+    updateTicker();
+    const ap = $('page-accounts'); if (ap && ap.classList.contains('active')) { renderAccounts(); loadPayments(); loadAdvances(); }
+    const bp = $('page-buyer-accounts'); if (bp && bp.classList.contains('active')) { renderBuyerAccounts(); loadBuyerPayments(); }
+    const wp = $('page-workers'); if (wp && wp.classList.contains('active')) renderWorkers();
+  }, 300);
+};
+
+// Override delete functions to include recalcAll
+const _origDelPay = window.deletePayment;
+window.deletePayment = async function(id) { if (!confirm('حذف هذه الدفعة؟')) return; await dbRemove('supplierPayments/' + id); toast('تم الحذف', 'success'); renderAccounts(); loadPayments(); recalcAll(); };
+const _origDelAdv = window.deleteAdvance;
+window.deleteAdvance = async function(id) { if (!confirm('حذف هذه السلفة؟')) return; await dbRemove('supplierAdvances/' + id); toast('تم الحذف', 'success'); renderAccounts(); loadAdvances(); loadSupplierAdvancesTable(); recalcAll(); };
+const _origDelMilk = window.deleteMilkRecord;
+window.deleteMilkRecord = async function(id) { if (!confirm('حذف هذا السجل؟')) return; loading(true); try { await dbRemove('milkRecords/' + id); toast('تم الحذف', 'success'); loadMilkRecords(); recalcAll(); } catch(e) { toast('خطأ: ' + e.message, 'error'); } finally { loading(false); } };
+const _origDelExp = window.deleteExpense;
+window.deleteExpense = async function(id) { if (!confirm('حذف هذا المصروف؟')) return; await dbRemove('expenses/' + id); toast('تم الحذف', 'success'); loadExpenses(); recalcAll(); };
+const _origDelSale = window.deleteSale;
+window.deleteSale = async function(id) { if (!confirm('حذف هذا البيع؟')) return; await dbRemove('sales/' + id); toast('تم الحذف', 'success'); loadSales(); recalcAll(); };
+const _origDelBuyerPay = window.deleteBuyerPayment;
+window.deleteBuyerPayment = async function(id) { if (!confirm('حذف هذه الدفعة؟')) return; await dbRemove('buyerPayments/' + id); toast('تم الحذف', 'success'); renderBuyerAccounts(); loadBuyerPayments(); recalcAll(); };
+
+// ══════════════════════════════════════════════════════════════════
+// PRINT STATEMENTS (A4 Professional)
+// ══════════════════════════════════════════════════════════════════
+function printA4Header(title, infoRows) {
+  return `<h1 style="text-align:center;color:#D4A843;font-size:20px;margin-bottom:4px">${infoRows.factoryName || 'مصنع الألبان'}</h1><div style="text-align:center;color:#666;font-size:13px;margin-bottom:20px">${title}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;font-size:13px">${infoRows.rows.map(r => `<div style="display:flex;gap:8px"><span style="font-weight:bold;color:#555;min-width:80px">${r[0]}:</span><span>${r[1]}</span></div>`).join('')}</div>`;
+}
+
+window.printSupplierStatement = function() {
+  const s = state.suppliers[currentStmtSupplierId]; if (!s) return;
+  const df = getDateFilter('stmt');
+  const allMilk = Object.entries(state.milkRecords).filter(([,r]) => r.supplierId === currentStmtSupplierId);
+  const allPay = Object.entries(state.supplierPayments).filter(([,p]) => p.supplierId === currentStmtSupplierId);
+  const allAdv = Object.entries(state.supplierAdvances).filter(([,a]) => a.supplierId === currentStmtSupplierId);
+  const allPur = Object.entries(state.supplierPurchases || {}).filter(([,p]) => p.supplierId === currentStmtSupplierId);
+  const milk = filterByDate(allMilk, 'date', df.from, df.to);
+  const pay = filterByDate(allPay, 'date', df.from, df.to);
+  const adv = filterByDate(allAdv, 'date', df.from, df.to);
+  const pur = filterByDate(allPur, 'date', df.from, df.to);
+  const milkSum = milk.reduce((s,[,r]) => s+Number(r.total||0), 0);
+  const paySum = pay.reduce((s,[,p]) => s+Number(p.amount||0), 0);
+  const advSum = adv.reduce((s,[,a]) => s+Number(a.amount||0), 0);
+  const purSum = pur.reduce((s,[,p]) => s+Number(p.totalPrice||0), 0);
+  const balance = milkSum - paySum - advSum - purSum;
+  const nowStr = new Date().toLocaleString('ar-EG', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
+  const pw = window.open('','_blank');
+  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#333;padding:20px}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:8px;text-align:center}td{border:1px solid #ddd;padding:6px 8px;text-align:center}.totals{margin-top:16px;padding:12px;border:2px solid #D4A843;border-radius:8px}.total-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:8px}.footer{text-align:center;margin-top:24px;color:#999;font-size:11px}</style></head><body>${printA4Header('كشف حساب مورد', {factoryName: state.settings.factoryName || 'مصنع الألبان', rows: [['المورد',s.name],['الهاتف',s.phone||'—'],['الفترة',(df.from||'الكل')+' ← '+(df.to||'الكل')],['تاريخ الطباعة',nowStr]]})}<h3 style="color:#D4A843">سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي الحليب:</span><span>${fmt(milkSum,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${balance>0?'green':'red'}">${fmt(balance,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
+  pw.document.close(); setTimeout(()=>pw.print(), 600);
+};
+
+window.printWorkerStatement = function() {
+  const w = state.workers[currentWorkerStmtId]; if (!w) return;
+  const df = getDateFilter('wstmt');
+  const dailyRate = Number(w.daily||0);
+  const allAtt = Object.entries(state.workerAttendance||{}).filter(([,a])=>a.workerId===currentWorkerStmtId&&a.present);
+  const att = filterByDate(allAtt, 'date', df.from, df.to);
+  const allPay = Object.entries(state.workerPayments||{}).filter(([,p])=>p.workerId===currentWorkerStmtId);
+  const pay = filterByDate(allPay, 'date', df.from, df.to);
+  const allAdv = Object.entries(state.workerAdvances||{}).filter(([,a])=>a.workerId===currentWorkerStmtId);
+  const adv = filterByDate(allAdv, 'date', df.from, df.to);
+  const allPur = Object.entries(state.workerPurchases||{}).filter(([,p])=>p.workerId===currentWorkerStmtId);
+  const pur = filterByDate(allPur, 'date', df.from, df.to);
+  const totalDays = att.length; const totalEarned = totalDays*dailyRate;
+  const paySum = pay.reduce((s,[,p])=>s+Number(p.amount||0),0);
+  const advSum = adv.reduce((s,[,a])=>s+Number(a.amount||0),0);
+  const purSum = pur.reduce((s,[,p])=>s+Number(p.totalPrice||0),0);
+  const remaining = totalEarned - paySum - advSum - purSum;
+  const nowStr = new Date().toLocaleString('ar-EG',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
+  const pw = window.open('','_blank');
+  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#333;padding:20px}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:8px;text-align:center}td{border:1px solid #ddd;padding:6px 8px;text-align:center}.totals{margin-top:16px;padding:12px;border:2px solid #D4A843;border-radius:8px}.total-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:8px}.footer{text-align:center;margin-top:24px;color:#999;font-size:11px}</style></head><body>${printA4Header('كشف حساب عامل',{factoryName:state.settings.factoryName||'مصنع الألبان',rows:[['العامل',w.name],['اليومية',fmt(dailyRate,2)+' ج'],['الفترة',(df.from||'الكل')+' ← '+(df.to||'الكل')],['تاريخ الطباعة',nowStr]]})}<h3 style="color:#D4A843">سجل الحضور (${totalDays} يوم)</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${att.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>المستحق (${totalDays} يوم):</span><span>${fmt(totalEarned,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
+  pw.document.close(); setTimeout(()=>pw.print(), 600);
+};
+
+window.printBuyerStatement = function() {
+  const b = state.buyers[currentBuyerStmtId]; if (!b) return;
+  const df = getDateFilter('bstmt');
+  const buyerName = (b.name||'').trim().toLowerCase();
+  const allSales = Object.entries(state.sales).filter(([,s])=>(s.client||'').trim().toLowerCase()===buyerName);
+  const allPay = Object.entries(state.buyerPayments||{}).filter(([,p])=>p.buyerId===currentBuyerStmtId);
+  const allPur = Object.entries(state.buyerPurchases||{}).filter(([,p])=>p.buyerId===currentBuyerStmtId);
+  const sales = filterByDate(allSales,'date',df.from,df.to);
+  const pay = filterByDate(allPay,'date',df.from,df.to);
+  const pur = filterByDate(allPur,'date',df.from,df.to);
+  const salesTotal = sales.reduce((s,[,r])=>s+Number(r.total||0),0);
+  const salesPaid = sales.reduce((s,[,r])=>s+Number(r.paidNow??r.total??0),0);
+  const paySum = pay.reduce((s,[,p])=>s+Number(p.amount||0),0);
+  const purSum = pur.reduce((s,[,p])=>s+Number(p.totalPrice||0),0);
+  const remaining = salesTotal - salesPaid - paySum - purSum;
+  const nowStr = new Date().toLocaleString('ar-EG',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
+  const pw = window.open('','_blank');
+  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#333;padding:20px}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:8px;text-align:center}td{border:1px solid #ddd;padding:6px 8px;text-align:center}.totals{margin-top:16px;padding:12px;border:2px solid #D4A843;border-radius:8px}.total-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:8px}.footer{text-align:center;margin-top:24px;color:#999;font-size:11px}</style></head><body>${printA4Header('كشف حساب مشترٍ',{factoryName:state.settings.factoryName||'مصنع الألبان',rows:[['المشتري',b.name],['الهاتف',b.phone||'—'],['الفترة',(df.from||'الكل')+' ← '+(df.to||'الكل')],['تاريخ الطباعة',nowStr]]})}<h3 style="color:#D4A843">المبيعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${sales.map(([,s],i)=>{const pd=Number(s.paidNow??s.total??0);return`<tr><td>${i+1}</td><td>${s.date}</td><td>${sanitize(s.product)}</td><td>${fmt(s.qty,2)}</td><td>${fmt(s.total,2)}</td><td>${fmt(pd,2)}</td><td>${fmt(Number(s.total||0)-pd,2)}</td></tr>`;}).join('')||'<tr><td colspan="7">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي المبيعات:</span><span>${fmt(salesTotal,2)} ج</span></div><div class="total-row"><span>المدفوع:</span><span>${fmt(salesPaid+paySum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
+  pw.document.close(); setTimeout(()=>pw.print(), 600);
+};
+
+// ══════════════════════════════════════════════════════════════════
+// UPDATED STATEMENT VIEWS (with date filter, purchases, advances)
+// ══════════════════════════════════════════════════════════════════
+window.showAccountDetail = function(supplierId) {
+  currentStmtSupplierId = supplierId;
+  const s = state.suppliers[supplierId]; if (!s) return;
+  $('account-detail-title').textContent = 'كشف حساب: ' + s.name;
+  const df = getDateFilter('stmt');
+  const milkRecords = filterByDate(Object.entries(state.milkRecords).filter(([,r])=>r.supplierId===supplierId), 'date', df.from, df.to).sort((a,b)=>a[1].date>b[1].date?-1:1);
+  const payments = filterByDate(Object.entries(state.supplierPayments).filter(([,p])=>p.supplierId===supplierId), 'date', df.from, df.to);
+  const advances = filterByDate(Object.entries(state.supplierAdvances).filter(([,a])=>a.supplierId===supplierId), 'date', df.from, df.to);
+  const purchases = filterByDate(Object.entries(state.supplierPurchases||{}).filter(([,p])=>p.supplierId===supplierId), 'date', df.from, df.to);
+  const milkSum = milkRecords.reduce((s,[,r])=>s+Number(r.total||0),0);
+  const paySum = payments.reduce((s,[,p])=>s+Number(p.amount||0),0);
+  const advSum = advances.reduce((s,[,a])=>s+Number(a.amount||0),0);
+  const purSum = purchases.reduce((s,[,p])=>s+Number(p.totalPrice||0),0);
+  const balance = milkSum - paySum - advSum - purSum;
+  $('account-detail-body').innerHTML = `<div class="summary-bar" style="margin-bottom:20px"><div class="summary-item"><div class="val">${fmt(milkSum,2)}</div><div class="lbl">الحليب (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--danger)">${fmt(paySum,2)}</div><div class="lbl">المدفوعات (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(advSum,2)}</div><div class="lbl">السلف (ج)</div></div>${purSum>0?`<div class="summary-item"><div class="val" style="color:var(--info)">${fmt(purSum,2)}</div><div class="lbl">المشتريات (ج)</div></div>`:''}<div class="summary-item"><div class="val" style="color:${balance>0?'var(--success)':'var(--danger)'}">${fmt(balance,2)}</div><div class="lbl">الرصيد (ج)</div></div></div><h4 style="color:var(--gold);margin-bottom:10px">سجل الحليب (${milkRecords.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${milkRecords.slice(0,30).map(([,r])=>`<tr><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td style="color:var(--gold)">${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text-400)">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">المدفوعات</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${payments.map(([,p])=>`<tr><td>${p.date}</td><td style="color:var(--danger)">${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">السلف</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${advances.map(([,a])=>`<tr><td>${a.date}</td><td style="color:var(--warning)">${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div>${purchases.length?`<h4 style="color:var(--gold);margin-bottom:10px">المشتريات</h4><div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>الوصف</th><th>الكمية</th><th>الإجمالي</th></tr></thead><tbody>${purchases.map(([,p])=>`<tr><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.qty,2)} ${sanitize(p.unit)}</td><td style="color:var(--danger)">${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table></div>`:''}`;
+  const waPhone = (s.phone||'').replace(/\D/g,'');
+  const waBtnEl = $('wa-send-btn');
+  if (waPhone && waBtnEl) {
+    waBtnEl.style.display = '';
+    const waMsg = encodeURIComponent('السلام عليكم '+s.name+' 🥛\n\n📋 كشف حسابك\n━━━━━━━━\n💰 الحليب: '+fmt(milkSum,2)+' ج\n✅ المدفوعات: '+fmt(paySum,2)+' ج\n💵 السلف: '+fmt(advSum,2)+' ج\n📌 الرصيد: '+fmt(balance,2)+' ج\nشكراً 🙏');
+    waBtnEl.onclick = () => window.open('https://wa.me/2'+waPhone+'?text='+waMsg, '_blank');
+  } else if (waBtnEl) waBtnEl.style.display = 'none';
+  openModal('modal-account-detail');
+};
+
+window.showWorkerAccount = function(workerId) {
+  currentWorkerStmtId = workerId;
+  const w = state.workers[workerId]; if (!w) return;
+  $('worker-account-title').textContent = 'كشف حساب: ' + w.name;
+  const dailyRate = Number(w.daily||0);
+  const df = getDateFilter('wstmt');
+  const allAtt = Object.entries(state.workerAttendance||{}).filter(([,a])=>a.workerId===workerId&&a.present);
+  const attRecords = filterByDate(allAtt, 'date', df.from, df.to).sort((a,b)=>a[1].date>b[1].date?-1:1);
+  const payments = filterByDate(Object.entries(state.workerPayments||{}).filter(([,p])=>p.workerId===workerId), 'date', df.from, df.to);
+  const advances = filterByDate(Object.entries(state.workerAdvances||{}).filter(([,a])=>a.workerId===workerId), 'date', df.from, df.to);
+  const purchases = filterByDate(Object.entries(state.workerPurchases||{}).filter(([,p])=>p.workerId===workerId), 'date', df.from, df.to);
+  const totalDays = attRecords.length;
+  const totalEarned = totalDays * dailyRate;
+  const paySum = payments.reduce((s,[,p])=>s+Number(p.amount||0),0);
+  const advSum = advances.reduce((s,[,a])=>s+Number(a.amount||0),0);
+  const purSum = purchases.reduce((s,[,p])=>s+Number(p.totalPrice||0),0);
+  const remaining = totalEarned - paySum - advSum - purSum;
+  $('worker-account-body').innerHTML = `<div class="summary-bar" style="margin-bottom:20px"><div class="summary-item"><div class="val" style="color:var(--info)">${totalDays}</div><div class="lbl">أيام الحضور</div></div><div class="summary-item"><div class="val" style="color:var(--gold)">${fmt(totalEarned,2)}</div><div class="lbl">المستحق (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--success)">${fmt(paySum,2)}</div><div class="lbl">المدفوع (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(advSum,2)}</div><div class="lbl">السلف (ج)</div></div>${purSum>0?`<div class="summary-item"><div class="val" style="color:var(--info)">${fmt(purSum,2)}</div><div class="lbl">المشتريات (ج)</div></div>`:''}<div class="summary-item"><div class="val" style="color:${remaining>0?'var(--danger)':'var(--success)'}">${fmt(remaining,2)}</div><div class="lbl">المتبقي (ج)</div></div></div><h4 style="color:var(--gold);margin-bottom:10px">الحضور (${totalDays} يوم)</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${attRecords.map(([,a])=>`<tr><td>${a.date}</td><td style="color:var(--gold)">${fmt(dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="2">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">المدفوعات</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${payments.map(([,p])=>`<tr><td>${p.date}</td><td style="color:var(--danger)">${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="2">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">السلف</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${advances.map(([,a])=>`<tr><td>${a.date}</td><td style="color:var(--warning)">${fmt(a.amount,2)} ج</td><td>${sanitize(a.description||'')}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div>${purchases.length?`<h4 style="color:var(--gold);margin-bottom:10px">المشتريات</h4><div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${purchases.map(([,p])=>`<tr><td>${p.date}</td><td>${sanitize(p.desc)}</td><td style="color:var(--danger)">${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table></div>`:''}`;
+  const waPhone = (w.phone||'').replace(/\D/g,'');
+  const waBtnEl = $('worker-wa-btn');
+  if (waPhone && waBtnEl) {
+    waBtnEl.style.display = '';
+    const waMsg = encodeURIComponent('السلام عليكم '+w.name+' 👷\n📋 كشف حسابك\n━━━━━━━━\n💵 اليومية: '+fmt(dailyRate,2)+' ج\n📆 أيام: '+totalDays+'\n💰 المستحق: '+fmt(totalEarned,2)+' ج\n✅ المدفوع: '+fmt(paySum,2)+' ج\n📌 المتبقي: '+fmt(remaining,2)+' ج\nشكراً 🙏');
+    waBtnEl.onclick = () => window.open('https://wa.me/2'+waPhone+'?text='+waMsg, '_blank');
+  } else if (waBtnEl) waBtnEl.style.display = 'none';
+  openModal('modal-worker-account');
+};
+
+// ══════════════════════════════════════════════════════════════════
+// BUYER ACCOUNT DETAIL
+// ══════════════════════════════════════════════════════════════════
+window.showBuyerAccount = function(buyerId) {
+  currentBuyerStmtId = buyerId;
+  const b = state.buyers[buyerId]; if (!b) return;
+  $('buyer-account-title').textContent = 'كشف حساب: ' + b.name;
+  const df = getDateFilter('bstmt');
+  const buyerName = (b.name||'').trim().toLowerCase();
+  const allSales = Object.entries(state.sales).filter(([,s])=>(s.client||'').trim().toLowerCase()===buyerName);
+  const allPay = Object.entries(state.buyerPayments||{}).filter(([,p])=>p.buyerId===buyerId);
+  const allPur = Object.entries(state.buyerPurchases||{}).filter(([,p])=>p.buyerId===buyerId);
+  const sales = filterByDate(allSales,'date',df.from,df.to).sort((a,b)=>a[1].date>b[1].date?-1:1);
+  const pay = filterByDate(allPay,'date',df.from,df.to);
+  const pur = filterByDate(allPur,'date',df.from,df.to);
+  const salesTotal = sales.reduce((s,[,r])=>s+Number(r.total||0),0);
+  const salesPaid = sales.reduce((s,[,r])=>s+Number(r.paidNow??r.total??0),0);
+  const paySum = pay.reduce((s,[,p])=>s+Number(p.amount||0),0);
+  const purSum = pur.reduce((s,[,p])=>s+Number(p.totalPrice||0),0);
+  const remaining = salesTotal - salesPaid - paySum - purSum;
+  $('buyer-account-body').innerHTML = `<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px;padding:0 4px"><div class="form-group" style="min-width:150px;margin:0"><label>من تاريخ</label><input type="date" id="bstmt-from" onchange="showBuyerAccount(currentBuyerStmtId)"></div><div class="form-group" style="min-width:150px;margin:0"><label>إلى تاريخ</label><input type="date" id="bstmt-to" onchange="showBuyerAccount(currentBuyerStmtId)"></div><button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="document.getElementById('bstmt-from').value='';document.getElementById('bstmt-to').value='';showBuyerAccount(currentBuyerStmtId)">الكل</button></div><div class="summary-bar" style="margin-bottom:20px"><div class="summary-item"><div class="val" style="color:var(--success)">${fmt(salesTotal,2)}</div><div class="lbl">المبيعات (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--gold)">${fmt(salesPaid+paySum,2)}</div><div class="lbl">المدفوع (ج)</div></div>${purSum>0?`<div class="summary-item"><div class="val" style="color:var(--info)">${fmt(purSum,2)}</div><div class="lbl">المشتريات (ج)</div></div>`:''}<div class="summary-item"><div class="val" style="color:${remaining>0?'var(--danger)':'var(--success)'}">${fmt(remaining,2)}</div><div class="lbl">المتبقي (ج)</div></div></div><h4 style="color:var(--gold);margin-bottom:10px">المبيعات (${sales.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${sales.slice(0,30).map(([,s])=>{const pd=Number(s.paidNow??s.total??0);return`<tr><td>${s.date}</td><td>${sanitize(s.product)}</td><td>${fmt(s.qty,2)}</td><td style="color:var(--success)">${fmt(s.total,2)}</td><td style="color:var(--gold)">${fmt(pd,2)}</td><td style="color:${Number(s.total||0)-pd>0?'var(--danger)':'var(--success)'}">${fmt(Number(s.total||0)-pd,2)}</td></tr>`;}).join('')||'<tr><td colspan="6">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">المدفوعات</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p])=>`<tr><td>${p.date}</td><td style="color:var(--danger)">${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="2">لا توجد</td></tr>'}</tbody></table></div>${pur.length?`<h4 style="color:var(--gold);margin-bottom:10px">المشتريات</h4><div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p])=>`<tr><td>${p.date}</td><td>${sanitize(p.desc)}</td><td style="color:var(--danger)">${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table></div>`:''}`;
+  openModal('modal-buyer-account');
+};
+
+window.openBuyerPaymentModalFor = function(buyerId) { openBuyerPaymentModal(); const sel = $('bp-buyer'); if (sel) sel.value = buyerId; };
+
+// ══════════════════════════════════════════════════════════════════
+// UPDATED renderAccounts (with purchases column)
+// ══════════════════════════════════════════════════════════════════
+// Override by redefining (the original is a plain function, not window.*)
+// We redefine it in the script block scope - this works because the original
+// function is referenced by name in the HTML
+window._renderAccountsV2 = function(search) {
+  search = search || '';
+  const suppliers = Object.entries(state.suppliers).filter(([,s]) => !search || fuzzyMatch(search, s.name || ''));
+  $('accounts-tbody').innerHTML = suppliers.length ? suppliers.map(([id,s], i) => {
+    const milkTotal = Object.values(state.milkRecords).filter(r=>r.supplierId===id).reduce((s,r)=>s+Number(r.total||0),0);
+    const payments = Object.values(state.supplierPayments).filter(p=>p.supplierId===id).reduce((s,p)=>s+Number(p.amount||0),0);
+    const advances = Object.values(state.supplierAdvances).filter(a=>a.supplierId===id).reduce((s,a)=>s+Number(a.amount||0),0);
+    const purchases = Object.values(state.supplierPurchases||{}).filter(p=>p.supplierId===id).reduce((s,p)=>s+Number(p.totalPrice||0),0);
+    const balance = milkTotal - payments - advances - purchases;
+    const balClass = balance>0?'balance-positive':balance<0?'balance-negative':'balance-zero';
+    return `<tr style="animation:rowFadeIn 0.3s ease ${i*0.05}s both"><td>${i+1}</td><td><strong>${sanitize(s.name)}</strong></td><td style="color:var(--gold)">${fmt(milkTotal,2)} ج</td><td style="color:var(--danger)">${fmt(payments,2)} ج</td><td style="color:var(--warning)">${fmt(advances,2)} ج</td><td class="${balClass}" style="font-weight:900;font-size:15px">${fmt(balance,2)} ج</td><td><div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="openPaymentModal('${id}')">💳 دفعة</button><button class="btn btn-secondary btn-sm" onclick="openPurchaseModal('supplier','${id}')">🛍️</button><button class="btn btn-secondary btn-sm" onclick="showAccountDetail('${id}')">📋 كشف</button></div></td></tr>`;
+  }).join('') : '<tr><td colspan="7"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>';
+};
+
+// Patch: since renderAccounts is a local function, we need to also update
+// the global reference used by navigate(). We do this by wrapping filterAccounts too.
+window.filterAccounts = function() { window._renderAccountsV2($('accounts-search')?.value || ''); };
+
+// ══════════════════════════════════════════════════════════════════
+// UPDATED renderBuyerAccounts
+// ══════════════════════════════════════════════════════════════════
+window.renderBuyerAccounts = function(search) {
+  search = search || '';
+  const buyers = Object.entries(state.buyers).filter(([,b]) => !search || fuzzyMatch(search, b.name || ''));
+  $('buyer-accounts-tbody').innerHTML = buyers.length ? buyers.map(([id,b], i) => {
+    const balance = calcBuyerBalance(id);
+    return `<tr style="animation:rowFadeIn 0.3s ease ${i*0.05}s both"><td>${i+1}</td><td><strong>${sanitize(b.name)}</strong></td><td class="${balance>0?'balance-positive':'balance-zero'}" style="font-weight:900;font-size:15px">${fmt(balance,2)} ج</td><td><span class="badge ${balance>0?'badge-warning':'badge-success'}">${balance>0?'عليه':'لا يوجد'}</span></td><td><div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="openBuyerPaymentModalFor('${id}')">💳 دفعة</button><button class="btn btn-secondary btn-sm" onclick="openPurchaseModal('buyer','${id}')">🛍️</button><button class="btn btn-secondary btn-sm" onclick="showBuyerAccount('${id}')">📋 كشف</button></div></td></tr>`;
+  }).join('') : '<tr><td colspan="5"><div class="empty-state"><span class="empty-icon">💳</span><p>لا توجد بيانات</p></div></td></tr>';
+};
+
+// ══════════════════════════════════════════════════════════════════
+// UPDATED renderWorkers (with balance + action buttons)
+// ══════════════════════════════════════════════════════════════════
+window.renderWorkers = function(search) {
+  search = search || '';
+  const rows = Object.entries(state.workers).filter(([,w]) => !search || fuzzyMatch(search, w.name || ''));
+  $('workers-count').textContent = '(' + rows.length + ' عامل)';
+  if (!rows.length) { $('workers-tbody').innerHTML = '<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">👷</span><p>لا يوجد عمال</p></div></td></tr>'; return; }
+  $('workers-tbody').innerHTML = rows.map(([id,w], i) => {
+    const dailyRate = Number(w.daily||0);
+    const wb = getWeekBounds();
+    const weekAtt = Object.values(state.workerAttendance||{}).filter(a=>a.workerId===id&&a.present&&a.date>=wb.start&&a.date<=wb.end);
+    const weekDays = weekAtt.length;
+    const balance = calcWorkerBalance(id);
+    return `<tr style="animation:rowFadeIn 0.3s ease ${i*0.05}s both"><td>${i+1}</td><td><strong>${sanitize(w.name)}</strong></td><td dir="ltr">${sanitize(w.phone||'—')}</td><td>${fmt(dailyRate,2)} ج</td><td style="color:var(--success);font-weight:700">${weekDays} يوم</td><td style="color:var(--gold)">${fmt(weekDays*dailyRate,2)} ج</td><td class="${balance>0?'balance-positive':'balance-zero'}" style="font-weight:700">${fmt(balance,2)} ج</td><td><div style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="showWorkerAccount('${id}')">📋</button><button class="btn btn-secondary btn-sm" onclick="openPurchaseModal('worker','${id}')">🛍️</button><button class="btn btn-secondary btn-sm" onclick="openWorkerAdvanceModalFor('${id}')">💵</button><button class="btn btn-secondary btn-sm btn-icon" onclick="openWorkerModal('${id}')">✏️</button><button class="btn btn-danger btn-sm btn-icon" onclick="deleteWorker('${id}')">🗑️</button><button class="btn btn-secondary btn-sm" onclick="openAttendanceModal('${id}')">📅</button></div></td></tr>`;
+  }).join('');
+};
+
+// Note: navigate() is patched in the HTML to use _renderAccountsV2 for accounts page
+
+// Initialize ticker
+setTimeout(updateTicker, 2000);
+setInterval(updateTicker, 30000);
+
 // Initialize default date filters
 const firstOfMonth = () => { const d = new Date(); d.setDate(1); return d.toISOString().slice(0,10); };
 ['exp-from','sales-from','exports-from'].forEach(id => { const el = $(id); if (el && !el.value) el.value = firstOfMonth(); });
@@ -4055,6 +4713,70 @@ const firstOfMonth = () => { const d = new Date(); d.setDate(1); return d.toISOS
 // Load dashboard on start
 setTimeout(loadDashboard, 800);
 </script>
+
+<!-- Worker Advance Modal -->
+<div class="modal-backdrop" id="modal-worker-advance">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header"><span style="font-size:22px">💵</span><h3>تسجيل سلفة عامل</h3><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-worker-advance')">✕</button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="form-group"><label>العامل *</label><select id="wa-worker"><option value="">اختر عاملاً...</option></select></div>
+      <div class="form-group"><label>التاريخ *</label><input type="date" id="wa-date"></div>
+      <div class="form-group"><label>المبلغ (جنيه) *</label><input type="number" id="wa-amount" placeholder="0" min="0" step="0.01"></div>
+      <div class="form-group"><label>الوصف</label><input type="text" id="wa-desc" placeholder="سبب السلفة"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="wa-notes" placeholder="ملاحظات اختيارية"></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-worker-advance')">إلغاء</button><button class="btn btn-primary" onclick="saveWorkerAdvance()">💾 حفظ</button></div>
+  </div>
+</div>
+
+<!-- Supplier Advance Modal (New) -->
+<div class="modal-backdrop" id="modal-supplier-advance-new">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header"><span style="font-size:22px">💵</span><h3>تسجيل سلفة مورد</h3><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-supplier-advance-new')">✕</button></div>
+    <div class="modal-body"><div class="form-grid">
+      <div class="form-group"><label>المورد *</label><select id="sadv-supplier"><option value="">اختر مورداً...</option></select></div>
+      <div class="form-group"><label>التاريخ *</label><input type="date" id="sadv-date"></div>
+      <div class="form-group"><label>المبلغ (جنيه) *</label><input type="number" id="sadv-amount" placeholder="0" min="0" step="0.01"></div>
+      <div class="form-group"><label>الوصف</label><input type="text" id="sadv-desc" placeholder="سبب السلفة"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="sadv-notes" placeholder="ملاحظات اختيارية"></div>
+    </div></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-supplier-advance-new')">إلغاء</button><button class="btn btn-primary" onclick="saveSupplierAdvanceNew()">💾 حفظ</button></div>
+  </div>
+</div>
+
+<!-- Purchase Modal -->
+<div class="modal-backdrop" id="modal-purchase">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header"><span style="font-size:22px">🛍️</span><h3 id="purchase-modal-title">تسجيل مشتريات</h3><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-purchase')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="pur-type" value=""><input type="hidden" id="pur-person-id" value="">
+      <div class="form-grid">
+        <div class="form-group"><label>التاريخ *</label><input type="date" id="pur-date"></div>
+        <div class="form-group"><label>الوصف *</label><input type="text" id="pur-desc" placeholder="مثال: جبنة"></div>
+        <div class="form-group"><label>الكمية *</label><input type="number" id="pur-qty" placeholder="0" min="0" step="0.01" oninput="calcPurchaseTotal()"></div>
+        <div class="form-group"><label>الوحدة</label><select id="pur-unit"><option>كجم</option><option>لتر</option><option>قطعة</option><option>علبة</option><option>كرتونة</option></select></div>
+        <div class="form-group"><label>سعر الوحدة (ج) *</label><input type="number" id="pur-unit-price" placeholder="0" min="0" step="0.01" oninput="calcPurchaseTotal()"></div>
+        <div class="form-group"><label>الإجمالي</label><input type="number" id="pur-total" placeholder="0" readonly style="background:var(--bg-500);color:var(--gold);font-weight:700"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="pur-notes" placeholder="ملاحظات اختيارية"></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-purchase')">إلغاء</button><button class="btn btn-primary" onclick="savePurchase()">💾 حفظ</button></div>
+  </div>
+</div>
+
+<!-- Buyer Account Detail Modal -->
+<div class="modal-backdrop" id="modal-buyer-account">
+  <div class="modal" style="max-width:800px;max-height:90vh;overflow-y:auto">
+    <div class="modal-header"><span style="font-size:22px">💳</span><h3 id="buyer-account-title">كشف حساب مشترٍ</h3><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-buyer-account')">✕</button></div>
+    <div class="modal-body" id="buyer-account-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-buyer-account')">إغلاق</button>
+      <button class="btn btn-primary" id="buyer-print-btn" onclick="printBuyerStatement()">🖨️ طباعة</button>
+      <a class="btn btn-secondary" id="buyer-wa-btn" href="#" target="_blank" style="display:none;text-decoration:none">📱 واتساب</a>
+    </div>
+  </div>
+</div>
+
 
 <!-- ═══════════════ SERVICE WORKER ═══════════════ -->
 <script>

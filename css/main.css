@@ -855,3 +855,56 @@ input[type=number] { direction: ltr; text-align: right; }
 .section-icon svg {
   filter: drop-shadow(0 2px 6px rgba(212,168,67,0.3));
 }
+
+/* ── Bottom Ticker Bar ── */
+.ticker-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(90deg, var(--bg-800), var(--bg-700), var(--bg-800));
+  border-top: 1px solid var(--border);
+  padding: 8px 0;
+  z-index: 900;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.ticker-content {
+  display: inline-block;
+  animation: tickerScroll 30s linear infinite;
+  font-size: 13px;
+  color: var(--text-200);
+  padding-right: 100%;
+}
+
+@keyframes tickerScroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+@media (max-width: 768px) {
+  .ticker-bar { bottom: 60px; }
+  .main-content { padding-bottom: 120px !important; }
+}
+@media (min-width: 769px) {
+  .ticker-bar { bottom: 0; }
+  .main-content { padding-bottom: 50px !important; }
+}
+
+/* ── UI Improvements ── */
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--text-200); }
+input, select, textarea { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+input:focus, select:focus, textarea:focus { border-color: var(--gold) !important; box-shadow: 0 0 0 3px rgba(212,168,67,0.15); }
+.btn { transition: all 0.2s ease; cursor: pointer; }
+.btn:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+.btn:active { transform: translateY(0); }
+.table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table th { position: sticky; top: 0; z-index: 1; }
+
+/* Better modal animations */
+.modal-backdrop { animation: fadeIn 0.2s ease; }
+.modal { animation: slideUp 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }

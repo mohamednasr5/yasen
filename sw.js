@@ -1,6 +1,6 @@
 // Service Worker — نظام إدارة مصنع الألبان
 const BASE = '/yasen/';
-const CACHE_NAME = 'dairy-v1.2';
+const CACHE_NAME = 'dairy-v2.0';
 const STATIC_ASSETS = [
   BASE,
   BASE + 'index.html',
