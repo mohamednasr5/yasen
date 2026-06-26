@@ -4451,7 +4451,8 @@ window.updateTicker = function() {
   const cheeseCost = cheeseWeight > 0 ? (totalMilkCost + totalExpenses) / cheeseWeight : 0;
   const tickerEl = $('ticker-content');
   if (tickerEl) {
-    tickerEl.innerHTML = `<span style="margin-left:40px">🥛 متوسط سعر الحليب (آخر 7 أيام): <strong style="color:var(--gold)">${avgMilkPrice.toFixed(2)}</strong> ج/كجم</span><span style="margin-left:40px">🧀 متوسط تكلفة الجبنة (آخر 7 أيام): <strong style="color:var(--gold)">${cheeseCost.toFixed(2)}</strong> ج/كجم</span><span style="margin-left:40px">📊 إجمالي الحليب (آخر 7 أيام): <strong>${fmt(totalMilkQty,1)}</strong> كجم</span>`;
+    const items = `🥛 متوسط سعر الحليب (آخر 7 أيام): ${avgMilkPrice.toFixed(2)} ج/كجم  ◆  🧀 متوسط تكلفة الجبنة (آخر 7 أيام): ${cheeseCost.toFixed(2)} ج/كجم  ◆  📊 إجمالي الحليب (آخر 7 أيام): ${fmt(totalMilkQty,1)} كجم  ◆  `;
+    tickerEl.innerHTML = `<span class="ticker-item"><strong style="color:var(--gold)">${items}</strong></span><span class="ticker-item"><strong style="color:var(--gold)">${items}</strong></span>`;
   }
   const autoEl = $('auto-cheese-value');
   if (autoEl) autoEl.textContent = cheeseWeight > 0 ? cheeseCost.toFixed(2) : '—';

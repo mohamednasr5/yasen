@@ -871,16 +871,22 @@ input[type=number] { direction: ltr; text-align: right; }
 }
 
 .ticker-content {
-  display: inline-block;
-  animation: tickerScroll 30s linear infinite;
+  display: inline-flex;
+  animation: tickerScroll 60s linear infinite;
   font-size: 13px;
   color: var(--text-200);
-  padding-right: 100%;
+ gap: 0;
+}
+
+.ticker-content .ticker-item {
+  display: inline-flex;
+  white-space: nowrap;
+  padding: 0 60px;
 }
 
 @keyframes tickerScroll {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
 }
 
 @media (max-width: 768px) {
