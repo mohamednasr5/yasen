@@ -270,6 +270,10 @@
       </div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
+      <div id="easy-date-bar" style="font-size:11px;color:#4a6a88;display:none"></div>
+      <button onclick="easyGoSettings()" style="background:#1a2030;border:1px solid #556677;color:#8899aa;padding:7px 14px;border-radius:20px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:600;transition:all 0.2s"
+              onmouseover="this.style.borderColor='#D4A843';this.style.color='#D4A843'"
+              onmouseout="this.style.borderColor='#556677';this.style.color='#8899aa'">⚙️ الإعدادات</button>
       <button onclick="switchToNormalUI()" style="background:#1e3a5a;border:1px solid #4a9eff;color:#4a9eff;padding:7px 14px;border-radius:20px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:600;transition:all 0.2s"
               onmouseover="this.style.background='#4a9eff';this.style.color='#fff'"
               onmouseout="this.style.background='#1e3a5a';this.style.color='#4a9eff'">📊 الواجهة الكاملة</button>
@@ -293,7 +297,7 @@
         <div style="flex:1;height:1px;background:linear-gradient(to left,transparent,rgba(34,197,94,0.3))"></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('suppliers'),600)" class="easy-btn" style="--btn-color:#22c55e;--btn-bg:#0f2a1a">
+        <button onclick=\"easyNavigate('suppliers')\" class="easy-btn" style="--btn-color:#22c55e;--btn-bg:#0f2a1a">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <circle cx="18" cy="10" r="6" fill="#22c55e" opacity="0.9"><animate attributeName="r" values="6;7;6" dur="2s" repeatCount="indefinite"/></circle>
@@ -304,7 +308,7 @@
           </span>
           <span class="easy-btn-label">الموردون</span>
         </button>
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('milk'),600)" class="easy-btn" style="--btn-color:#22c55e;--btn-bg:#0f2a1a">
+        <button onclick=\"easyNavigate('milk')\" class="easy-btn" style="--btn-color:#22c55e;--btn-bg:#0f2a1a">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <ellipse cx="18" cy="18" rx="12" ry="14" fill="#22c55e" opacity="0.2" stroke="#22c55e" stroke-width="1.5"/>
@@ -316,7 +320,7 @@
           </span>
           <span class="easy-btn-label">استلام الحليب</span>
         </button>
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('accounts'),600)" class="easy-btn" style="--btn-color:#22c55e;--btn-bg:#0f2a1a">
+        <button onclick=\"easyNavigate('accounts')\" class="easy-btn" style="--btn-color:#22c55e;--btn-bg:#0f2a1a">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <rect x="6" y="8" width="24" height="20" rx="4" fill="#22c55e" opacity="0.2" stroke="#22c55e" stroke-width="1.5"/>
@@ -341,7 +345,7 @@
         <div style="flex:1;height:1px;background:linear-gradient(to left,transparent,rgba(74,158,255,0.3))"></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('factory-out'),600)" class="easy-btn" style="--btn-color:#4a9eff;--btn-bg:#0f1a2a">
+        <button onclick=\"easyNavigate('factory-out')\" class="easy-btn" style="--btn-color:#4a9eff;--btn-bg:#0f1a2a">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <rect x="4" y="16" width="28" height="16" rx="3" fill="#4a9eff" opacity="0.3" stroke="#4a9eff" stroke-width="1.5"/>
@@ -354,7 +358,7 @@
           </span>
           <span class="easy-btn-label">خارج من المعمل</span>
         </button>
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('warehouse1'),600)" class="easy-btn" style="--btn-color:#4a9eff;--btn-bg:#0f1a2a">
+        <button onclick=\"easyNavigate('warehouse1')\" class="easy-btn" style="--btn-color:#4a9eff;--btn-bg:#0f1a2a">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <rect x="5" y="12" width="26" height="20" rx="3" fill="#4a9eff" opacity="0.25" stroke="#4a9eff" stroke-width="1.5"/>
@@ -365,7 +369,7 @@
           </span>
           <span class="easy-btn-label">المخزن الأول</span>
         </button>
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('warehouse2'),600)" class="easy-btn" style="--btn-color:#4a9eff;--btn-bg:#0f1a2a">
+        <button onclick=\"easyNavigate('warehouse2')\" class="easy-btn" style="--btn-color:#4a9eff;--btn-bg:#0f1a2a">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <rect x="5" y="12" width="26" height="20" rx="3" fill="#4a9eff" opacity="0.25" stroke="#4a9eff" stroke-width="1.5"/>
@@ -376,7 +380,7 @@
           </span>
           <span class="easy-btn-label">المخزن الثاني</span>
         </button>
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('exports'),600)" class="easy-btn" style="--btn-color:#4a9eff;--btn-bg:#0f1a2a">
+        <button onclick=\"easyNavigate('exports')\" class="easy-btn" style="--btn-color:#4a9eff;--btn-bg:#0f1a2a">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <rect x="4" y="10" width="24" height="20" rx="3" fill="#4a9eff" opacity="0.2" stroke="#4a9eff" stroke-width="1.5"/>
@@ -402,7 +406,7 @@
         <div style="flex:1;height:1px;background:linear-gradient(to left,transparent,rgba(244,114,182,0.3))"></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('sales'),600)" class="easy-btn" style="--btn-color:#f472b6;--btn-bg:#2a0f1a">
+        <button onclick=\"easyNavigate('sales')\" class="easy-btn" style="--btn-color:#f472b6;--btn-bg:#2a0f1a">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <rect x="4" y="8" width="28" height="20" rx="4" fill="#f472b6" opacity="0.15" stroke="#f472b6" stroke-width="1.5"/>
@@ -414,7 +418,7 @@
           </span>
           <span class="easy-btn-label">المبيعات</span>
         </button>
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('buyers'),600)" class="easy-btn" style="--btn-color:#f472b6;--btn-bg:#2a0f1a">
+        <button onclick=\"easyNavigate('buyers')\" class="easy-btn" style="--btn-color:#f472b6;--btn-bg:#2a0f1a">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <circle cx="12" cy="12" r="5" fill="#f472b6" opacity="0.8"/>
@@ -424,7 +428,7 @@
           </span>
           <span class="easy-btn-label">المشترون</span>
         </button>
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('buyer-accounts'),600)" class="easy-btn" style="--btn-color:#f472b6;--btn-bg:#2a0f1a">
+        <button onclick=\"easyNavigate('buyer-accounts')\" class="easy-btn" style="--btn-color:#f472b6;--btn-bg:#2a0f1a">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <rect x="6" y="6" width="24" height="24" rx="5" fill="#f472b6" opacity="0.15" stroke="#f472b6" stroke-width="1.5"/>
@@ -449,7 +453,7 @@
         <div style="flex:1;height:1px;background:linear-gradient(to left,transparent,rgba(249,115,22,0.3))"></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('expenses'),600)" class="easy-btn" style="--btn-color:#f97316;--btn-bg:#2a1a0f">
+        <button onclick=\"easyNavigate('expenses')\" class="easy-btn" style="--btn-color:#f97316;--btn-bg:#2a1a0f">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <path d="M18 4 L32 30 L4 30Z" fill="#f97316" opacity="0.2" stroke="#f97316" stroke-width="1.5"/>
@@ -459,7 +463,7 @@
           </span>
           <span class="easy-btn-label">المصاريف</span>
         </button>
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('advances'),600)" class="easy-btn" style="--btn-color:#f97316;--btn-bg:#2a1a0f">
+        <button onclick=\"easyNavigate('advances')\" class="easy-btn" style="--btn-color:#f97316;--btn-bg:#2a1a0f">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <rect x="6" y="10" width="24" height="16" rx="4" fill="#f97316" opacity="0.2" stroke="#f97316" stroke-width="1.5"/>
@@ -468,7 +472,7 @@
           </span>
           <span class="easy-btn-label">السلف</span>
         </button>
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('workers'),600)" class="easy-btn" style="--btn-color:#f97316;--btn-bg:#2a1a0f">
+        <button onclick=\"easyNavigate('workers')\" class="easy-btn" style="--btn-color:#f97316;--btn-bg:#2a1a0f">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <circle cx="18" cy="10" r="6" fill="#f97316" opacity="0.7"/>
@@ -492,7 +496,7 @@
         <div style="flex:1;height:1px;background:linear-gradient(to left,transparent,rgba(212,168,67,0.3))"></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('dashboard'),600)" class="easy-btn" style="--btn-color:#D4A843;--btn-bg:#2a1f0f">
+        <button onclick=\"easyNavigate('dashboard')\" class="easy-btn" style="--btn-color:#D4A843;--btn-bg:#2a1f0f">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <rect x="4" y="4" width="12" height="12" rx="3" fill="#D4A843" opacity="0.6"/>
@@ -505,7 +509,7 @@
           </span>
           <span class="easy-btn-label">لوحة التحكم</span>
         </button>
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('reports'),600)" class="easy-btn" style="--btn-color:#D4A843;--btn-bg:#2a1f0f">
+        <button onclick=\"easyNavigate('reports')\" class="easy-btn" style="--btn-color:#D4A843;--btn-bg:#2a1f0f">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <rect x="6" y="4" width="24" height="28" rx="4" fill="#D4A843" opacity="0.15" stroke="#D4A843" stroke-width="1.5"/>
@@ -517,7 +521,7 @@
           </span>
           <span class="easy-btn-label">التقارير</span>
         </button>
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('cheese-calc'),600)" class="easy-btn" style="--btn-color:#D4A843;--btn-bg:#2a1f0f">
+        <button onclick=\"easyNavigate('cheese-calc')\" class="easy-btn" style="--btn-color:#D4A843;--btn-bg:#2a1f0f">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <polygon points="18,4 32,28 4,28" fill="#D4A843" opacity="0.4" stroke="#D4A843" stroke-width="1.5"/>
@@ -528,7 +532,7 @@
           </span>
           <span class="easy-btn-label">حاسبة الجبنة 🧀</span>
         </button>
-        <button onclick="launchNormalUI();setTimeout(()=>navigate('settings'),600)" class="easy-btn" style="--btn-color:#D4A843;--btn-bg:#2a1f0f">
+        <button onclick=\"easyNavigate('settings')\" class="easy-btn" style="--btn-color:#D4A843;--btn-bg:#2a1f0f">
           <span class="easy-btn-icon">
             <svg width="36" height="36" viewBox="0 0 36 36">
               <circle cx="18" cy="18" r="12" fill="#D4A843" opacity="0.1" stroke="#D4A843" stroke-width="1.5">
@@ -557,6 +561,14 @@
 </div>
 
 <style>
+/* Hide interface selection & easy UI on mobile phones */
+@media (max-width: 599px) {
+  #interface-select-screen,
+  #easy-ui-screen,
+  #btn-back-easy { display: none !important; }
+}
+/* Also hide on phone UA via JS — CSS covers layout, JS covers logic */
+
 /* Easy UI Button Styles */
 .easy-btn {
   display: flex;
@@ -758,6 +770,7 @@
           <span id="connection-text">متصل</span>
         </div>
         <span style="font-size:12px;color:var(--text-400)" id="current-date"></span>
+        <button id="btn-back-easy" onclick="switchToEasyUI()" style="display:none;background:#0f2a1a;border:1px solid #22c55e;border-radius:var(--radius);padding:5px 10px;color:#22c55e;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600" title="العودة للواجهة السهلة">🟩 السهلة</button>
         <button onclick="logout()" style="background:none;border:1px solid var(--border);border-radius:var(--radius);padding:5px 10px;color:var(--text-400);font-size:12px;cursor:pointer;font-family:inherit" title="تسجيل الخروج">🔒 خروج</button>
       </div>
     </header>
@@ -1616,6 +1629,37 @@
         <div class="card" id="pwd-card" style="display:none">
           <div class="card-header"><span>🔐</span><h3>إدارة كلمات المرور</h3></div>
           <div class="card-body" id="pwd-box"></div>
+        </div>
+
+        <!-- UI Mode Switcher Card -->
+        <div class="card">
+          <div class="card-header"><span>🖥️</span><h3>واجهة العمل</h3></div>
+          <div class="card-body">
+            <div style="margin-bottom:16px;font-size:13px;color:var(--text-400)">اختر الواجهة التي تفضلها. سيتم حفظ اختيارك تلقائياً.</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="ui-mode-cards">
+              <!-- Easy UI Option -->
+              <div id="ui-card-easy" onclick="selectUIModeFromSettings('easy')" style="border:2px solid transparent;border-radius:14px;padding:16px;cursor:pointer;background:#0f2a1a;text-align:center;transition:all 0.25s"
+                   onmouseover="if(localStorage.getItem('yasen_ui_mode')!=='easy')this.style.borderColor='#22c55e88'"
+                   onmouseout="if(localStorage.getItem('yasen_ui_mode')!=='easy')this.style.borderColor='transparent'">
+                <div style="font-size:28px;margin-bottom:8px">🟩</div>
+                <div style="font-size:14px;font-weight:700;color:#22c55e;margin-bottom:4px">الواجهة السهلة</div>
+                <div style="font-size:11px;color:#667788">أزرار كبيرة وملونة</div>
+                <div id="ui-badge-easy" style="display:none;margin-top:8px;background:#22c55e;color:#000;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-block">✓ مفعّلة</div>
+              </div>
+              <!-- Normal UI Option -->
+              <div id="ui-card-normal" onclick="selectUIModeFromSettings('normal')" style="border:2px solid transparent;border-radius:14px;padding:16px;cursor:pointer;background:#0f1a2a;text-align:center;transition:all 0.25s"
+                   onmouseover="if(localStorage.getItem('yasen_ui_mode')!=='normal')this.style.borderColor='#4a9eff88'"
+                   onmouseout="if(localStorage.getItem('yasen_ui_mode')!=='normal')this.style.borderColor='transparent'">
+                <div style="font-size:28px;margin-bottom:8px">🔵</div>
+                <div style="font-size:14px;font-weight:700;color:#4a9eff;margin-bottom:4px">الواجهة العادية</div>
+                <div style="font-size:11px;color:#667788">لوحة تحكم كاملة</div>
+                <div id="ui-badge-normal" style="display:none;margin-top:8px;background:#4a9eff;color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-block">✓ مفعّلة</div>
+              </div>
+            </div>
+            <div style="margin-top:14px;font-size:12px;color:var(--text-400);text-align:center" id="ui-mode-hint">
+              سيتم تطبيق الواجهة المختارة عند الدخول التالي أو فوراً
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -3575,7 +3619,65 @@ function loadSettingsUI() {
 function loadSettings() { 
   loadSettingsUI(); 
   showPasswordUI();
+  updateUIModeCard();
+  // Hide UI mode switcher card on mobile phones
+  const uiModeCards = document.getElementById('ui-mode-cards');
+  const uiModeCard  = uiModeCards && uiModeCards.closest('.card');
+  if (uiModeCard) {
+    uiModeCard.style.display = isMobilePhone() ? 'none' : '';
+  }
 }
+
+function updateUIModeCard() {
+  const mode = localStorage.getItem('yasen_ui_mode') || 'normal';
+  const cardEasy   = document.getElementById('ui-card-easy');
+  const cardNormal = document.getElementById('ui-card-normal');
+  const badgeEasy   = document.getElementById('ui-badge-easy');
+  const badgeNormal = document.getElementById('ui-badge-normal');
+  if (!cardEasy) return;
+  if (mode === 'easy') {
+    cardEasy.style.borderColor   = '#22c55e';
+    cardEasy.style.boxShadow     = '0 0 16px rgba(34,197,94,0.25)';
+    cardNormal.style.borderColor = 'transparent';
+    cardNormal.style.boxShadow   = '';
+    if (badgeEasy)   badgeEasy.style.display   = 'inline-block';
+    if (badgeNormal) badgeNormal.style.display = 'none';
+  } else {
+    cardNormal.style.borderColor = '#4a9eff';
+    cardNormal.style.boxShadow   = '0 0 16px rgba(74,158,255,0.25)';
+    cardEasy.style.borderColor   = 'transparent';
+    cardEasy.style.boxShadow     = '';
+    if (badgeNormal) badgeNormal.style.display = 'inline-block';
+    if (badgeEasy)   badgeEasy.style.display   = 'none';
+  }
+}
+
+window.selectUIModeFromSettings = function(mode) {
+  localStorage.setItem('yasen_ui_mode', mode);
+  updateUIModeCard();
+  const hint = document.getElementById('ui-mode-hint');
+  if (mode === 'easy') {
+    if (hint) hint.innerHTML = '<span style="color:#22c55e;font-weight:700">✅ سيتم تطبيق الواجهة السهلة الآن</span>';
+    setTimeout(() => {
+      const easy = document.getElementById('easy-ui-screen');
+      if (easy) {
+        easy.style.display = 'flex';
+        easy.style.opacity = '0';
+        easy.style.transition = 'opacity 0.4s ease';
+        setTimeout(() => { easy.style.opacity = '1'; }, 20);
+      }
+    }, 600);
+  } else {
+    if (hint) hint.innerHTML = '<span style="color:#4a9eff;font-weight:700">✅ أنت الآن في الواجهة العادية</span>';
+    const easy = document.getElementById('easy-ui-screen');
+    if (easy && easy.style.display !== 'none') {
+      easy.style.transition = 'opacity 0.3s ease';
+      easy.style.opacity = '0';
+      setTimeout(() => { easy.style.display = 'none'; }, 300);
+    }
+  }
+  toast(mode === 'easy' ? '✅ تم التبديل للواجهة السهلة' : '✅ تم التبديل للواجهة العادية', 'success');
+};
 
 window.saveSettings = async function() {
   const data = {
@@ -4173,6 +4275,30 @@ window.importBackupUI = async function(e) {
 };
 
 // ══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
+// DEVICE DETECTION
+// ══════════════════════════════════════════════════════════════════
+function isMobilePhone() {
+  // True only for phones (narrow portrait screens), not tablets/desktop
+  const ua = navigator.userAgent || '';
+  const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  // Tablets have wider screens; phones are typically < 768px in portrait
+  const isNarrow = window.innerWidth < 768 || screen.width < 768;
+  // Check common phone UA strings (not iPad/tablet)
+  const isPhoneUA = /Android.*Mobile|iPhone|iPod|Windows Phone|BlackBerry|Mobile/i.test(ua)
+                 && !/iPad|Tablet|Silk/i.test(ua);
+  // PWA standalone mode on phone
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                    || window.navigator.standalone === true;
+  // If standalone AND narrow → phone PWA
+  if (isStandalone && isNarrow) return true;
+  // If phone UA → phone
+  if (isPhoneUA) return true;
+  // If touch + very narrow (< 600px) → likely phone
+  if (isTouchDevice && window.innerWidth < 600) return true;
+  return false;
+}
+
 // PIN / LOGIN SYSTEM WITH ROLES
 // ══════════════════════════════════════════════════════════════════
 const AUTH_PINS = {
@@ -4269,12 +4395,17 @@ window.checkLogin = function() {
   screen.style.opacity = '0';
   setTimeout(() => { 
     screen.style.display = 'none';
-    // Show interface selection screen
-    const sel = document.getElementById('interface-select-screen');
-    sel.style.display = 'flex';
-    sel.style.opacity = '0';
-    sel.style.transition = 'opacity 0.4s ease';
-    setTimeout(() => { sel.style.opacity = '1'; }, 20);
+    // On mobile phones → skip selection, go straight to normal UI
+    if (isMobilePhone()) {
+      updateUIForRole();
+    } else {
+      // Desktop / tablet → show interface selection screen
+      const sel = document.getElementById('interface-select-screen');
+      sel.style.display = 'flex';
+      sel.style.opacity = '0';
+      sel.style.transition = 'opacity 0.4s ease';
+      setTimeout(() => { sel.style.opacity = '1'; }, 20);
+    }
   }, 400);
 };
 
@@ -4286,6 +4417,7 @@ window.toggleLoginVis = function() {
 };
 
 window.launchEasyUI = function() {
+  localStorage.setItem('yasen_ui_mode', 'easy');
   const sel = document.getElementById('interface-select-screen');
   sel.style.transition = 'opacity 0.3s ease';
   sel.style.opacity = '0';
@@ -4300,6 +4432,7 @@ window.launchEasyUI = function() {
 };
 
 window.launchNormalUI = function() {
+  localStorage.setItem('yasen_ui_mode', 'normal');
   const sel = document.getElementById('interface-select-screen');
   const easy = document.getElementById('easy-ui-screen');
   sel.style.transition = 'opacity 0.3s ease';
@@ -4314,6 +4447,7 @@ window.launchNormalUI = function() {
 };
 
 window.switchToNormalUI = function() {
+  localStorage.setItem('yasen_ui_mode', 'normal');
   const easy = document.getElementById('easy-ui-screen');
   easy.style.transition = 'opacity 0.3s ease';
   easy.style.opacity = '0';
@@ -4321,6 +4455,54 @@ window.switchToNormalUI = function() {
     easy.style.display = 'none';
     updateUIForRole();
   }, 300);
+};
+
+window.easyNavigate = function(page) {
+  // Hide easy UI temporarily, go to that page in normal UI
+  // Keep 'easy' preference so back button shows
+  const easy = document.getElementById('easy-ui-screen');
+  if (easy) {
+    easy.style.transition = 'opacity 0.25s ease';
+    easy.style.opacity = '0';
+    setTimeout(() => {
+      easy.style.display = 'none';
+      updateUIForRole();   // shows back-to-easy btn since pref is still 'easy'
+      navigate(page);
+    }, 250);
+  } else {
+    updateUIForRole();
+    navigate(page);
+  }
+};
+
+window.easyGoSettings = function() {
+  // Go to settings page, keeping easy preference intact
+  const easy = document.getElementById('easy-ui-screen');
+  if (easy) {
+    easy.style.transition = 'opacity 0.3s ease';
+    easy.style.opacity = '0';
+    setTimeout(() => {
+      easy.style.display = 'none';
+      updateUIForRole();  // shows back-to-easy btn
+      navigate('settings');
+    }, 300);
+  }
+};
+
+window.switchToEasyUI = function() {
+  localStorage.setItem('yasen_ui_mode', 'easy');
+  const easy = document.getElementById('easy-ui-screen');
+  if (easy) {
+    easy.style.display = 'flex';
+    easy.style.opacity = '0';
+    easy.style.transition = 'opacity 0.3s ease';
+    setTimeout(() => { easy.style.opacity = '1'; }, 20);
+    // Update date bar
+    const easyDate = document.getElementById('easy-date-bar');
+    if (easyDate) {
+      easyDate.textContent = new Date().toLocaleDateString('ar-EG', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    }
+  }
 };
 
 window.logout = function() {
@@ -4422,13 +4604,31 @@ window.changeOwnPwd = function() {
 // Check session on load
 if (isAuthenticated()) {
   $('login-screen').style.display = 'none';
-  updateUIForRole();
+  const savedUI = localStorage.getItem('yasen_ui_mode');
+  if (!isMobilePhone() && savedUI === 'easy') {
+    const easy = document.getElementById('easy-ui-screen');
+    if (easy) { easy.style.display = 'flex'; easy.style.opacity = '1'; }
+  } else {
+    updateUIForRole();
+  }
 } else {
   setTimeout(() => $('login-pin').focus(), 100);
 }
 
 // ── requirePin: wraps any delete/edit action ────────────────────
 function updateUIForRole() {
+  // Show "back to easy" button in topbar if user prefers easy UI (desktop/tablet only)
+  const savedUI = localStorage.getItem('yasen_ui_mode');
+  const backEasyBtn = document.getElementById('btn-back-easy');
+  if (backEasyBtn) {
+    backEasyBtn.style.display = (!isMobilePhone() && savedUI === 'easy') ? 'inline-block' : 'none';
+  }
+  // Init easy date bar
+  const easyDate = document.getElementById('easy-date-bar');
+  if (easyDate) {
+    easyDate.textContent = new Date().toLocaleDateString('ar-EG', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    easyDate.style.display = 'block';
+  }
   if (isViewerMode()) {
     // إخفاء ALL buttons except back button
     document.querySelectorAll('button').forEach(btn => {
