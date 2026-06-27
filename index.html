@@ -3691,8 +3691,17 @@ const USER_KEY = 'yasen_user';
 let currentUserRole = null;
 
 function isAuthenticated() {
-  const auth = localStorage.getItem(SESSION_KEY);
-  currentUserRole = localStorage.getItem(ROLE_KEY);
+  const auth = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
+  currentUserRole = sessionStorage.getItem(ROLE_KEY) || localStorage.getItem(ROLE_KEY);
+  // migrate old localStorage sessions to sessionStorage (one-time)
+  if (localStorage.getItem(SESSION_KEY) === '1') {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    sessionStorage.setItem(ROLE_KEY, localStorage.getItem(ROLE_KEY)||'');
+    sessionStorage.setItem(USER_KEY, localStorage.getItem(USER_KEY)||'');
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(ROLE_KEY);
+    localStorage.removeItem(USER_KEY);
+  }
   return auth === '1';
 }
 
@@ -3755,9 +3764,9 @@ window.checkLogin = function() {
     }
   }
   
-  localStorage.setItem(SESSION_KEY, '1');
-  localStorage.setItem(ROLE_KEY, pinData.role);
-  localStorage.setItem(USER_KEY, pin);
+  sessionStorage.setItem(SESSION_KEY, '1');
+  sessionStorage.setItem(ROLE_KEY, pinData.role);
+  sessionStorage.setItem(USER_KEY, pin);
   currentUserRole = pinData.role;
   const screen = $('login-screen');
   screen.style.transition = 'opacity 0.4s ease';
@@ -3780,6 +3789,9 @@ window.logout = function() {
   localStorage.removeItem(SESSION_KEY);
   localStorage.removeItem(ROLE_KEY);
   localStorage.removeItem(USER_KEY);
+  sessionStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem(ROLE_KEY);
+  sessionStorage.removeItem(USER_KEY);
   currentUserRole = null;
   const screen = $('login-screen');
   screen.style.opacity = '0';
@@ -3800,7 +3812,7 @@ window.logout = function() {
 
 // PASSWORD MANAGEMENT
 window.showPasswordUI = function() {
-  const user = localStorage.getItem(USER_KEY);
+  const user = sessionStorage.getItem(USER_KEY) || localStorage.getItem(USER_KEY);
   const card = $('pwd-card');
   const box = $('pwd-box');
   
@@ -3847,7 +3859,7 @@ window.savePwd = function(pin, id) {
 };
 
 window.changeOwnPwd = function() {
-  const user = localStorage.getItem(USER_KEY);
+  const user = sessionStorage.getItem(USER_KEY) || localStorage.getItem(USER_KEY);
   const old = $('old').value;
   const n1 = $('new1').value;
   const n2 = $('new2').value;
@@ -4053,7 +4065,12 @@ function fuzzyMatch(query, text) {
                            headerText.includes('عدد') ||
                            headerText.includes('إجمالي') || 
                            headerText.includes('الإجمالي') ||
-                           headerText.includes('مبلغ');
+                           headerText.includes('مبلغ') ||
+                           headerText.includes('اليومية') ||
+                           headerText.includes('المستحق') ||
+                           headerText.includes('الرصيد') ||
+                           headerText.includes('السلف') ||
+                           headerText.includes('المدفوعات');
           
           // إذا لم يكن من الأعمدة المسموحة، تخطيه
           if (!shouldSum) return;
