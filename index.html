@@ -299,7 +299,7 @@
         <span style="font-size:9px;font-weight:800;color:#22c55e;letter-spacing:1.5px">LIVE</span>
       </div>
       <!-- scrolling content -->
-      <div id="easy-ticker-content" style="white-space:nowrap;display:inline-flex;align-items:center;animation:easyTickerScroll 500s linear infinite;will-change:transform">
+      <div id="easy-ticker-content" style="white-space:nowrap;display:inline-flex;align-items:center;animation:easyTickerScroll 40s linear infinite;will-change:transform;padding-right:100px">
         <span style="color:#445566;font-size:12px;padding:0 30px">⏳ جارٍ تحميل البيانات...</span>
       </div>
     </div>
@@ -591,8 +591,8 @@
 
   /* ── Ticker ── */
   @keyframes easyTickerScroll {
-    0%   { transform: translateX(-33.33%); }
-    100% { transform: translateX(0%); }
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
   }
   @keyframes liveDot {
     0%,100% { opacity:1; transform:scale(1); }
@@ -1473,7 +1473,7 @@
             <thead>
               <tr>
                 <th>#</th><th>التاريخ</th><th>المنتج</th>
-                <th>الوزن (كجم)</th><th>العدد</th><th>الوحدة</th><th>السعر</th>
+                <th>الوزن (كجم)</th><th>العدد</th><th>الوحدة</th>
                 <th>العميل / الجهة</th><th>ملاحظات</th><th>حذف</th>
               </tr>
             </thead>
@@ -2452,10 +2452,6 @@
           <div class="form-group"><label>العميل / الجهة</label>
             <input type="text" id="fo-client" placeholder="اسم العميل أو الجهة">
           </div>
-          <div class="form-group">
-            <label>السعر (جنيه) <span style="color:var(--text-400);font-size:11px">(اختياري)</span></label>
-            <input type="number" id="fo-price" placeholder="0.00" min="0" step="0.01">
-          </div>
           <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label>
             <input type="text" id="fo-notes" placeholder="ملاحظات إضافية">
           </div>
@@ -2597,8 +2593,7 @@
         <button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="document.getElementById('stmt-from').value='';document.getElementById('stmt-to').value='';showAccountDetail(currentStmtSupplierId)">الكل</button>
       </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="printSupplierStatementChoice('full')">📋 طباعة كامل الكشف</button>
-      <button class="btn btn-secondary" onclick="printSupplierStatementChoice('summary')">📊 طباعة الإجمالي فقط</button>
+      <button class="btn btn-primary" onclick="printSupplierStatement()">🖨️ طباعة</button>
       <button class="btn btn-secondary" type="button" onclick="closeModal('modal-account-detail')">إغلاق</button>
       <button class="btn-whatsapp" type="button" id="wa-send-btn" style="display:none">
         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -2637,7 +2632,7 @@
 
 <!-- Worker Attendance Modal -->
 <div class="modal-backdrop" id="modal-worker-attendance">
-  <div class="modal" style="max-width:420px">
+  <div class="modal" style="max-width:600px">
     <div class="modal-header">
       <span style="font-size:22px">📅</span>
       <h3 id="worker-att-title">تسجيل حضور</h3>
@@ -2645,27 +2640,29 @@
     </div>
     <div class="modal-body">
       <input type="hidden" id="att-worker-id">
-      <div style="text-align:center;padding:20px 16px;background:var(--bg-300);border-radius:12px;margin-bottom:20px">
-        <div style="font-size:11px;color:var(--text-400);margin-bottom:6px">تاريخ اليوم</div>
-        <div id="att-today-date" style="font-size:22px;font-weight:900;color:var(--gold);margin-bottom:4px"></div>
-        <div id="att-today-day" style="font-size:14px;color:var(--text-300)"></div>
-      </div>
-      <div style="margin-bottom:16px;padding:12px;background:var(--bg-300);border-radius:10px;display:flex;gap:16px;align-items:center">
+      <div style="margin-bottom:16px;padding:12px;background:var(--bg-300);border-radius:8px;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+        <div>
+          <div style="font-size:11px;color:var(--text-400)">الأسبوع</div>
+          <div id="att-week-label" style="color:var(--gold);font-weight:700">—</div>
+        </div>
         <div>
           <div style="font-size:11px;color:var(--text-400)">اليومية</div>
           <div id="att-daily-rate" style="color:var(--info);font-weight:700">—</div>
         </div>
         <div style="margin-right:auto">
-          <div style="font-size:11px;color:var(--text-400)">حالة اليوم</div>
-          <div id="att-today-status" style="font-weight:900;font-size:16px">—</div>
+          <div style="font-size:11px;color:var(--text-400)">المستحق</div>
+          <div id="att-due" style="color:var(--success);font-weight:900;font-size:18px">—</div>
         </div>
       </div>
-
+      <div id="att-days-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:20px"></div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;color:var(--text-300);margin-bottom:6px;display:block">أسبوع آخر</label>
+        <input type="week" id="att-week-picker" onchange="loadAttendanceWeek()">
+      </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" type="button" id="att-absent-btn" onclick="markTodayAttendance(false)" style="background:#dc2626;color:#fff;border-color:#dc2626;min-width:90px;font-size:15px;padding:10px 20px">❌ غائب</button>
-      <button class="btn btn-primary" type="button" id="att-present-btn" onclick="markTodayAttendance(true)" style="background:#16a34a;border-color:#16a34a;min-width:90px;font-size:15px;padding:10px 20px">✅ حضر</button>
       <button class="btn btn-secondary" type="button" onclick="closeModal('modal-worker-attendance')">إغلاق</button>
+      <button class="btn btn-primary" type="button" onclick="saveAttendance()">💾 حفظ الحضور</button>
     </div>
   </div>
 </div>
@@ -2691,8 +2688,7 @@
         </div>
       </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="printWorkerStatementChoice('full')">📋 طباعة كامل الكشف</button>
-      <button class="btn btn-secondary" onclick="printWorkerStatementChoice('summary')">📊 طباعة الإجمالي فقط</button>
+      <button class="btn btn-primary" onclick="printWorkerStatement()">🖨️ طباعة</button>
       <button class="btn btn-secondary" type="button" onclick="closeModal('modal-worker-account')">إغلاق</button>
       <button class="btn-whatsapp" type="button" id="worker-wa-btn" style="display:none">
         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -4414,60 +4410,15 @@ window.openWorkerAttendance = function(workerId) {
   $('att-worker-id').value = workerId;
   $('worker-att-title').textContent = `حضور: ${w.name}`;
   const d = new Date();
-  const todayStr = d.toISOString().slice(0,10);
-  const dayNames = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-  const dayName = dayNames[d.getDay()];
-  // Show today's date
-  const dateParts = todayStr.split('-');
-  const formattedDate = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
-  $('att-today-date').textContent = formattedDate;
-  $('att-today-day').textContent = dayName;
-  $('att-daily-rate').textContent = `${fmt(Number(w.daily||0),2)} ج/يوم`;
-  // Check if today already has attendance record
-  const existingAtt = Object.values(state.workerAttendance).find(a => a.workerId===workerId && a.date===todayStr);
-  const isPresent = existingAtt ? existingAtt.present : null;
-  updateTodayStatusUI(isPresent);
+  const iso = d.toISOString().slice(0,10);
+  // Set week picker to current week
+  const wy = d.getFullYear();
+  const wn = getWeekNumber(d);
+  $('att-week-picker').value = `${wy}-W${String(wn).padStart(2,'0')}`;
+  currentAttWeek = getWeekBounds(iso);
+  renderAttendanceDays(workerId, currentAttWeek.start, currentAttWeek.end);
   openModal('modal-worker-attendance');
 };
-
-function updateTodayStatusUI(isPresent) {
-  const statusEl = $('att-today-status');
-  const presentBtn = $('att-present-btn');
-  const absentBtn = $('att-absent-btn');
-  if (isPresent === true) {
-    statusEl.innerHTML = '<span style="color:#16a34a">✅ حاضر</span>';
-    if (presentBtn) { presentBtn.style.opacity = '0.5'; presentBtn.style.transform = 'scale(0.95)'; }
-    if (absentBtn) { absentBtn.style.opacity = '1'; absentBtn.style.transform = 'scale(1)'; }
-  } else if (isPresent === false) {
-    statusEl.innerHTML = '<span style="color:#dc2626">❌ غائب</span>';
-    if (presentBtn) { presentBtn.style.opacity = '1'; presentBtn.style.transform = 'scale(1)'; }
-    if (absentBtn) { absentBtn.style.opacity = '0.5'; absentBtn.style.transform = 'scale(0.95)'; }
-  } else {
-    statusEl.innerHTML = '<span style="color:var(--text-400)">لم يُسجّل بعد</span>';
-    if (presentBtn) { presentBtn.style.opacity = '1'; presentBtn.style.transform = 'scale(1)'; }
-    if (absentBtn) { absentBtn.style.opacity = '1'; absentBtn.style.transform = 'scale(1)'; }
-  }
-}
-
-window.markTodayAttendance = function(present) {
-  const workerId = $('att-worker-id').value;
-  if (!workerId) return;
-  const todayStr = today();
-  const existingEntry = Object.entries(state.workerAttendance).find(([,a]) => a.workerId===workerId && a.date===todayStr);
-  const existingId = existingEntry ? existingEntry[0] : null;
-  updateTodayStatusUI(present);
-  // Immediately save this one day
-  if (existingId) {
-    dbUpdate(`workerAttendance/${existingId}`, { present });
-  } else {
-    dbPush('workerAttendance', { workerId, date: todayStr, present });
-  }
-  toast(present ? 'تم تسجيل الحضور ✅' : 'تم تسجيل الغياب ❌', present ? 'success' : 'info');
-  renderWorkers();
-};
-
-// Alias for compatibility
-window.openAttendanceModal = window.openWorkerAttendance;
 
 function getWeekNumber(d) {
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -4490,17 +4441,13 @@ window.loadAttendanceWeek = function() {
   currentAttWeek = getWeekBounds(sunStr);
   const workerId = $('att-worker-id').value;
   renderAttendanceDays(workerId, currentAttWeek.start, currentAttWeek.end);
-  // Refresh today status
-  const todayStr = today();
-  const existingAtt = Object.values(state.workerAttendance).find(a => a.workerId===workerId && a.date===todayStr);
-  updateTodayStatusUI(existingAtt ? existingAtt.present : null);
 };
 
 function renderAttendanceDays(workerId, weekStart, weekEnd) {
   const w = state.workers[workerId];
   if (!w) return;
   const dailyRate = Number(w.daily||0);
-  $('att-week-label') && ($('att-week-label').textContent = `${weekStart} ← ${weekEnd}`);
+  $('att-week-label').textContent = `${weekStart} ← ${weekEnd}`;
   $('att-daily-rate').textContent = `${fmt(dailyRate,2)} ج/يوم`;
 
   const grid = $('att-days-grid');
@@ -4536,7 +4483,7 @@ function renderAttendanceDays(workerId, weekStart, weekEnd) {
   });
 
   const attended = days.filter(d=>d.present).length;
-  if ($('att-due')) $('att-due').textContent = `${fmt(attended * dailyRate, 2)} ج (${attended} يوم)`;
+  $('att-due').textContent = `${fmt(attended * dailyRate, 2)} ج (${attended} يوم)`;
 
   // Store days reference for saving
   grid._days = days;
@@ -5040,7 +4987,7 @@ window.updateEasyTicker = function() {
 
     const el = document.getElementById('easy-ticker-content');
     if (el) {
-      el.innerHTML = `<span class="ticker-item" style="padding:0 28px">${line}</span><span class="ticker-item" style="padding:0 28px">${line}</span><span class="ticker-item" style="padding:0 28px">${line}</span>`;
+      el.innerHTML = `<span class="ticker-item" style="padding:0 28px">${line}</span><span class="ticker-item" style="padding:0 28px">${line}</span>`;
     }
   } catch(err) { /* silent */ }
 };
@@ -6511,18 +6458,8 @@ function printA4Header(title, infoRows) {
     <div class="info-grid">${infoRows.rows.map(r => `<div class="info-row"><span>${r[0]}:</span><span>${r[1]}</span></div>`).join('')}</div>`;
 }
 
-function getA4Style() {
-  return `@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff}h1{color:#b8860b;font-size:20px;margin-bottom:4px;text-align:center}h2,h3{color:#b8860b;font-size:14px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a}td{border:1px solid #ddd;padding:6px 8px;text-align:center}tr:nth-child(even) td{background:#fffbf0}.totals{margin-top:16px;padding:12px 16px;border:2px solid #D4A843;border-radius:8px;background:#fffdf5}.total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #f0e8cc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:10px;color:#333}.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.summary-card{border:2px solid #D4A843;border-radius:8px;padding:10px;text-align:center;background:#fffdf5}.summary-card .val{font-size:18px;font-weight:900;color:#b8860b}.summary-card .lbl{font-size:10px;color:#888;margin-top:3px}.summary-card.green .val{color:#16a34a}.summary-card.red .val{color:#dc2626}.summary-card.blue .val{color:#2563eb}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px}.info-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f0ead0}.info-row span:first-child{font-weight:bold;color:#666;min-width:90px}.footer{text-align:center;margin-top:24px;color:#aaa;font-size:11px;border-top:1px solid #eee;padding-top:8px}a{display:none!important}@media print{a{display:none!important}}`;
-}
-
-function openPrintWindow(htmlContent) {
-  const pw = window.open('','_blank');
-  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>${getA4Style()}</style></head><body>${htmlContent}<div class="footer">تم بحمد الله</div></body></html>`);
-  pw.document.close(); setTimeout(()=>pw.print(), 600);
-}
-
-function getSupplierStmtData() {
-  const s = state.suppliers[currentStmtSupplierId]; if (!s) return null;
+window.printSupplierStatement = function() {
+  const s = state.suppliers[currentStmtSupplierId]; if (!s) return;
   const df = getDateFilter('stmt');
   const allMilk = Object.entries(state.milkRecords).filter(([,r]) => r.supplierId === currentStmtSupplierId);
   const allPay = Object.entries(state.supplierPayments).filter(([,p]) => p.supplierId === currentStmtSupplierId);
@@ -6538,50 +6475,22 @@ function getSupplierStmtData() {
   const purSum = pur.reduce((s,[,p]) => s+Number(p.totalPrice||0), 0);
   const balance = milkSum - paySum - advSum - purSum;
   const nowStr = new Date().toLocaleString('ar-EG', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
-  return {s, df, milk, pay, adv, pur, milkSum, paySum, advSum, purSum, balance, nowStr};
-}
-
-function buildSupplierFullHTML(d) {
-  return `<h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
-    <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب مورد</div>
-    <div class="info-grid">
-      <div class="info-row"><span>المورد:</span><span>${d.s.name}</span></div>
-      <div class="info-row"><span>الهاتف:</span><span>${d.s.phone||'—'}</span></div>
-      <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
-      <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
-    </div>
-    <h3>سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${d.milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${d.pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${d.adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${d.pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${d.pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي الحليب:</span><span>${fmt(d.milkSum,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(d.paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(d.advSum,2)} ج</span></div>${d.purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(d.purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${d.balance>0?'green':'red'}">${fmt(d.balance,2)} ج</span></div></div>`;
-}
-
-function buildSupplierSummaryHTML(d) {
-  return `<h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
-    <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب مورد - الإجمالي</div>
-    <div class="info-grid">
-      <div class="info-row"><span>المورد:</span><span>${d.s.name}</span></div>
-      <div class="info-row"><span>الهاتف:</span><span>${d.s.phone||'—'}</span></div>
-      <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
-      <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
-    </div>
-    <div class="summary-grid">
-      <div class="summary-card green"><div class="val">${fmt(d.milkSum,2)} ج</div><div class="lbl">إجمالي الحليب</div></div>
-      <div class="summary-card red"><div class="val">${fmt(d.paySum,2)} ج</div><div class="lbl">المدفوعات</div></div>
-      <div class="summary-card"><div class="val" style="color:#d97706">${fmt(d.advSum,2)} ج</div><div class="lbl">السلف</div></div>
-      ${d.purSum>0?`<div class="summary-card blue"><div class="val">${fmt(d.purSum,2)} ج</div><div class="lbl">المشتريات</div></div>`:''}
-      <div class="summary-card ${d.balance>0?'green':'red'}"><div class="val" style="font-size:22px">${fmt(d.balance,2)} ج</div><div class="lbl">الرصيد المستحق</div></div>
-    </div>
-    <div class="totals"><div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${d.balance>0?'green':'red'}">${fmt(d.balance,2)} ج</span></div></div>`;
-}
-
-window.printSupplierStatementChoice = function(mode) {
-  const d = getSupplierStmtData(); if (!d) return;
-  openPrintWindow(mode === 'full' ? buildSupplierFullHTML(d) : buildSupplierSummaryHTML(d));
+  const pw = window.open('','_blank');
+  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff}h1{color:#b8860b;font-size:20px;margin-bottom:4px;text-align:center}h2,h3{color:#b8860b;font-size:14px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a}td{border:1px solid #ddd;padding:6px 8px;text-align:center}tr:nth-child(even) td{background:#fffbf0}.totals{margin-top:16px;padding:12px 16px;border:2px solid #D4A843;border-radius:8px;background:#fffdf5}.total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #f0e8cc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:10px;color:#333}.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.summary-card{border:2px solid #D4A843;border-radius:8px;padding:10px;text-align:center;background:#fffdf5}.summary-card .val{font-size:18px;font-weight:900;color:#b8860b}.summary-card .lbl{font-size:10px;color:#888;margin-top:3px}.summary-card.green .val{color:#16a34a}.summary-card.red .val{color:#dc2626}.summary-card.blue .val{color:#2563eb}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px}.info-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f0ead0}.info-row span:first-child{font-weight:bold;color:#666;min-width:90px}.footer{text-align:center;margin-top:24px;color:#aaa;font-size:11px;border-top:1px solid #eee;padding-top:8px}a{display:none!important}@media print{a{display:none!important}}</style></head><body>
+      <h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
+      <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب مورد</div>
+      <div class="info-grid">
+        <div class="info-row"><span>المورد:</span><span>${s.name}</span></div>
+        <div class="info-row"><span>الهاتف:</span><span>${s.phone||'—'}</span></div>
+        <div class="info-row"><span>الفترة:</span><span>${(df.from||'الكل')+' ← '+(df.to||'الكل')}</span></div>
+        <div class="info-row"><span>تاريخ الطباعة:</span><span>${nowStr}</span></div>
+      </div>
+      <h3>سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي الحليب:</span><span>${fmt(milkSum,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${balance>0?'green':'red'}">${fmt(balance,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
+  pw.document.close(); setTimeout(()=>pw.print(), 600);
 };
 
-window.printSupplierStatement = function() { printSupplierStatementChoice('full'); };
-
-// ═══ Worker Statement Print Choices ═══
-function getWorkerStmtData() {
-  const w = state.workers[currentWorkerStmtId]; if (!w) return null;
+window.printWorkerStatement = function() {
+  const w = state.workers[currentWorkerStmtId]; if (!w) return;
   const df = getDateFilter('wstmt');
   const dailyRate = Number(w.daily||0);
   const allAtt = Object.entries(state.workerAttendance||{}).filter(([,a])=>a.workerId===currentWorkerStmtId&&a.present);
@@ -6598,50 +6507,21 @@ function getWorkerStmtData() {
   const purSum = pur.reduce((s,[,p])=>s+Number(p.totalPrice||0),0);
   const remaining = totalEarned - paySum - advSum - purSum;
   const nowStr = new Date().toLocaleString('ar-EG',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
-  return {w, df, dailyRate, att, pay, adv, pur, totalDays, totalEarned, paySum, advSum, purSum, remaining, nowStr};
-}
-
-function buildWorkerFullHTML(d) {
-  return `<h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
-    <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب عامل</div>
-    <div class="info-grid">
-      <div class="info-row"><span>العامل:</span><span>${d.w.name}</span></div>
-      <div class="info-row"><span>اليومية:</span><span>${fmt(d.dailyRate,2)} ج</span></div>
-      <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
-      <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
-    </div><h3 style="color:#D4A843">سجل الحضور (${d.totalDays} يوم)</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${d.att.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(d.dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${d.pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلفة</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${d.adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${d.pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${d.pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>المستحق (${d.totalDays} يوم):</span><span>${fmt(d.totalEarned,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(d.paySum,2)} ج</span></div><div class="total-row"><span>السلفة:</span><span>${fmt(d.advSum,2)} ج</span></div>${d.purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(d.purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${d.remaining>0?'red':'green'}">${fmt(d.remaining,2)} ج</span></div></div>`;
-}
-
-function buildWorkerSummaryHTML(d) {
-  return `<h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
-    <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب عامل - الإجمالي</div>
-    <div class="info-grid">
-      <div class="info-row"><span>العامل:</span><span>${d.w.name}</span></div>
-      <div class="info-row"><span>اليومية:</span><span>${fmt(d.dailyRate,2)} ج</span></div>
-      <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
-      <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
-    </div>
-    <div class="summary-grid">
-      <div class="summary-card blue"><div class="val">${d.totalDays}</div><div class="lbl">أيام الحضور</div></div>
-      <div class="summary-card"><div class="val">${fmt(d.totalEarned,2)} ج</div><div class="lbl">المستحق</div></div>
-      <div class="summary-card green"><div class="val">${fmt(d.paySum,2)} ج</div><div class="lbl">المدفوعات</div></div>
-      <div class="summary-card"><div class="val" style="color:#d97706">${fmt(d.advSum,2)} ج</div><div class="lbl">السلفة</div></div>
-      ${d.purSum>0?`<div class="summary-card blue"><div class="val">${fmt(d.purSum,2)} ج</div><div class="lbl">المشتريات</div></div>`:''}
-      <div class="summary-card ${d.remaining>0?'red':'green'}"><div class="val" style="font-size:22px">${fmt(d.remaining,2)} ج</div><div class="lbl">المتبقي</div></div>
-    </div>
-    <div class="totals"><div class="total-row final"><span>المتبقي:</span><span style="color:${d.remaining>0?'red':'green'}">${fmt(d.remaining,2)} ج</span></div></div>`;
-}
-
-window.printWorkerStatementChoice = function(mode) {
-  const d = getWorkerStmtData(); if (!d) return;
-  openPrintWindow(mode === 'full' ? buildWorkerFullHTML(d) : buildWorkerSummaryHTML(d));
+  const pw = window.open('','_blank');
+  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff}h1{color:#b8860b;font-size:20px;margin-bottom:4px;text-align:center}h2,h3{color:#b8860b;font-size:14px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a}td{border:1px solid #ddd;padding:6px 8px;text-align:center}tr:nth-child(even) td{background:#fffbf0}.totals{margin-top:16px;padding:12px 16px;border:2px solid #D4A843;border-radius:8px;background:#fffdf5}.total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #f0e8cc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:10px;color:#333}.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.summary-card{border:2px solid #D4A843;border-radius:8px;padding:10px;text-align:center;background:#fffdf5}.summary-card .val{font-size:18px;font-weight:900;color:#b8860b}.summary-card .lbl{font-size:10px;color:#888;margin-top:3px}.summary-card.green .val{color:#16a34a}.summary-card.red .val{color:#dc2626}.summary-card.blue .val{color:#2563eb}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px}.info-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f0ead0}.info-row span:first-child{font-weight:bold;color:#666;min-width:90px}.footer{text-align:center;margin-top:24px;color:#aaa;font-size:11px;border-top:1px solid #eee;padding-top:8px}a{display:none!important}@media print{a{display:none!important}}</style></head><body>
+      <h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
+      <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب عامل</div>
+      <div class="info-grid">
+        <div class="info-row"><span>العامل:</span><span>${w.name}</span></div>
+        <div class="info-row"><span>اليومية:</span><span>${fmt(dailyRate,2)} ج</span></div>
+        <div class="info-row"><span>الفترة:</span><span>${(df.from||'الكل')+' ← '+(df.to||'الكل')}</span></div>
+        <div class="info-row"><span>تاريخ الطباعة:</span><span>${nowStr}</span></div>
+      </div><h3 style="color:#D4A843">سجل الحضور (${totalDays} يوم)</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${att.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلفة</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>المستحق (${totalDays} يوم):</span><span>${fmt(totalEarned,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلفة:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
+  pw.document.close(); setTimeout(()=>pw.print(), 600);
 };
 
-window.printWorkerStatement = function() { printWorkerStatementChoice('full'); };
-
-// ═══ Buyer Statement Print Choices ═══
-function getBuyerStmtData() {
-  const b = state.buyers[currentBuyerStmtId]; if (!b) return null;
+window.printBuyerStatement = function() {
+  const b = state.buyers[currentBuyerStmtId]; if (!b) return;
   const df = getDateFilter('bstmt');
   const buyerName = (b.name||'').trim().toLowerCase();
   const allSales = Object.entries(state.sales).filter(([,s])=>(s.client||'').trim().toLowerCase()===buyerName);
@@ -6656,44 +6536,18 @@ function getBuyerStmtData() {
   const purSum = pur.reduce((s,[,p])=>s+Number(p.totalPrice||0),0);
   const remaining = salesTotal - salesPaid - paySum - purSum;
   const nowStr = new Date().toLocaleString('ar-EG',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
-  return {b, df, sales, pay, pur, salesTotal, salesPaid, paySum, purSum, remaining, nowStr};
-}
-
-function buildBuyerFullHTML(d) {
-  return `<h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
-    <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب مشترٍ</div>
-    <div class="info-grid">
-      <div class="info-row"><span>المشتري:</span><span>${d.b.name}</span></div>
-      <div class="info-row"><span>الهاتف:</span><span>${d.b.phone||'—'}</span></div>
-      <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
-      <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
-    </div><h3 style="color:#D4A843">المبيعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${d.sales.map(([,s],i)=>{const pd=Number(s.paidNow??s.total??0);return`<tr><td>${i+1}</td><td>${s.date}</td><td>${sanitize(s.product)}</td><td>${fmt(s.qty,2)}</td><td>${fmt(s.total,2)}</td><td>${fmt(pd,2)}</td><td>${fmt(Number(s.total||0)-pd,2)}</td></tr>`;}).join('')||'<tr><td colspan="7">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${d.pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${d.pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${d.pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي المبيعات:</span><span>${fmt(d.salesTotal,2)} ج</span></div><div class="total-row"><span>المدفوع:</span><span>${fmt(d.salesPaid+d.paySum,2)} ج</span></div>${d.purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(d.purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${d.remaining>0?'red':'green'}">${fmt(d.remaining,2)} ج</span></div></div>`;
-}
-
-function buildBuyerSummaryHTML(d) {
-  return `<h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
-    <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب مشترٍ - الإجمالي</div>
-    <div class="info-grid">
-      <div class="info-row"><span>المشتري:</span><span>${d.b.name}</span></div>
-      <div class="info-row"><span>الهاتف:</span><span>${d.b.phone||'—'}</span></div>
-      <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
-      <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
-    </div>
-    <div class="summary-grid">
-      <div class="summary-card green"><div class="val">${fmt(d.salesTotal,2)} ج</div><div class="lbl">إجمالي المبيعات</div></div>
-      <div class="summary-card"><div class="val" style="color:#d97706">${fmt(d.salesPaid+d.paySum,2)} ج</div><div class="lbl">المدفوع</div></div>
-      ${d.purSum>0?`<div class="summary-card blue"><div class="val">${fmt(d.purSum,2)} ج</div><div class="lbl">المشتريات</div></div>`:''}
-      <div class="summary-card ${d.remaining>0?'red':'green'}"><div class="val" style="font-size:22px">${fmt(d.remaining,2)} ج</div><div class="lbl">المتبقي</div></div>
-    </div>
-    <div class="totals"><div class="total-row final"><span>المتبقي:</span><span style="color:${d.remaining>0?'red':'green'}">${fmt(d.remaining,2)} ج</span></div></div>`;
-}
-
-window.printBuyerStatementChoice = function(mode) {
-  const d = getBuyerStmtData(); if (!d) return;
-  openPrintWindow(mode === 'full' ? buildBuyerFullHTML(d) : buildBuyerSummaryHTML(d));
+  const pw = window.open('','_blank');
+  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff}h1{color:#b8860b;font-size:20px;margin-bottom:4px;text-align:center}h2,h3{color:#b8860b;font-size:14px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a}td{border:1px solid #ddd;padding:6px 8px;text-align:center}tr:nth-child(even) td{background:#fffbf0}.totals{margin-top:16px;padding:12px 16px;border:2px solid #D4A843;border-radius:8px;background:#fffdf5}.total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #f0e8cc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:10px;color:#333}.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.summary-card{border:2px solid #D4A843;border-radius:8px;padding:10px;text-align:center;background:#fffdf5}.summary-card .val{font-size:18px;font-weight:900;color:#b8860b}.summary-card .lbl{font-size:10px;color:#888;margin-top:3px}.summary-card.green .val{color:#16a34a}.summary-card.red .val{color:#dc2626}.summary-card.blue .val{color:#2563eb}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px}.info-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f0ead0}.info-row span:first-child{font-weight:bold;color:#666;min-width:90px}.footer{text-align:center;margin-top:24px;color:#aaa;font-size:11px;border-top:1px solid #eee;padding-top:8px}a{display:none!important}@media print{a{display:none!important}}</style></head><body>
+      <h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
+      <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب مشترٍ</div>
+      <div class="info-grid">
+        <div class="info-row"><span>المشتري:</span><span>${b.name}</span></div>
+        <div class="info-row"><span>الهاتف:</span><span>${b.phone||'—'}</span></div>
+        <div class="info-row"><span>الفترة:</span><span>${(df.from||'الكل')+' ← '+(df.to||'الكل')}</span></div>
+        <div class="info-row"><span>تاريخ الطباعة:</span><span>${nowStr}</span></div>
+      </div><h3 style="color:#D4A843">المبيعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${sales.map(([,s],i)=>{const pd=Number(s.paidNow??s.total??0);return`<tr><td>${i+1}</td><td>${s.date}</td><td>${sanitize(s.product)}</td><td>${fmt(s.qty,2)}</td><td>${fmt(s.total,2)}</td><td>${fmt(pd,2)}</td><td>${fmt(Number(s.total||0)-pd,2)}</td></tr>`;}).join('')||'<tr><td colspan="7">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي المبيعات:</span><span>${fmt(salesTotal,2)} ج</span></div><div class="total-row"><span>المدفوع:</span><span>${fmt(salesPaid+paySum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
+  pw.document.close(); setTimeout(()=>pw.print(), 600);
 };
-
-window.printBuyerStatement = function() { printBuyerStatementChoice('full'); };
 
 // ══════════════════════════════════════════════════════════════════
 // UPDATED STATEMENT VIEWS (with date filter, purchases, advances)
@@ -6926,8 +6780,7 @@ setTimeout(loadDashboard, 800);
     <div class="modal-body" id="buyer-account-body"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-buyer-account')">إغلاق</button>
-      <button class="btn btn-primary" id="buyer-print-btn" onclick="printBuyerStatementChoice('full')">📋 طباعة كامل الكشف</button>
-      <button class="btn btn-secondary" onclick="printBuyerStatementChoice('summary')">📊 طباعة الإجمالي فقط</button>
+      <button class="btn btn-primary" id="buyer-print-btn" onclick="printBuyerStatement()">🖨️ طباعة</button>
       <a class="btn btn-secondary" id="buyer-wa-btn" href="#" target="_blank" style="display:none;text-decoration:none">📱 واتساب</a>
     </div>
   </div>
@@ -7558,7 +7411,7 @@ if ('serviceWorker' in navigator) {
 
     window.openFactoryOutModal = function() {
       document.getElementById('fo-date').value = typeof today === 'function' ? today() : new Date().toISOString().slice(0,10);
-      ['fo-item-name','fo-qty','fo-count','fo-count-unit','fo-client','fo-notes','fo-price'].forEach(id => {
+      ['fo-item-name','fo-qty','fo-count','fo-count-unit','fo-client','fo-notes'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
@@ -7572,7 +7425,6 @@ if ('serviceWorker' in navigator) {
       const countUnit = sanitize(document.getElementById('fo-count-unit').value || '');
       const client    = sanitize(document.getElementById('fo-client').value || '');
       const notes     = sanitize(document.getElementById('fo-notes').value || '');
-      const price     = parseFloat(document.getElementById('fo-price').value) || 0;
       const date      = document.getElementById('fo-date').value;
 
       if (!itemName) { toast('أدخل اسم المنتج', 'error'); return; }
@@ -7586,7 +7438,7 @@ if ('serviceWorker' in navigator) {
           warehouse: 'factory',
           itemId: itemName,
           itemName: sanitize(itemName),
-          qty, count, countUnit, client, notes, price
+          qty, count, countUnit, client, notes
         });
         toast('تم تسجيل الصادر من المعمل ✅', 'success');
         closeModal('modal-factory-out');
@@ -7630,7 +7482,6 @@ if ('serviceWorker' in navigator) {
           <td style="color:var(--gold);font-weight:700">${fmt(e.qty, 2)} كجم</td>
           <td style="color:var(--info)">${e.count ? fmt(e.count, 0) : '—'}</td>
           <td style="color:var(--text-300)">${sanitize(e.countUnit || '—')}</td>
-          <td style="color:var(--success);font-weight:700">${e.price ? fmt(e.price, 2) + ' ج' : '—'}</td>
           <td>${sanitize(e.client || '—')}</td>
           <td style="color:var(--text-400)">${sanitize(e.notes || '—')}</td>
           <td>
