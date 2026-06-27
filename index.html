@@ -4223,112 +4223,193 @@ function fuzzyMatch(query, text) {
       modal.onclick = e => { if (e.target === modal) modal.remove(); };
     };
 
-window.exportTableToPDF = async function(selector, fileName) {
+window.exportTableToPDF = function(selector, fileName) {
   if (typeof isViewerMode === 'function' && isViewerMode()) {
     toast('غير متاح في وضع المشاهدة', 'warning'); return;
-  }
-  if (!window.html2canvas || !window.jspdf) {
-    toast('مكتبة التصدير غير محملة، انتظر ثانية', 'warning'); return;
   }
 
   const tbody = document.querySelector(selector);
   if (!tbody) { toast('لم يتم العثور على الجدول', 'error'); return; }
 
-  const table = tbody.closest('table');
-  const thead = table ? table.querySelector('thead') : null;
-  const page  = tbody.closest('.page');
-  const title = page?.querySelector('h2')?.innerText?.trim() || 'تقرير';
+  const table  = tbody.closest('table');
+  const thead  = table ? table.querySelector('thead') : null;
+  const page   = tbody.closest('.page');
+  const title  = page?.querySelector('h2')?.innerText?.trim() || fileName?.replace(/\.pdf$/,'') || 'تقرير';
   const factoryName = state?.settings?.factoryName || 'نظام إدارة مصنع الألبان';
-  const now = new Date().toLocaleString('ar-EG');
+  const now    = new Date().toLocaleString('ar-EG',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
 
-  let theadHTML = '';
-  if (thead) {
-    const ths = Array.from(thead.querySelectorAll('th')).filter(th => {
-      const t = th.innerText.trim();
-      return t !== 'حذف' && t !== 'تعديل' && t !== 'إجراءات' && t !== '';
-    });
-    theadHTML = `<thead><tr>${ths.map(th => `<th>${th.innerText.trim()}</th>`).join('')}</tr></thead>`;
-  }
+  // رؤوس الجدول — بدون أعمدة الأزرار
+  const thEls = thead ? Array.from(thead.querySelectorAll('th')).filter(th => {
+    const t = th.innerText.trim();
+    return t !== 'حذف' && t !== 'تعديل' && t !== 'إجراءات' && t !== '';
+  }) : [];
+  const theadHTML = thEls.length
+    ? `<thead><tr>${thEls.map(th=>`<th>${th.innerText.trim()}</th>`).join('')}</tr></thead>`
+    : '';
 
   const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state'));
   if (!rows.length) { toast('لا توجد بيانات للتصدير', 'warning'); return; }
 
+  // إجماليات الأعمدة
+  const colTotals = {}, colIsNum = {}, colUnits = {};
   const tbodyHTML = '<tbody>' + rows.map(r => {
-    const cells = Array.from(r.querySelectorAll('td'))
-      .filter(td => !td.querySelector('button') && !td.querySelector('.btn'));
-    return cells.length ? `<tr>${cells.map(td => `<td>${td.innerText.trim()}</td>`).join('')}</tr>` : '';
+    const cells = Array.from(r.querySelectorAll('td')).filter(td => !td.querySelector('button') && !td.querySelector('.btn'));
+    cells.forEach((td, ci) => {
+      const headerText = thEls[ci]?.innerText?.toLowerCase() || '';
+      const shouldSum = headerText.includes('كمية') || headerText.includes('كجم') ||
+        headerText.includes('عدد') || headerText.includes('إجمالي') ||
+        headerText.includes('الإجمالي') || headerText.includes('مبلغ') ||
+        headerText.includes('اليومية') || headerText.includes('المستحق') ||
+        headerText.includes('الرصيد') || headerText.includes('السلف') ||
+        headerText.includes('المدفوعات');
+      if (!shouldSum) return;
+      const getUnit = h => {
+        if (h.includes('كمية') || h.includes('كجم')) return 'كيلوجرام';
+        if (h.includes('عدد') || h.includes('قطعة') || h.includes('طرد') || h.includes('كرتونة')) return 'قطعة';
+        if (h.includes('إجمالي') || h.includes('الإجمالي') || h.includes('مبلغ') ||
+            h.includes('اليومية') || h.includes('المستحق') || h.includes('الرصيد') ||
+            h.includes('السلف') || h.includes('المدفوعات')) return 'جنيه مصري';
+        return '';
+      };
+      if (!colUnits[ci]) colUnits[ci] = getUnit(headerText);
+      const raw = td.innerText.trim()
+        .replace(/[\u0660-\u0669]/g, d => String(d.charCodeAt(0) - 0x0660))
+        .replace(/[\u066C\u060C،,]/g, '')
+        .replace(/\u066B/g, '.');
+      const num = parseFloat(raw.replace(/[^\d.-]/g,''));
+      if (!isNaN(num) && raw.match(/\d/)) { colTotals[ci] = (colTotals[ci]||0) + num; colIsNum[ci] = true; }
+    });
+    return cells.length ? `<tr>${cells.map(td=>`<td>${td.innerText.trim()}</td>`).join('')}</tr>` : '';
   }).filter(Boolean).join('') + '</tbody>';
 
-  loading(true, 'جاري تصدير PDF...');
-  try {
-    const wrap = document.createElement('div');
-    wrap.style.cssText = 'position:fixed;top:0;left:-9999px;width:800px;min-height:100px;background:#fff;padding:20px;font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#2c1a0e;font-size:12px;z-index:-9999;line-height:1.6';
-
-    wrap.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:12px;border-bottom:3px solid #A0826D;margin-bottom:8px">
-        <div>
-          <div style="font-size:20px;font-weight:900;color:#2c1a0e">${factoryName}</div>
-          <div style="font-size:13px;color:#A0826D;font-weight:700;margin-top:2px">${title}</div>
-        </div>
-        <div style="font-size:10px;color:#999">طُبع: ${now}</div>
-      </div>
-      <div style="font-size:10px;color:#888;margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid #e8d5c4">
-        عدد السجلات: ${rows.length}
-      </div>
-      <table style="width:100%;border-collapse:collapse">${theadHTML}${tbodyHTML}</table>
-      <div style="margin-top:16px;padding-top:8px;border-top:1px solid #e8d5c4;display:flex;justify-content:space-between;font-size:10px;color:#aaa">
-        <span>${factoryName}</span><span>${new Date().toLocaleDateString('ar-EG')}</span>
-      </div>`;
-
-    // تطبيق styles مباشرة على الخلايا
-    wrap.querySelectorAll('thead th').forEach(th => {
-      Object.assign(th.style, { background:'#8B6914', color:'#fff', padding:'8px 10px', textAlign:'right', fontSize:'11px', fontWeight:'700' });
-    });
-    wrap.querySelectorAll('tbody tr').forEach((tr, i) => {
-      tr.querySelectorAll('td').forEach(td => {
-        Object.assign(td.style, { padding:'7px 10px', textAlign:'right', fontSize:'11px', borderBottom:'1px solid #f0e6d8', background: i%2===0 ? '#FFF8F3' : '#FFFBF0' });
-      });
-    });
-
-    document.body.appendChild(wrap);
-    await new Promise(r => setTimeout(r, 350));
-
-    const canvas = await html2canvas(wrap, {
-      scale:2, backgroundColor:'#ffffff', useCORS:true, allowTaint:true,
-      width:800, scrollX:0, scrollY:0
-    });
-    document.body.removeChild(wrap);
-
-    const { jsPDF } = window.jspdf;
-    const pdf  = new jsPDF({ orientation:'p', unit:'mm', format:'a4' });
-    const imgW = 190, pageH = 270;
-    const imgH = canvas.height * imgW / canvas.width;
-
-    if (imgH <= pageH) {
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, imgH);
-    } else {
-      const rowH = pageH * canvas.width / imgW;
-      let srcY = 0;
-      while (srcY < canvas.height) {
-        const sliceH = Math.min(rowH, canvas.height - srcY);
-        const sc = document.createElement('canvas');
-        sc.width = canvas.width; sc.height = sliceH;
-        sc.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
-        if (srcY > 0) pdf.addPage();
-        pdf.addImage(sc.toDataURL('image/png'), 'PNG', 10, 10, imgW, sliceH * imgW / canvas.width);
-        srcY += sliceH;
-      }
+  // صف الإجماليات
+  const totalCells = thEls.map((th, i) => {
+    if (i === 0) return `<td class="total-label">الإجمالي</td>`;
+    if (colIsNum[i] && colTotals[i] > 0) {
+      const val = colTotals[i].toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2});
+      const unit = colUnits[i] ? `<span class="unit">${colUnits[i]}</span>` : '';
+      return `<td class="total-val">${val}${unit}</td>`;
     }
+    return `<td class="total-empty"></td>`;
+  });
+  const tfootHTML = thEls.length ? `<tfoot><tr>${totalCells.join('')}</tr></tfoot>` : '';
 
-    const dateStr = new Date().toISOString().slice(0,10);
-    const safeTitle = title.replace(/\s+/g,'_');
-    const fname = `${factoryName}_${safeTitle}_${dateStr}.pdf`.replace(/[^\u0600-\u06FFa-zA-Z0-9._-]/g,'_');
-    pdf.save(fname);
-    toast(`تم تصدير PDF بنجاح ✅`, 'success');
-  } catch(e) {
-    toast('خطأ في التصدير: ' + e.message, 'error');
-    console.error(e);
-  } finally { loading(false); }
+  // بطاقات الإجمالي
+  const summaryItems = Object.entries(colTotals)
+    .filter(([ci, v]) => v > 0 && thEls[ci])
+    .map(([ci, v]) => ({ label: thEls[ci].innerText.trim(), value: v, unit: colUnits[ci]||'' }));
+  const colors = ['#D4A843','#8B6914','#A0826D','#2c7a4b','#2563eb','#dc2626'];
+  const summaryCards = summaryItems.map((s,i) => `
+    <div class="sum-card">
+      <div class="sum-val" style="color:${colors[i%colors.length]}">${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+      ${s.unit ? `<div class="sum-unit">${s.unit}</div>` : ''}
+      <div class="sum-lbl">إجمالي ${s.label}</div>
+    </div>`).join('');
+
+  const CSS = `<style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+    @page{size:A4;margin:15mm}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Cairo',Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff;font-size:12px}
+    .doc-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #D4A843;padding-bottom:12px;margin-bottom:10px}
+    .doc-top h1{color:#8B6914;font-size:20px;margin-bottom:2px}
+    .doc-top .sub{font-size:11px;color:#A0826D;font-weight:600}
+    .doc-top .meta{font-size:10px;color:#999;text-align:left;direction:ltr}
+    .sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:14px 0 18px}
+    .sum-card{border:1px solid #D4A843;border-radius:8px;padding:12px;text-align:center;background:#fffdf5}
+    .sum-val{font-size:18px;font-weight:900;margin-bottom:2px}
+    .sum-unit{font-size:9px;color:#b8860b;font-weight:600;margin-bottom:3px}
+    .sum-lbl{font-size:10px;color:#888}
+    h3{color:#b8860b;font-size:13px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}
+    table{width:100%;border-collapse:collapse;margin:8px 0;font-size:11px}
+    th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a;font-weight:700}
+    td{border:1px solid #ddd;padding:6px 8px;text-align:center}
+    tr:nth-child(even) td{background:#fffbf0}
+    tfoot tr td{background:#fffdf5;border-top:2px solid #D4A843;font-weight:900}
+    .total-label{font-weight:700;text-align:right;background:#D4A843;color:#fff}
+    .total-val{font-weight:900;color:#8B6914;background:#fffbf0}
+    .total-empty{background:#fffbf0}
+    .unit{font-size:9px;color:#aaa;font-weight:400;display:block;margin-top:1px}
+    .footer{margin-top:16px;padding-top:10px;border-top:1px solid #e8d5c4;display:flex;justify-content:space-between;font-size:10px;color:#aaa}
+    @media print{th,tfoot td{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+  </style>`;
+
+  function buildFull() {
+    return `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${title}</title>${CSS}</head><body>
+      <div class="doc-top">
+        <div><h1>${factoryName}</h1><div class="sub">${title}</div></div>
+        <div class="meta">طُبع: ${now}<br>السجلات: ${rows.length}</div>
+      </div>
+      ${summaryCards ? `<div class="sum-grid">${summaryCards}</div>` : ''}
+      <h3>التفاصيل الكاملة</h3>
+      <table>${theadHTML}${tbodyHTML}${tfootHTML}</table>
+      <div class="footer"><span>${factoryName}</span><span>${new Date().toLocaleDateString('ar-EG')}</span></div>
+    </body></html>`;
+  }
+
+  function buildSummary() {
+    const tableRows = summaryItems.map((s,i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td style="text-align:right;font-weight:600">إجمالي ${s.label}</td>
+        <td style="font-weight:900;color:#8B6914;font-size:14px">
+          ${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}
+          ${s.unit ? `<span style="font-size:10px;color:#aaa;font-weight:400"> ${s.unit}</span>` : ''}
+        </td>
+      </tr>`).join('');
+    return `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${title} — إجمالي</title>${CSS}</head><body>
+      <div class="doc-top">
+        <div><h1>${factoryName}</h1><div class="sub">${title} — ملخص الإجماليات</div></div>
+        <div class="meta">طُبع: ${now}<br>بناءً على ${rows.length} سجل</div>
+      </div>
+      ${summaryCards ? `<div class="sum-grid">${summaryCards}</div>` : ''}
+      <h3>جدول الإجماليات</h3>
+      <table>
+        <thead><tr><th>#</th><th>البيان</th><th>الإجمالي</th></tr></thead>
+        <tbody>
+          ${tableRows || '<tr><td colspan="3">لا توجد أعمدة رقمية</td></tr>'}
+          <tr><td colspan="2" style="font-weight:700;text-align:right">عدد السجلات</td><td style="font-weight:900;color:#8B6914">${rows.length}</td></tr>
+        </tbody>
+      </table>
+      <div class="footer"><span>${factoryName}</span><span>${new Date().toLocaleDateString('ar-EG')}</span></div>
+    </body></html>`;
+  }
+
+  // نافذة الاختيار
+  const old = document.getElementById('print-choice-modal');
+  if (old) old.remove();
+  const modal = document.createElement('div');
+  modal.id = 'print-choice-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;z-index:99999;direction:rtl;font-family:Cairo,Arial,sans-serif';
+  modal.innerHTML = `
+    <div style="background:#1e2235;border:1px solid #D4A843;border-radius:16px;padding:32px;width:380px;max-width:92vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+      <div style="font-size:30px;margin-bottom:8px">📄</div>
+      <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:4px">${title}</div>
+      <div style="font-size:12px;color:#aaa;margin-bottom:24px">اختر نوع التصدير</div>
+      <button id="pcm-full" style="width:100%;padding:14px 10px;margin-bottom:10px;background:#8B6914;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.5">
+        📋 تصدير كافة التفاصيل
+        <div style="font-size:10px;font-weight:400;opacity:0.85;margin-top:2px">كل السجلات + الإجمالي في الأسفل</div>
+      </button>
+      <button id="pcm-sum" style="width:100%;padding:14px 10px;margin-bottom:10px;background:#A0826D;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.5">
+        📊 تصدير الإجمالي فقط
+        <div style="font-size:10px;font-weight:400;opacity:0.85;margin-top:2px">ملخص الأرقام والإجماليات فقط</div>
+      </button>
+      <button id="pcm-cancel" style="width:100%;padding:10px;background:transparent;color:#888;border:1px solid #444;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">إلغاء</button>
+    </div>`;
+  document.body.appendChild(modal);
+
+  function openWin(html) {
+    const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+    const url  = URL.createObjectURL(blob);
+    const pw   = window.open(url,'_blank');
+    if (!pw) { toast('يرجى السماح بالنوافذ المنبثقة','warning'); return; }
+    pw.onload = () => { setTimeout(() => { pw.focus(); pw.print(); URL.revokeObjectURL(url); }, 500); };
+  }
+
+  document.getElementById('pcm-full').onclick   = () => { modal.remove(); openWin(buildFull()); };
+  document.getElementById('pcm-sum').onclick     = () => { modal.remove(); openWin(buildSummary()); };
+  document.getElementById('pcm-cancel').onclick  = () => modal.remove();
+  modal.onclick = e => { if (e.target === modal) modal.remove(); };
 };
 
 window.printThermalReceipt = function(type, data) {
