@@ -4052,7 +4052,7 @@ function fuzzyMatch(query, text) {
       const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state'));
       if (!rows.length) { toast('لا توجد بيانات للطباعة', 'warning'); return; }
 
-      const colTotals = {}, colIsNum = {};
+      const colTotals = {}, colIsNum = {}, colUnits = {};
       const tbodyHTML = '<tbody>' + rows.map(r => {
         const cells = Array.from(r.querySelectorAll('td')).filter(td => !td.querySelector('button') && !td.querySelector('.btn'));
         cells.forEach((td, ci) => {
@@ -4074,7 +4074,18 @@ function fuzzyMatch(query, text) {
           
           // إذا لم يكن من الأعمدة المسموحة، تخطيه
           if (!shouldSum) return;
-          
+
+          // تحديد وحدة القياس بناءً على اسم العمود
+          const getUnit = (h) => {
+            if (h.includes('كمية') || h.includes('كجم')) return 'كيلوجرام';
+            if (h.includes('عدد') || h.includes('قطعة') || h.includes('طرد') || h.includes('كرتونة')) return 'قطعة';
+            if (h.includes('إجمالي') || h.includes('الإجمالي') || h.includes('مبلغ') ||
+                h.includes('اليومية') || h.includes('المستحق') || h.includes('الرصيد') ||
+                h.includes('السلف') || h.includes('المدفوعات')) return 'جنيه مصري';
+            return '';
+          };
+          if (!colUnits[ci]) colUnits[ci] = getUnit(headerText);
+
           const raw = td.innerText.trim()
             .replace(/[\u0660-\u0669]/g, d => String(d.charCodeAt(0) - 0x0660))
             .replace(/[\u066C\u060C،,]/g, '')
@@ -4093,7 +4104,8 @@ function fuzzyMatch(query, text) {
         if (i === 0) return `<td style="font-weight:700;text-align:right;background:#D4A843;color:#fff">الإجمالي</td>`;
         if (colIsNum[i] && colTotals[i] > 0) {
           const val = colTotals[i].toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2});
-          return `<td style="font-weight:900;color:#8B6914;background:#fffbf0">${val}</td>`;
+          const unit = colUnits[i] ? `<span style="font-size:9px;color:#aaa;font-weight:400;display:block;margin-top:1px">${colUnits[i]}</span>` : '';
+          return `<td style="font-weight:900;color:#8B6914;background:#fffbf0">${val}${unit}</td>`;
         }
         return `<td style="background:#fffbf0"></td>`;
       });
@@ -4102,13 +4114,14 @@ function fuzzyMatch(query, text) {
       // بطاقات الإجمالي
       const summaryItems = Object.entries(colTotals)
         .filter(([ci, v]) => v > 0 && thEls[ci])
-        .map(([ci, v]) => ({ label: thEls[ci].innerText.trim(), value: v }));
+        .map(([ci, v]) => ({ label: thEls[ci].innerText.trim(), value: v, unit: colUnits[ci] || '' }));
       const colors = ['#D4A843','#8B6914','#A0826D','#2c7a4b','#2563eb','#dc2626'];
       const summaryCards = summaryItems.map((s,i) => `
         <div style="border:1px solid #D4A843;border-radius:8px;padding:12px;text-align:center;background:#fffdf5">
-          <div style="font-size:20px;font-weight:900;color:${colors[i%colors.length]};margin-bottom:4px">
+          <div style="font-size:20px;font-weight:900;color:${colors[i%colors.length]};margin-bottom:2px">
             ${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}
           </div>
+          ${s.unit ? `<div style="font-size:9px;color:#b8860b;font-weight:600;margin-bottom:3px">${s.unit}</div>` : ''}
           <div style="font-size:10px;color:#888">إجمالي ${s.label}</div>
         </div>`).join('');
 
@@ -4152,6 +4165,7 @@ function fuzzyMatch(query, text) {
             <td style="text-align:right;font-weight:600">إجمالي ${s.label}</td>
             <td style="font-weight:900;color:#8B6914;font-size:14px">
               ${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}
+              ${s.unit ? `<span style="font-size:10px;color:#aaa;font-weight:400"> ${s.unit}</span>` : ''}
             </td>
           </tr>`).join('');
         return `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${title} — إجمالي</title>${CSS}</head><body>
