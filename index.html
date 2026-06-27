@@ -4007,81 +4007,169 @@ function fuzzyMatch(query, text) {
 // ══════════════════════════════════════════════════════════════════
 // PDF EXPORT & PRINT
 // ══════════════════════════════════════════════════════════════════
-window.exportTableToPDF = async function(tableName, fileName = 'تقرير.pdf') {
-  if (isViewerMode()) {
-    toast('العارض لا يمكنه التصدير', 'warning');
-    return;
+    // ══════════════════════════════════════════════════════════
+    // printTable — طباعة احترافية لأي جدول
+    // ══════════════════════════════════════════════════════════
+    window.printTable = function(selector) {
+      const tbody = document.querySelector(selector);
+      if (!tbody) { toast('لم يتم العثور على الجدول', 'error'); return; }
+
+      const table = tbody.closest('table');
+      const thead = table ? table.querySelector('thead') : null;
+      const page  = tbody.closest('.page');
+      const title = page?.querySelector('h2')?.innerText?.trim() || 'تقرير';
+      const factoryName = state?.settings?.factoryName || 'نظام إدارة مصنع الألبان';
+      const now = new Date().toLocaleString('ar-EG');
+
+      let theadHTML = '';
+      if (thead) {
+        const ths = Array.from(thead.querySelectorAll('th')).filter(th => {
+          const t = th.innerText.trim();
+          return t !== 'حذف' && t !== 'تعديل' && t !== 'إجراءات' && t !== '';
+        });
+        theadHTML = `<thead><tr>${ths.map(th => `<th>${th.innerText.trim()}</th>`).join('')}</tr></thead>`;
+      }
+
+      const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state'));
+      if (!rows.length) { toast('لا توجد بيانات للطباعة', 'warning'); return; }
+
+      const tbodyHTML = '<tbody>' + rows.map(r => {
+        const cells = Array.from(r.querySelectorAll('td'))
+          .filter(td => !td.querySelector('button') && !td.querySelector('.btn'));
+        return cells.length ? `<tr>${cells.map(td => `<td>${td.innerText.trim()}</td>`).join('')}</tr>` : '';
+      }).filter(Boolean).join('') + '</tbody>';
+
+      const html = `<!DOCTYPE html>
+<html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${title}</title>
+${getPrintStyles()}
+</head><body>
+  <div class="doc-header">
+    <div><div class="factory-name">${factoryName}</div><div class="section-name">${title}</div></div>
+    <div class="doc-date">طُبع: ${now}</div>
+  </div>
+  <div class="doc-meta">عدد السجلات: ${rows.length}</div>
+  <table>${theadHTML}${tbodyHTML}</table>
+  <div class="doc-footer">
+    <span>${factoryName}</span>
+    <span>${new Date().toLocaleDateString('ar-EG')}</span>
+  </div>
+</body></html>`;
+
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url  = URL.createObjectURL(blob);
+      const pw   = window.open(url, '_blank');
+      if (!pw) { toast('يرجى السماح بالنوافذ المنبثقة', 'warning'); return; }
+      pw.onload = () => { setTimeout(() => { pw.focus(); pw.print(); URL.revokeObjectURL(url); }, 500); };
+    };
+
+window.exportTableToPDF = async function(selector, fileName) {
+  if (typeof isViewerMode === 'function' && isViewerMode()) {
+    toast('غير متاح في وضع المشاهدة', 'warning'); return;
   }
-  
-  loading(true, 'جارٍ تحضير PDF...');
+  if (!window.html2canvas || !window.jspdf) {
+    toast('مكتبة التصدير غير محملة، انتظر ثانية', 'warning'); return;
+  }
+
+  const tbody = document.querySelector(selector);
+  if (!tbody) { toast('لم يتم العثور على الجدول', 'error'); return; }
+
+  const table = tbody.closest('table');
+  const thead = table ? table.querySelector('thead') : null;
+  const page  = tbody.closest('.page');
+  const title = page?.querySelector('h2')?.innerText?.trim() || 'تقرير';
+  const factoryName = state?.settings?.factoryName || 'نظام إدارة مصنع الألبان';
+  const now = new Date().toLocaleString('ar-EG');
+
+  let theadHTML = '';
+  if (thead) {
+    const ths = Array.from(thead.querySelectorAll('th')).filter(th => {
+      const t = th.innerText.trim();
+      return t !== 'حذف' && t !== 'تعديل' && t !== 'إجراءات' && t !== '';
+    });
+    theadHTML = `<thead><tr>${ths.map(th => `<th>${th.innerText.trim()}</th>`).join('')}</tr></thead>`;
+  }
+
+  const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state'));
+  if (!rows.length) { toast('لا توجد بيانات للتصدير', 'warning'); return; }
+
+  const tbodyHTML = '<tbody>' + rows.map(r => {
+    const cells = Array.from(r.querySelectorAll('td'))
+      .filter(td => !td.querySelector('button') && !td.querySelector('.btn'));
+    return cells.length ? `<tr>${cells.map(td => `<td>${td.innerText.trim()}</td>`).join('')}</tr>` : '';
+  }).filter(Boolean).join('') + '</tbody>';
+
+  loading(true, 'جاري تصدير PDF...');
   try {
-    const element = document.querySelector(tableName) || document.querySelector(`#${tableName}`);
-    if (!element) { toast('لم يتم العثور على الجدول', 'error'); return; }
-    
-    const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#0A0C0F' });
-    const imgData = canvas.toDataURL('image/png');
-    
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;top:0;left:-9999px;width:800px;min-height:100px;background:#fff;padding:20px;font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#2c1a0e;font-size:12px;z-index:-9999;line-height:1.6';
+
+    wrap.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:12px;border-bottom:3px solid #A0826D;margin-bottom:8px">
+        <div>
+          <div style="font-size:20px;font-weight:900;color:#2c1a0e">${factoryName}</div>
+          <div style="font-size:13px;color:#A0826D;font-weight:700;margin-top:2px">${title}</div>
+        </div>
+        <div style="font-size:10px;color:#999">طُبع: ${now}</div>
+      </div>
+      <div style="font-size:10px;color:#888;margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid #e8d5c4">
+        عدد السجلات: ${rows.length}
+      </div>
+      <table style="width:100%;border-collapse:collapse">${theadHTML}${tbodyHTML}</table>
+      <div style="margin-top:16px;padding-top:8px;border-top:1px solid #e8d5c4;display:flex;justify-content:space-between;font-size:10px;color:#aaa">
+        <span>${factoryName}</span><span>${new Date().toLocaleDateString('ar-EG')}</span>
+      </div>`;
+
+    // تطبيق styles مباشرة على الخلايا
+    wrap.querySelectorAll('thead th').forEach(th => {
+      Object.assign(th.style, { background:'#8B6914', color:'#fff', padding:'8px 10px', textAlign:'right', fontSize:'11px', fontWeight:'700' });
+    });
+    wrap.querySelectorAll('tbody tr').forEach((tr, i) => {
+      tr.querySelectorAll('td').forEach(td => {
+        Object.assign(td.style, { padding:'7px 10px', textAlign:'right', fontSize:'11px', borderBottom:'1px solid #f0e6d8', background: i%2===0 ? '#FFF8F3' : '#FFFBF0' });
+      });
+    });
+
+    document.body.appendChild(wrap);
+    await new Promise(r => setTimeout(r, 350));
+
+    const canvas = await html2canvas(wrap, {
+      scale:2, backgroundColor:'#ffffff', useCORS:true, allowTaint:true,
+      width:800, scrollX:0, scrollY:0
+    });
+    document.body.removeChild(wrap);
+
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-    const imgWidth = 190;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    
-    pdf.addFont('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/fonts/HTML-CSS/TeX/woff/MathJax_Main-Regular.woff', 'custom', 'normal');
-    pdf.setFont('courier');
-    pdf.text(fileName.replace('.pdf', ''), 10, 10);
-    pdf.addImage(imgData, 'PNG', 10, 20, imgWidth, imgHeight);
-    pdf.save(fileName);
-    
-    toast('تم التصدير بنجاح', 'success');
-  } catch(e) { 
-    toast('خطأ في التصدير: ' + e.message, 'error'); 
-  }
-  finally { loading(false); }
+    const pdf  = new jsPDF({ orientation:'p', unit:'mm', format:'a4' });
+    const imgW = 190, pageH = 270;
+    const imgH = canvas.height * imgW / canvas.width;
+
+    if (imgH <= pageH) {
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, imgH);
+    } else {
+      const rowH = pageH * canvas.width / imgW;
+      let srcY = 0;
+      while (srcY < canvas.height) {
+        const sliceH = Math.min(rowH, canvas.height - srcY);
+        const sc = document.createElement('canvas');
+        sc.width = canvas.width; sc.height = sliceH;
+        sc.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        if (srcY > 0) pdf.addPage();
+        pdf.addImage(sc.toDataURL('image/png'), 'PNG', 10, 10, imgW, sliceH * imgW / canvas.width);
+        srcY += sliceH;
+      }
+    }
+
+    const dateStr = new Date().toISOString().slice(0,10);
+    const safeTitle = title.replace(/\s+/g,'_');
+    const fname = `${factoryName}_${safeTitle}_${dateStr}.pdf`.replace(/[^\u0600-\u06FFa-zA-Z0-9._-]/g,'_');
+    pdf.save(fname);
+    toast(`تم تصدير PDF بنجاح ✅`, 'success');
+  } catch(e) {
+    toast('خطأ في التصدير: ' + e.message, 'error');
+    console.error(e);
+  } finally { loading(false); }
 };
 
-// ══════════════════════════════════════════════════════════════════
-// THERMAL PRINTER (POS 58MM) PRINT FUNCTIONS
-// ══════════════════════════════════════════════════════════════════
-
-// دالة طباعة عامة للجدول العادي
-window.printTable = function(selector) {
-  const element = document.querySelector(selector);
-  if (!element) { toast('لم يتم العثور على العنصر', 'error'); return; }
-  
-  const printWindow = window.open('', '_blank');
-  const clone = element.cloneNode(true);
-  
-  clone.style.direction = 'rtl';
-  clone.style.fontFamily = 'Cairo, Tajawal, Arial';
-  
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html dir="rtl">
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        body { font-family: Cairo, Arial; direction: rtl; padding: 20px; background: white; color: #333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: right; }
-        th { background: #D4A843; color: #0A0C0F; font-weight: bold; }
-        .empty-state, button, .btn { display: none; }
-        h2 { text-align: center; color: #D4A843; }
-      </style>
-
-</head>
-    <body>
-  `);
-  printWindow.document.write(clone.outerHTML);
-  printWindow.document.write('</body></html>');
-  printWindow.document.close();
-  
-  setTimeout(() => {
-    printWindow.print();
-    printWindow.close();
-  }, 500);
-};
-
-// دالة طباعة متخصصة للطابعة الحرارية (58 مم)
 window.printThermalReceipt = function(type, data) {
   const printWindow = window.open('', '_blank');
   const html = generateThermalReceiptHTML(type, data);
@@ -5671,286 +5759,72 @@ if ('serviceWorker' in navigator) {
     // ══════════════════════════════════════════════════════════
 
     function getPrintStyles() {
-      return `<style>
-        * {box-sizing: border-box; margin: 0; padding: 0}
-        body {
-          font-family: 'Cairo', 'Tajawal', Arial, sans-serif;
-          direction: rtl;
-          background: #ffffff;
-          color: #333333;
-          padding: 25px;
-          font-size: 12px;
-          line-height: 1.6;
-        }
-        
-        h1 {
-          color: #8B6914;
-          font-size: 24px;
-          margin-bottom: 8px;
-          text-align: center;
-          font-weight: 900;
-          border-bottom: 3px solid #D4A843;
-          padding-bottom: 10px;
-        }
-        
-        h2 {
-          color: #ffffff;
-          background: #A0826D;
-          font-size: 14px;
-          margin: 20px 0 12px 0;
-          padding: 8px 12px;
-          font-weight: 700;
-          letter-spacing: 0.5px;
-        }
-        
-        .meta {
-          color: #666666;
-          font-size: 11px;
-          margin-bottom: 20px;
-          text-align: center;
-          background: #f5f5f5;
-          padding: 8px;
-          border-radius: 4px;
-        }
-        
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-bottom: 20px;
-          font-size: 11px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        thead {
-          background: #D4A843;
-          color: #ffffff;
-        }
-        
-        th {
-          background: #D4A843;
-          color: #ffffff;
-          padding: 10px 8px;
-          text-align: center;
-          font-weight: 700;
-          border: 1px solid #B8860B;
-          word-wrap: break-word;
-        }
-        
-        td {
-          border: 1px solid #E5D4C1;
-          padding: 8px;
-          text-align: center;
-          background: #ffffff;
-        }
-        
-        tbody tr:nth-child(odd) td {
-          background: #FFFBF0;
-        }
-        
-        tbody tr:nth-child(even) td {
-          background: #FFF8F3;
-        }
-        
-        tbody tr:last-child td {
-          background: #E8D5C4;
-          font-weight: 700;
-          color: #5C3D2E;
-          border-top: 2px solid #D4A843;
-        }
-        
-        .summary-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 12px;
-          margin: 20px 0;
-          page-break-inside: avoid;
-        }
-        
-        .summary-card {
-          border: 2px solid #D4A843;
-          border-radius: 6px;
-          padding: 12px;
-          text-align: center;
-          background: linear-gradient(135deg, #FFFBF0 0%, #FFF8F3 100%);
-        }
-        
-        .summary-card .val {
-          font-size: 16px;
-          font-weight: 900;
-          color: #8B6914;
-          display: block;
-          margin-bottom: 4px;
-        }
-        
-        .summary-card .lbl {
-          font-size: 9px;
-          color: #666666;
-          font-weight: 600;
-        }
-        
-        .summary-card.green .val {color: #228B22}
-        .summary-card.red .val {color: #DC143C}
-        .summary-card.blue .val {color: #1E40AF}
-        
-        .section-factory .val {color: #D97706}
-        
-        .footer {
-          margin-top: 30px;
-          text-align: center;
-          font-size: 9px;
-          color: #999999;
-          border-top: 2px solid #D4A843;
-          padding-top: 12px;
-        }
-        
-        a {display: none !important}
-        button {display: none !important}
-        .wa-btn {display: none !important}
-        .btn-whatsapp {display: none !important}
-        .btn {display: none !important}
-        
-        @media print {
-          body {padding: 10px; margin: 0}
-          h1 {page-break-after: avoid}
-          h2 {page-break-after: avoid}
-          table {page-break-inside: avoid}
-          .summary-grid {page-break-inside: avoid}
-          a {display: none !important}
-          button {display: none !important}
-        }
-      </style>`;
-    }
-
-    function getReportData() {
-      const from = document.getElementById('inv-report-from')?.value || '';
-      const to   = document.getElementById('inv-report-to')?.value   || '';
-      const whFilter = document.getElementById('inv-report-warehouse')?.value || 'all';
-      const periodLabel = from && to ? `${from} ← ${to}` : from ? `من ${from}` : to ? `حتى ${to}` : 'كامل الفترة';
-      const factoryName = state.settings?.factoryName || 'نظام إدارة المصنع';
-
-      const salesRows   = Object.entries(state.sales || {}).filter(([,s]) => (!from||s.date>=from)&&(!to||s.date<=to));
-      const expRows     = Object.entries(state.expenses || {}).filter(([,e]) => (!from||e.date>=from)&&(!to||e.date<=to));
-      const milkRows    = Object.entries(state.milkRecords || {}).filter(([,r]) => (!from||r.date>=from)&&(!to||r.date<=to));
-      const factoryRows = whFilter==='warehouse1'||whFilter==='warehouse2' ? [] :
-        Object.entries(state.exports||{}).filter(([,e])=>e.warehouse==='factory'&&(!from||e.date>=from)&&(!to||e.date<=to));
-      const exp1Rows    = whFilter==='warehouse2'||whFilter==='factory' ? [] :
-        Object.entries(state.exports||{}).filter(([,e])=>e.warehouse==='warehouse1'&&(!from||e.date>=from)&&(!to||e.date<=to));
-      const exp2Rows    = whFilter==='warehouse1'||whFilter==='factory' ? [] :
-        Object.entries(state.exports||{}).filter(([,e])=>e.warehouse==='warehouse2'&&(!from||e.date>=from)&&(!to||e.date<=to));
-
-      const salesTotal   = salesRows.reduce((s,[,r])=>s+Number(r.total||0),0);
-      const expTotal     = expRows.reduce((s,[,e])=>s+Number(e.amount||0),0);
-      const milkQty      = milkRows.reduce((s,[,r])=>s+Number(r.qty||0),0);
-      const milkAmt      = milkRows.reduce((s,[,r])=>s+Number(r.total||0),0);
-      const factoryTot   = factoryRows.reduce((s,[,e])=>s+Number(e.qty||0),0);
-      const exp1Tot      = exp1Rows.reduce((s,[,e])=>s+Number(e.qty||0),0);
-      const exp2Tot      = exp2Rows.reduce((s,[,e])=>s+Number(e.qty||0),0);
-      const netProfit    = salesTotal - expTotal;
-
-      const expByCat = {};
-      expRows.forEach(([,e])=>{ expByCat[e.category]=(expByCat[e.category]||0)+Number(e.amount||0); });
-
-      return { from, to, whFilter, periodLabel, factoryName,
-               salesRows, expRows, milkRows, factoryRows, exp1Rows, exp2Rows,
-               salesTotal, expTotal, milkQty, milkAmt, factoryTot, exp1Tot, exp2Tot,
-               netProfit, expByCat };
-    }
-
-    window.printFullFilteredReport = function() {
-      const d = getReportData();
-      const pw = window.open('','_blank');
-      pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">
-        <title>تقرير كامل — ${d.factoryName}</title>${getPrintStyles()}</head><body>
-        <h1>${d.factoryName}</h1>
-        <div class="meta">الفترة: ${d.periodLabel} | التاريخ: ${new Date().toLocaleDateString('ar-EG')}</div>
-        
-        <div class="summary-grid">
-          <div class="summary-card green"><div class="val">${fmt(d.salesTotal,2)}</div><div class="lbl">إجمالي المبيعات</div></div>
-          <div class="summary-card red"><div class="val">${fmt(d.expTotal,2)}</div><div class="lbl">إجمالي المصاريف</div></div>
-          <div class="summary-card ${d.netProfit>=0?'green':'red'}"><div class="val">${fmt(d.netProfit,2)}</div><div class="lbl">صافي الربح</div></div>
-          <div class="summary-card blue"><div class="val">${fmt(d.milkQty,1)} كجم</div><div class="lbl">استلام الحليب</div></div>
-          <div class="summary-card"><div class="val" style="color:#d97706">${fmt(d.factoryTot,2)} كجم</div><div class="lbl">خارج من المعمل</div></div>
-          <div class="summary-card"><div class="val">${fmt(d.exp1Tot,2)} كجم</div><div class="lbl">صادرات المخزن 1</div></div>
-          <div class="summary-card"><div class="val">${fmt(d.exp2Tot,2)} كجم</div><div class="lbl">صادرات المخزن 2</div></div>
-        </div>
-
-        ${d.milkRows.length ? `
-        <h2>سجل استلام الحليب (${d.milkRows.length} سجل)</h2>
-        <table><thead><tr><th>التاريخ</th><th>المورد</th><th>الكمية (كجم)</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>
-          ${d.milkRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,r])=>`<tr>
-            <td>${r.date}</td><td>${sanitize(state.suppliers?.[r.supplierId]?.name||'')}</td>
-            <td>${fmt(r.qty,2)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td>
-          </tr>`).join('')}
-          <tr><td colspan="2"><strong>الإجمالي</strong></td><td><strong>${fmt(d.milkQty,2)}</strong></td><td></td><td><strong>${fmt(d.milkAmt,2)}</strong></td></tr>
-        </tbody></table>` : ''}
-
-        ${d.factoryRows.length ? `
-        <h2>خارج من المعمل (${d.factoryRows.length} عملية)</h2>
-        <table><thead><tr><th>التاريخ</th><th>المنتج</th><th>الوزن (كجم)</th><th>العدد</th><th>العميل</th></tr></thead><tbody>
-          ${d.factoryRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,e])=>`<tr>
-            <td>${e.date}</td><td>${sanitize(e.itemName||e.itemId||'')}</td>
-            <td>${fmt(e.qty,2)}</td><td>${e.count?fmt(e.count,0)+' '+(e.countUnit||''):'—'}</td>
-            <td>${sanitize(e.client||'—')}</td>
-          </tr>`).join('')}
-          <tr><td colspan="2"><strong>الإجمالي</strong></td><td><strong>${fmt(d.factoryTot,2)} كجم</strong></td><td colspan="2"></td></tr>
-        </tbody></table>` : ''}
-
-        ${d.exp1Rows.length ? `
-        <h2>صادرات المخزن الأول (${d.exp1Rows.length} عملية)</h2>
-        <table><thead><tr><th>التاريخ</th><th>الصنف</th><th>الوزن (كجم)</th><th>العدد</th><th>العميل</th></tr></thead><tbody>
-          ${d.exp1Rows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,e])=>`<tr>
-            <td>${e.date}</td><td>${sanitize(state.warehouse1?.[e.itemId]?.name||e.itemName||'')}</td>
-            <td>${fmt(e.qty,2)}</td><td>${e.count?fmt(e.count,0)+' '+(e.countUnit||''):'—'}</td>
-            <td>${sanitize(e.client||'—')}</td>
-          </tr>`).join('')}
-          <tr><td colspan="2"><strong>الإجمالي</strong></td><td><strong>${fmt(d.exp1Tot,2)} كجم</strong></td><td colspan="2"></td></tr>
-        </tbody></table>` : ''}
-
-        ${d.exp2Rows.length ? `
-        <h2>صادرات المخزن الثاني (${d.exp2Rows.length} عملية)</h2>
-        <table><thead><tr><th>التاريخ</th><th>الصنف</th><th>الوزن (كجم)</th><th>العدد</th><th>العميل</th></tr></thead><tbody>
-          ${d.exp2Rows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,e])=>`<tr>
-            <td>${e.date}</td><td>${sanitize(state.warehouse2?.[e.itemId]?.name||e.itemName||'')}</td>
-            <td>${fmt(e.qty,2)}</td><td>${e.count?fmt(e.count,0)+' '+(e.countUnit||''):'—'}</td>
-            <td>${sanitize(e.client||'—')}</td>
-          </tr>`).join('')}
-          <tr><td colspan="2"><strong>الإجمالي</strong></td><td><strong>${fmt(d.exp2Tot,2)} كجم</strong></td><td colspan="2"></td></tr>
-        </tbody></table>` : ''}
-
-        ${d.salesRows.length ? `
-        <h2>المبيعات (${d.salesRows.length} فاتورة)</h2>
-        <table><thead><tr><th>التاريخ</th><th>العميل</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th></tr></thead><tbody>
-          ${d.salesRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,s])=>`<tr>
-            <td>${s.date}</td><td>${sanitize(s.client||'')}</td><td>${sanitize(s.product||'')}</td>
-            <td>${fmt(s.qty,2)}</td><td>${fmt(s.total,2)}</td>
-          </tr>`).join('')}
-          <tr><td colspan="4"><strong>الإجمالي</strong></td><td><strong>${fmt(d.salesTotal,2)}</strong></td></tr>
-        </tbody></table>` : ''}
-
-        ${d.expRows.length ? `
-        <h2>المصاريف (${d.expRows.length} عملية)</h2>
-        <table><thead><tr><th>التاريخ</th><th>البيان</th><th>الفئة</th><th>المبلغ</th></tr></thead><tbody>
-          ${d.expRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,e])=>`<tr>
-            <td>${e.date}</td><td>${sanitize(e.desc||'')}</td><td>${sanitize(e.category||'')}</td><td>${fmt(e.amount,2)}</td>
-          </tr>`).join('')}
-          <tr><td colspan="3"><strong>الإجمالي</strong></td><td><strong>${fmt(d.expTotal,2)}</strong></td></tr>
-        </tbody></table>` : ''}
-
-        <div class="footer">نظام إدارة مصنع الألبان | ${new Date().toLocaleDateString('ar-EG')}</div>
-      </body></html>`);
-      pw.document.close();
-      setTimeout(()=>pw.print(), 600);
+      return `
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body {
+            font-family: 'Cairo', 'Tajawal', Arial, sans-serif;
+            direction: rtl; background: #fff; color: #2c1a0e;
+            padding: 20px; font-size: 12px; line-height: 1.6;
+          }
+          .doc-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding-bottom: 12px; border-bottom: 3px solid #A0826D; margin-bottom: 8px;
+          }
+          .factory-name { font-size: 20px; font-weight: 900; color: #2c1a0e; }
+          .section-name { font-size: 13px; color: #A0826D; font-weight: 700; margin-top: 2px; }
+          .doc-date { font-size: 10px; color: #999; }
+          .doc-meta { font-size: 10px; color: #888; margin-bottom: 16px; padding-bottom: 6px; border-bottom: 1px solid #e8d5c4; }
+          .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 14px 0 20px; }
+          .summary-card { border: 1px solid #e8d5c4; border-radius: 6px; padding: 10px 12px; text-align: center; background: #FFFBF0; }
+          .summary-card .val { font-size: 17px; font-weight: 900; margin-bottom: 3px; }
+          .summary-card .lbl { font-size: 10px; color: #888; }
+          .section-title { font-size: 13px; font-weight: 700; color: #fff; background: #A0826D; padding: 7px 12px; margin: 18px 0 0; border-radius: 4px 4px 0 0; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(160,130,109,0.15); }
+          thead th {
+            background: #8B6914; color: #fff;
+            padding: 8px 10px; text-align: right;
+            font-size: 11px; font-weight: 700;
+          }
+          tbody td {
+            padding: 7px 10px; text-align: right;
+            font-size: 11px; border-bottom: 1px solid #f0e6d8;
+          }
+          tbody tr:nth-child(even) td { background: #FFFBF0; }
+          tbody tr:nth-child(odd)  td { background: #FFF8F3; }
+          tbody tr.total-row td {
+            background: #E8D5C4 !important;
+            font-weight: 700; border-top: 2px solid #A0826D;
+          }
+          .no-data { text-align: center; color: #bbb; padding: 16px; font-size: 12px; }
+          .doc-footer {
+            margin-top: 20px; padding-top: 10px; border-top: 1px solid #e8d5c4;
+            display: flex; justify-content: space-between;
+            font-size: 10px; color: #aaa;
+          }
+          @media print {
+            @page { margin: 12mm; size: A4 portrait; }
+            thead th {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            .summary-card, .section-title {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+          }
+        </style>`;
     };
 
     window.printSummaryReport = function() {
       const d = getReportData();
       const pw = window.open('','_blank');
       pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">
-        <title>ملخص الإجماليات — ${d.factoryName}</title>${getPrintStyles()}</head><body>
-        <h1>${d.factoryName}</h1>
-        <h2 style="text-align:center;border:none;background:none;color:#8B6914">ملخص إجماليات الفترة</h2>
-        <div class="meta">الفترة: ${d.periodLabel} | التاريخ: ${new Date().toLocaleDateString('ar-EG')}</div>
-        
+        <title>إجماليات — ${d.factoryName}</title>${getPrintStyles()}</head><body>
+        <h1>🏭 ${d.factoryName}</h1>
+        <h2 style="color:#555;border:none;font-size:14px">ملخص إجماليات الفترة</h2>
+        <div class="meta">📅 الفترة: ${d.periodLabel} | 🖨️ طُبع: ${new Date().toLocaleString('ar-EG')}</div>
         <div class="summary-grid">
           <div class="summary-card blue"><div class="val">${fmt(d.milkQty,1)} كجم</div><div class="lbl">إجمالي الحليب</div></div>
           <div class="summary-card blue"><div class="val">${fmt(d.milkAmt,2)}</div><div class="lbl">قيمة الحليب</div></div>
@@ -5961,17 +5835,14 @@ if ('serviceWorker' in navigator) {
           <div class="summary-card red"><div class="val">${fmt(d.expTotal,2)}</div><div class="lbl">إجمالي المصاريف</div></div>
           <div class="summary-card ${d.netProfit>=0?'green':'red'}"><div class="val">${fmt(d.netProfit,2)}</div><div class="lbl">صافي الربح</div></div>
         </div>
-        
-        ${Object.keys(d.expByCat).length ? `
-        <h2>المصاريف حسب الفئة</h2>
-        <table><thead><tr><th>الفئة</th><th>المبلغ</th><th>النسبة</th></tr></thead><tbody>
+        <h2>💸 المصاريف حسب الفئة</h2>
+        ${Object.keys(d.expByCat).length ? `<table><thead><tr><th>الفئة</th><th>المبلغ</th><th>النسبة</th></tr></thead><tbody>
           ${Object.entries(d.expByCat).sort((a,b)=>b[1]-a[1]).map(([cat,amt])=>`<tr>
             <td>${sanitize(cat)}</td><td>${fmt(amt,2)}</td>
             <td>${d.expTotal?fmt(amt/d.expTotal*100,1)+'%':'—'}</td>
           </tr>`).join('')}
           <tr><td><strong>الإجمالي</strong></td><td><strong>${fmt(d.expTotal,2)}</strong></td><td>100%</td></tr>
-        </tbody></table>` : ''}
-        
+        </tbody></table>` : '<p>لا توجد بيانات</p>'}
         <div class="footer">نظام إدارة مصنع الألبان | ${new Date().toLocaleDateString('ar-EG')}</div>
       </body></html>`);
       pw.document.close();
@@ -6082,193 +5953,9 @@ if ('serviceWorker' in navigator) {
 
 
     // ══════════════════════════════════════════════════════════
-    // PDF EXPORT — تصدير PDF احترافي
+    // UNIVERSAL PRINT & PDF — كل الأقسام
     // ══════════════════════════════════════════════════════════
 
-    window.exportToPDF = function(reportType = 'full') {
-      const d = getReportData();
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({
-        orientation: 'p',
-        unit: 'mm',
-        format: 'a4',
-        compress: true
-      });
-
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      let yPosition = 15;
-
-      // الدالة لإضافة رأس الصفحة
-      const addHeader = () => {
-        pdf.setFont('Cairo', 'bold');
-        pdf.setFontSize(18);
-        pdf.setTextColor(139, 105, 20);
-        pdf.text(d.factoryName, pageWidth / 2, yPosition, { align: 'center' });
-        
-        yPosition += 8;
-        pdf.setFont('Cairo', 'normal');
-        pdf.setFontSize(10);
-        pdf.setTextColor(100, 100, 100);
-        pdf.text(`الفترة: ${d.periodLabel} | التاريخ: ${new Date().toLocaleDateString('ar-EG')}`, pageWidth / 2, yPosition, { align: 'center' });
-        
-        yPosition += 10;
-        pdf.setDrawColor(212, 168, 67);
-        pdf.setLineWidth(0.5);
-        pdf.line(10, yPosition - 2, pageWidth - 10, yPosition - 2);
-        yPosition += 5;
-      };
-
-      // الدالة لإضافة جدول
-      const addTable = (columns, rows, title) => {
-        if (yPosition > pageHeight - 40) {
-          pdf.addPage();
-          yPosition = 15;
-        }
-
-        pdf.setFont('Cairo', 'bold');
-        pdf.setFontSize(12);
-        pdf.setTextColor(212, 168, 67);
-        pdf.text(title, pageWidth - 15, yPosition, { align: 'right' });
-        yPosition += 8;
-
-        const colWidths = columns.map(c => (pageWidth - 20) / columns.length);
-        const cellHeight = 6;
-
-        // رأس الجدول
-        pdf.setFont('Cairo', 'bold');
-        pdf.setFontSize(10);
-        pdf.setFillColor(212, 168, 67);
-        pdf.setTextColor(255, 255, 255);
-        
-        columns.forEach((col, i) => {
-          const x = 10 + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
-          pdf.cell(colWidths[i], cellHeight, col, 1, 0, 'center', true);
-        });
-        
-        yPosition += cellHeight;
-
-        // صفوف الجدول
-        pdf.setFont('Cairo', 'normal');
-        pdf.setFontSize(9);
-        pdf.setTextColor(50, 50, 50);
-
-        rows.forEach((row, idx) => {
-          if (yPosition > pageHeight - 20) {
-            pdf.addPage();
-            yPosition = 15;
-            addHeader();
-          }
-
-          const isLast = idx === rows.length - 1;
-          pdf.setFillColor(isLast ? 232, 213, 196 : (idx % 2 === 0 ? 255, 251, 240 : 255, 248, 243));
-          
-          if (isLast) {
-            pdf.setFont('Cairo', 'bold');
-            pdf.setTextColor(92, 61, 46);
-          } else {
-            pdf.setFont('Cairo', 'normal');
-            pdf.setTextColor(50, 50, 50);
-          }
-
-          row.forEach((cell, i) => {
-            const x = 10 + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
-            pdf.cell(colWidths[i], cellHeight, String(cell), 1, 0, 'center', isLast);
-          });
-
-          yPosition += cellHeight;
-        });
-
-        yPosition += 5;
-      };
-
-      addHeader();
-
-      // إضافة ملخص الأرقام
-      pdf.setFont('Cairo', 'bold');
-      pdf.setFontSize(11);
-      pdf.setTextColor(212, 168, 67);
-      pdf.text('ملخص الأرقام الرئيسية', pageWidth - 15, yPosition, { align: 'right' });
-      yPosition += 8;
-
-      const summaryData = [
-        ['إجمالي المبيعات', fmt(d.salesTotal, 2)],
-        ['إجمالي المصاريف', fmt(d.expTotal, 2)],
-        ['صافي الربح', fmt(d.netProfit, 2)],
-        ['استلام الحليب', fmt(d.milkQty, 1) + ' كجم'],
-        ['خارج من المعمل', fmt(d.factoryTot, 2) + ' كجم']
-      ];
-
-      pdf.setFont('Cairo', 'normal');
-      pdf.setFontSize(10);
-      pdf.setTextColor(80, 80, 80);
-
-      summaryData.forEach(([label, value]) => {
-        pdf.text(`${label}:`, 20, yPosition, { align: 'right' });
-        pdf.setFont('Cairo', 'bold');
-        pdf.setTextColor(139, 105, 20);
-        pdf.text(value, pageWidth - 20, yPosition, { align: 'left' });
-        pdf.setFont('Cairo', 'normal');
-        pdf.setTextColor(80, 80, 80);
-        yPosition += 6;
-      });
-
-      yPosition += 5;
-
-      // إضافة الجداول حسب نوع التقرير
-      if (reportType === 'full' || reportType === 'all') {
-        if (d.milkRows.length) {
-          addTable(
-            ['التاريخ', 'المورد', 'الكمية', 'السعر', 'الإجمالي'],
-            d.milkRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,r]) => [
-              r.date,
-              sanitize(state.suppliers?.[r.supplierId]?.name||''),
-              fmt(r.qty, 2),
-              fmt(r.price, 2),
-              fmt(r.total, 2)
-            ]).concat([['الإجمالي', '', fmt(d.milkQty, 2), '', fmt(d.milkAmt, 2)]]),
-            'سجل استلام الحليب'
-          );
-        }
-
-        if (d.salesRows.length) {
-          addTable(
-            ['التاريخ', 'العميل', 'المنتج', 'الكمية', 'الإجمالي'],
-            d.salesRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,s]) => [
-              s.date,
-              sanitize(s.client||''),
-              sanitize(s.product||''),
-              fmt(s.qty, 2),
-              fmt(s.total, 2)
-            ]).concat([['الإجمالي', '', '', '', fmt(d.salesTotal, 2)]]),
-            'المبيعات'
-          );
-        }
-
-        if (d.expRows.length) {
-          addTable(
-            ['التاريخ', 'البيان', 'الفئة', 'المبلغ'],
-            d.expRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,e]) => [
-              e.date,
-              sanitize(e.desc||''),
-              sanitize(e.category||''),
-              fmt(e.amount, 2)
-            ]).concat([['الإجمالي', '', '', fmt(d.expTotal, 2)]]),
-            'المصاريف'
-          );
-        }
-      }
-
-      // إضافة التذييل
-      pdf.setFont('Cairo', 'normal');
-      pdf.setFontSize(8);
-      pdf.setTextColor(150, 150, 150);
-      pdf.text(`نظام إدارة مصنع الألبان | تم الإنشاء: ${new Date().toLocaleString('ar-EG')}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
-
-      const fileName = `تقرير_${reportType === 'summary' ? 'ملخص_' : ''}${new Date().getTime()}.pdf`;
-      pdf.save(fileName);
-      toast('تم تنزيل التقرير بنجاح ✅', 'success');
-    };
     
 </script>
 </body>
