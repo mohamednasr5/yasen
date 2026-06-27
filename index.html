@@ -283,6 +283,20 @@
     </div>
   </div>
 
+  <!-- Easy UI Ticker Bar -->
+  <div id="easy-ticker-bar" style="background:linear-gradient(90deg,#0d1520,#111a28,#0d1520);border-bottom:1px solid rgba(212,168,67,0.15);overflow:hidden;height:34px;display:flex;align-items:center;position:sticky;top:73px;z-index:9">
+    <div id="easy-ticker-content" style="white-space:nowrap;display:inline-flex;animation:easyTickerScroll 30s linear infinite;padding-right:40px">
+      <span style="color:#667788;font-size:12px;padding:0 20px">جارٍ تحميل البيانات...</span>
+    </div>
+  </div>
+  <style>
+  @keyframes easyTickerScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  #easy-ticker-bar:hover #easy-ticker-content { animation-play-state: paused; }
+  </style>
+
   <!-- Easy UI Content -->
   <div style="padding:24px;max-width:1200px;margin:0 auto;width:100%">
 
@@ -4487,6 +4501,7 @@ window.launchEasyUI = function() {
     easy.style.opacity = '0';
     easy.style.transition = 'opacity 0.3s ease';
     setTimeout(() => { easy.style.opacity = '1'; }, 20);
+    updateEasyTicker();
   }, 300);
 };
 
@@ -4561,8 +4576,100 @@ window.switchToEasyUI = function() {
     if (easyDate) {
       easyDate.textContent = new Date().toLocaleDateString('ar-EG', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
     }
+    // Update easy ticker
+    updateEasyTicker();
   }
 };
+
+// ══════════════════════════════════════════
+// EASY UI TICKER — يحدّث الشريط المتحرك
+// ══════════════════════════════════════════
+window.updateEasyTicker = function() {
+  try {
+    const s = state || {};
+    // Milk stats last 7 days
+    const now = new Date();
+    const last7 = new Date(now); last7.setDate(last7.getDate() - 7);
+    const last7Str = last7.toISOString().slice(0,10);
+    const todayStr = now.toISOString().slice(0,10);
+    const recentMilk = Object.values(s.milk || {}).filter(e => e.date >= last7Str && e.date <= todayStr);
+    const totalMilkQty = recentMilk.reduce((sum,e) => sum + Number(e.qty||0), 0);
+    const totalMilkCost = recentMilk.reduce((sum,e) => sum + Number(e.total||0), 0);
+    const avgMilkPrice = totalMilkQty > 0 ? totalMilkCost / totalMilkQty : 0;
+    const recentExp = Object.values(s.expenses || {}).filter(e => e.date >= last7Str && e.date <= todayStr);
+    const totalExpenses = recentExp.reduce((sum,e) => sum + Number(e.amount||0), 0);
+    const recentSales = Object.values(s.sales || {}).filter(e => e.date >= last7Str && e.date <= todayStr);
+    const totalSales = recentSales.reduce((sum,e) => sum + Number(e.total||0), 0);
+    const supplierCount = Object.keys(s.suppliers || {}).length;
+    const buyerCount = Object.keys(s.buyers || {}).length;
+
+    const fmt2 = (n,d=2) => Number(n).toLocaleString('ar-EG', {minimumFractionDigits:d,maximumFractionDigits:d});
+    const items = [
+      `🥛 الحليب (7 أيام): ${fmt2(totalMilkQty,1)} كجم`,
+      `◆`,
+      `💰 متوسط سعر الحليب: ${fmt2(avgMilkPrice)} ج/كجم`,
+      `◆`,
+      `📊 مبيعات (7 أيام): ${fmt2(totalSales)} ج`,
+      `◆`,
+      `💸 مصاريف (7 أيام): ${fmt2(totalExpenses)} ج`,
+      `◆`,
+      `👥 الموردون: ${supplierCount}`,
+      `◆`,
+      `🛒 المشترون: ${buyerCount}`,
+      `◆`,
+    ].join('  ');
+
+    const enhance = (t) => t
+      .replace(/([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}])/gu, '<span class="ticker-emoji">$1</span>')
+      .replace(/(\d[\d,.]*)/g, '<span class="ticker-val">$1</span>')
+      .replace(/◆/g, '<span class="ticker-sep">◆</span>');
+
+    const enhanced = enhance(items);
+    const el = document.getElementById('easy-ticker-content');
+    if (el) {
+      el.innerHTML = `<span class="ticker-item">${enhanced}</span><span class="ticker-item">${enhanced}</span>`;
+    }
+  } catch(e) { /* silent fail */ }
+};
+
+// ══════════════════════════════════════════
+// Ctrl key → رجوع للواجهة السهلة
+// ══════════════════════════════════════════
+(function() {
+  let lastCtrlTime = 0;
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Control' && !e.repeat) {
+      const now = Date.now();
+      // Single Ctrl press (not combo with other keys)
+      if (now - lastCtrlTime > 300) {
+        lastCtrlTime = now;
+        // Only trigger if user prefers easy UI and easy screen is NOT already shown
+        const uiPref = localStorage.getItem('yasen_ui_mode');
+        const easyScreen = document.getElementById('easy-ui-screen');
+        const loginScreen = document.getElementById('login-screen');
+        if (
+          uiPref === 'easy' &&
+          easyScreen &&
+          easyScreen.style.display !== 'flex' &&
+          loginScreen &&
+          loginScreen.style.display === 'none'
+        ) {
+          // Flash indicator
+          const flash = document.createElement('div');
+          flash.textContent = '⌨️ Ctrl — رجوع للواجهة السهلة';
+          flash.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(34,197,94,0.9);color:#000;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:99999;pointer-events:none;animation:ctrlFlash 0.8s ease forwards';
+          document.body.appendChild(flash);
+          setTimeout(() => flash.remove(), 900);
+          switchToEasyUI();
+        }
+      }
+    }
+  });
+  // Add flash animation style
+  const s = document.createElement('style');
+  s.textContent = '@keyframes ctrlFlash { 0%{opacity:0;transform:translateX(-50%) translateY(10px)} 20%{opacity:1;transform:translateX(-50%) translateY(0)} 80%{opacity:1} 100%{opacity:0} }';
+  document.head.appendChild(s);
+})();
 
 window.logout = function() {
   if (!confirm('هل تريد تسجيل الخروج؟')) return;
