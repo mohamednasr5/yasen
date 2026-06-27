@@ -4035,33 +4035,26 @@ function fuzzyMatch(query, text) {
       if (!rows.length) { toast('لا توجد بيانات للطباعة', 'warning'); return; }
 
       const colTotals = {}, colIsNum = {};
-      
-      // قائمة بالكلمات المفتاحية التي تشير إلى أعمدة لا يجب جمعها
-      const nonNumericKeywords = ['تاريخ', 'وقت', 'ساعة', 'دقيقة', 'ثانية', 'تليفون', 'هاتف', 'موبايل', 'رقم الهاتف', 
-        'بريد', 'اميل', 'عنوان', 'اسم', 'الاسم', 'المسلسل', '#', 'ملاحظات', 'ملاحظة', 'وصف', 'الوصف',
-        'فئة', 'نوع', 'الحالة', 'حالة', 'طريقة', 'وسيلة', 'منطقة', 'مدينة', 'محافظة', 'دولة',
-        'سعر الكيلو', 'سعر الوحدة', 'سعر كجم', 'سعر'];
-      
       const tbodyHTML = '<tbody>' + rows.map(r => {
         const cells = Array.from(r.querySelectorAll('td')).filter(td => !td.querySelector('button') && !td.querySelector('.btn'));
         cells.forEach((td, ci) => {
-          // التحقق من اسم العمود (header)
+          // الحصول على اسم العمود
           const headerText = thEls[ci]?.innerText?.toLowerCase() || '';
-          const isNonNumericColumn = nonNumericKeywords.some(keyword => headerText.includes(keyword.toLowerCase()));
           
-          // إذا كان العمود من نوع لا يصح جمعه، تخطيه
-          if (isNonNumericColumn) return;
+          // جمع فقط الأعمدة التي تحتوي على: كمية، إجمالي، مبلغ
+          const shouldSum = headerText.includes('كمية') || 
+                           headerText.includes('كجم') || 
+                           headerText.includes('عدد') ||
+                           headerText.includes('إجمالي') || 
+                           headerText.includes('الإجمالي') ||
+                           headerText.includes('مبلغ');
           
-          // محاولة استخراج الرقم من الخلية
+          // إذا لم يكن من الأعمدة المسموحة، تخطيه
+          if (!shouldSum) return;
+          
           const raw = td.innerText.trim().replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0)-1584));
           const num = parseFloat(raw.replace(/[^\d.-]/g,''));
-          
-          // التحقق من أن النص يحتوي على أرقام فقط (أو أرقام مع وحدات مثل "جنيه" أو "كجم")
-          // ولكن ليس نصاً مختلطاً بشكل غريب
-          const isValidNumber = !isNaN(num) && raw.match(/[\d٠-٩]/);
-          const isNotTooLong = num >= -9999999 && num <= 9999999; // تصفية الأرقام غير المعقولة
-          
-          if (isValidNumber && isNotTooLong) {
+          if (!isNaN(num) && raw.match(/[\d٠-٩]/)) {
             colTotals[ci] = (colTotals[ci] || 0) + num;
             colIsNum[ci]  = true;
           }
@@ -4080,34 +4073,15 @@ function fuzzyMatch(query, text) {
       });
       const tfootHTML = thEls.length ? `<tfoot><tr>${totalCells.join('')}</tr></tfoot>` : '';
 
-      // بطاقات الإجمالي مع اختصار أسماء الأعمدة والوحدات
+      // بطاقات الإجمالي
       const summaryItems = Object.entries(colTotals)
         .filter(([ci, v]) => v > 0 && thEls[ci])
-        .map(([ci, v]) => {
-          let label = thEls[ci].innerText.trim();
-          // اختصار أسماء الأعمدة التي تحتوي على "إجمالي"
-          if (label.includes('إجمالي') || label.includes('الإجمالي')) {
-            label = label.replace(/إجمالي\s*/g, 'ج. ').replace(/الإجمالي\s*/g, 'ج. ').trim();
-          }
-          
-          // تحديد الوحدة المناسبة حسب اسم العمود
-          let unit = '';
-          const lowerLabel = label.toLowerCase();
-          if (lowerLabel.includes('كجم') || lowerLabel.includes('كيلو') || lowerLabel.includes('وزن') || lowerLabel.includes('كمية')) {
-            unit = ' كيلو';
-          } else if (lowerLabel.includes('عدد') || lowerLabel.includes('count') || lowerLabel.includes('قطعة')) {
-            unit = ' قطعة';
-          } else if (lowerLabel.includes('جنيه') || lowerLabel.includes('ج.') || lowerLabel.includes('مبلغ') || lowerLabel.includes('سعر') || lowerLabel.includes('إجمالي') || lowerLabel.includes('مدفوع') || lowerLabel.includes('متبقي') || lowerLabel.includes('مصاريف') || lowerLabel.includes('سلف')) {
-            unit = ' جنيه مصري';
-          }
-          
-          return { label, value: v, unit };
-        });
+        .map(([ci, v]) => ({ label: thEls[ci].innerText.trim(), value: v }));
       const colors = ['#D4A843','#8B6914','#A0826D','#2c7a4b','#2563eb','#dc2626'];
       const summaryCards = summaryItems.map((s,i) => `
         <div style="border:1px solid #D4A843;border-radius:8px;padding:12px;text-align:center;background:#fffdf5">
           <div style="font-size:20px;font-weight:900;color:${colors[i%colors.length]};margin-bottom:4px">
-            ${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}${s.unit}
+            ${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}
           </div>
           <div style="font-size:10px;color:#888">إجمالي ${s.label}</div>
         </div>`).join('');
@@ -4151,7 +4125,7 @@ function fuzzyMatch(query, text) {
             <td>${i+1}</td>
             <td style="text-align:right;font-weight:600">إجمالي ${s.label}</td>
             <td style="font-weight:900;color:#8B6914;font-size:14px">
-              ${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}${s.unit}
+              ${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}
             </td>
           </tr>`).join('');
         return `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${title} — إجمالي</title>${CSS}</head><body>
