@@ -872,7 +872,7 @@ input[type=number] { direction: ltr; text-align: right; }
 
 .ticker-content {
   display: inline-flex;
-  animation: tickerScroll 60s linear infinite;
+  animation: tickerScroll 120s linear infinite;
   font-size: 13px;
   color: var(--text-200);
  gap: 0;
@@ -885,8 +885,8 @@ input[type=number] { direction: ltr; text-align: right; }
 }
 
 @keyframes tickerScroll {
-  0% { transform: translateX(-50%); }
-  100% { transform: translateX(0%); }
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
 }
 
 @media (max-width: 768px) {
