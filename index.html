@@ -13,6 +13,17 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* إخفاء عناصر الواتساب والأزرار عند الطباعة المباشرة */
+@media print {
+  .wa-btn, .btn-whatsapp, .sidebar, .sidebar-overlay,
+  .topbar, .btn, button, .nav-item, .modal,
+  #login-screen, #loading-overlay, #toast-container,
+  .ticker-bar { display: none !important; }
+  .app-shell { display: block !important; }
+  .main-content { margin: 0 !important; padding: 0 !important; }
+}
+</style>
 <style id="ticker-enhancements">
 /* ══════════════════════════════════════════
    TICKER BAR — Numbers White+Big, Icons Animated
@@ -3996,109 +4007,81 @@ function fuzzyMatch(query, text) {
 // ══════════════════════════════════════════════════════════════════
 // PDF EXPORT & PRINT
 // ══════════════════════════════════════════════════════════════════
-window.exportTableToPDF = async function(selector, fileName) {
-  if (typeof isViewerMode === 'function' && isViewerMode()) {
-    toast('العارض لا يمكنه التصدير', 'warning'); return;
+window.exportTableToPDF = async function(tableName, fileName = 'تقرير.pdf') {
+  if (isViewerMode()) {
+    toast('العارض لا يمكنه التصدير', 'warning');
+    return;
   }
-  if (!window.html2canvas || !window.jspdf) {
-    toast('مكتبة التصدير غير محملة بعد، انتظر ثانية', 'warning'); return;
-  }
-
-  const tbody = document.querySelector(selector);
-  if (!tbody) { toast('لم يتم العثور على الجدول', 'error'); return; }
-
-  const table  = tbody.closest('table');
-  const thead  = table ? table.querySelector('thead') : null;
-  const page   = tbody.closest('.page');
-  const h2El   = page ? page.querySelector('h2') : null;
-  const iconEl = page ? page.querySelector('.section-icon') : null;
-  const title  = h2El ? h2El.innerText : (fileName || 'تقرير').replace('.pdf','');
-  const icon   = iconEl ? iconEl.innerText : '';
-  const factoryName = (state && state.settings && state.settings.factoryName) ? state.settings.factoryName : 'نظام إدارة مصنع الألبان';
-  const now = new Date().toLocaleString('ar-EG');
-
-  const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state'));
-  if (!rows.length) { toast('لا توجد بيانات للتصدير', 'warning'); return; }
-
-  let theadHTML = '';
-  if (thead) {
-    const ths = Array.from(thead.querySelectorAll('th')).filter(th => {
-      const txt = th.innerText.trim();
-      return !(txt === '' || txt === 'حذف' || txt === 'تعديل' || txt === 'إجراءات');
-    });
-    theadHTML = `<thead><tr>${ths.map(th=>`<th>${th.innerText.trim()}</th>`).join('')}</tr></thead>`;
-  }
-  const tbodyHTML = '<tbody>' + rows.map(r => {
-    const cells = Array.from(r.querySelectorAll('td')).filter(td => !td.querySelector('button') && !td.querySelector('.btn'));
-    return `<tr>${cells.map(td=>`<td>${td.innerText.trim()}</td>`).join('')}</tr>`;
-  }).join('') + '</tbody>';
-
+  
   loading(true, 'جارٍ تحضير PDF...');
   try {
-    const container = document.createElement('div');
-    container.style.cssText = 'position:fixed;top:0;left:-9999px;width:794px;background:#fff;padding:20px;font-family:Cairo,Arial,sans-serif;direction:rtl;color:#1a1a2e;font-size:12px;z-index:-1';
-    container.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:3px solid #D4A843;margin-bottom:6px">
-        <span style="font-size:28px">${icon}</span>
-        <div>
-          <div style="font-size:11px;font-weight:700;color:#D4A843">${factoryName}</div>
-          <div style="font-size:18px;font-weight:900;color:#1a1a2e">${title}</div>
-        </div>
-      </div>
-      <div style="font-size:10px;color:#999;margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid #eee">📅 ${now}</div>
-      <table style="width:100%;border-collapse:collapse;font-size:11px">
-        <style>
-          thead th { background:#1a1a2e !important; color:#D4A843 !important; padding:8px 10px; text-align:right; font-size:11px; }
-          tbody td { border-bottom:1px solid #f0f0f0; padding:7px 10px; text-align:right; }
-          tbody tr:nth-child(even) td { background:#f8f9ff; }
-        </style>
-        ${theadHTML}${tbodyHTML}
-      </table>
-      <div style="margin-top:14px;padding-top:8px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:10px;color:#aaa">
-        <span>${factoryName} — ${title}</span>
-        <span>${new Date().toLocaleDateString('ar-EG')}</span>
-      </div>`;
-    document.body.appendChild(container);
-
-    // inject thead styles manually since html2canvas doesn't run CSS-in-HTML
-    const allThs = container.querySelectorAll('thead th');
-    allThs.forEach(th => { th.style.background='#1a1a2e'; th.style.color='#D4A843'; th.style.padding='8px 10px'; th.style.textAlign='right'; });
-    const allTds = container.querySelectorAll('tbody td');
-    allTds.forEach((td,i) => { td.style.borderBottom='1px solid #f0f0f0'; td.style.padding='7px 10px'; td.style.textAlign='right'; if(Math.floor(i/allTds.length*rows.length)%2===1) td.style.background='#f8f9ff'; });
-
-    await new Promise(r => setTimeout(r, 300));
-    const canvas = await html2canvas(container, { scale:2, backgroundColor:'#ffffff', useCORS:true, width:794, scrollX:0, scrollY:0 });
-    document.body.removeChild(container);
-
+    const element = document.querySelector(tableName) || document.querySelector(`#${tableName}`);
+    if (!element) { toast('لم يتم العثور على الجدول', 'error'); return; }
+    
+    const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#0A0C0F' });
+    const imgData = canvas.toDataURL('image/png');
+    
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation:'p', unit:'mm', format:'a4' });
-    const imgW = 190, pageH = 277;
-    const imgH = canvas.height * imgW / canvas.width;
-
-    if (imgH <= pageH) {
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, imgH);
-    } else {
-      const rowH = pageH * canvas.width / imgW;
-      let srcY = 0;
-      while (srcY < canvas.height) {
-        const sliceH = Math.min(rowH, canvas.height - srcY);
-        const sc = document.createElement('canvas');
-        sc.width = canvas.width; sc.height = sliceH;
-        sc.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
-        if (srcY > 0) pdf.addPage();
-        pdf.addImage(sc.toDataURL('image/png'), 'PNG', 10, 10, imgW, sliceH * imgW / canvas.width);
-        srcY += sliceH;
-      }
-    }
-
-    const fname = (fileName || `${title}.pdf`).replace(/[^؀-ۿa-zA-Z0-9._-]/g,'_');
-    pdf.save(fname);
-    toast('تم تصدير PDF ✅', 'success');
-  } catch(e) { toast('خطأ: ' + e.message, 'error'); console.error(e); }
+    const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    const imgWidth = 190;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    
+    pdf.addFont('https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/fonts/HTML-CSS/TeX/woff/MathJax_Main-Regular.woff', 'custom', 'normal');
+    pdf.setFont('courier');
+    pdf.text(fileName.replace('.pdf', ''), 10, 10);
+    pdf.addImage(imgData, 'PNG', 10, 20, imgWidth, imgHeight);
+    pdf.save(fileName);
+    
+    toast('تم التصدير بنجاح', 'success');
+  } catch(e) { 
+    toast('خطأ في التصدير: ' + e.message, 'error'); 
+  }
   finally { loading(false); }
 };
 
+// ══════════════════════════════════════════════════════════════════
+// THERMAL PRINTER (POS 58MM) PRINT FUNCTIONS
+// ══════════════════════════════════════════════════════════════════
 
+// دالة طباعة عامة للجدول العادي
+window.printTable = function(selector) {
+  const element = document.querySelector(selector);
+  if (!element) { toast('لم يتم العثور على العنصر', 'error'); return; }
+  
+  const printWindow = window.open('', '_blank');
+  const clone = element.cloneNode(true);
+  
+  clone.style.direction = 'rtl';
+  clone.style.fontFamily = 'Cairo, Tajawal, Arial';
+  
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html dir="rtl">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: Cairo, Arial; direction: rtl; padding: 20px; background: white; color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: right; }
+        th { background: #D4A843; color: #0A0C0F; font-weight: bold; }
+        .empty-state, button, .btn { display: none; }
+        h2 { text-align: center; color: #D4A843; }
+      </style>
+
+</head>
+    <body>
+  `);
+  printWindow.document.write(clone.outerHTML);
+  printWindow.document.write('</body></html>');
+  printWindow.document.close();
+  
+  setTimeout(() => {
+    printWindow.print();
+    printWindow.close();
+  }, 500);
+};
+
+// دالة طباعة متخصصة للطابعة الحرارية (58 مم)
 window.printThermalReceipt = function(type, data) {
   const printWindow = window.open('', '_blank');
   const html = generateThermalReceiptHTML(type, data);
@@ -4268,65 +4251,7 @@ function generateThermalReceiptHTML(type, data) {
           }
         }
       </style>
-    <style id="ticker-enhancements">
-/* ══════════════════════════════════════════
-   TICKER BAR — Numbers White+Big, Icons Animated
-   ══════════════════════════════════════════ */
 
-/* الأرقام: أبيض + حجم أكبر + توهج */
-.ticker-val {
-  color: #ffffff !important;
-  font-size: 1.2em !important;
-  font-weight: 900 !important;
-  letter-spacing: 0.5px;
-  text-shadow:
-    0 0 8px rgba(255, 255, 255, 0.6),
-    0 0 18px rgba(212, 168, 67, 0.4);
-  display: inline-block;
-  padding: 0 2px;
-}
-
-/* الإيموجي: نبضة + دوران خفيف */
-.ticker-emoji {
-  display: inline-block;
-  animation: emojiPulse 2.2s ease-in-out infinite;
-  filter: drop-shadow(0 0 5px rgba(212, 168, 67, 0.7));
-  transform-origin: center bottom;
-}
-.ticker-emoji:nth-of-type(3n+2) { animation-delay: 0.7s;  }
-.ticker-emoji:nth-of-type(3n+3) { animation-delay: 1.4s;  }
-
-@keyframes emojiPulse {
-  0%,100% { transform: scale(1)    rotate(0deg);    opacity: 1;   }
-  25%     { transform: scale(1.3)  rotate(-10deg);  opacity: 0.9; }
-  50%     { transform: scale(1.05) rotate(0deg);    opacity: 1;   }
-  75%     { transform: scale(1.2)  rotate(6deg);    opacity: 0.9; }
-}
-
-/* الفاصل ◆ يدور */
-.ticker-sep {
-  display: inline-block;
-  color: var(--gold, #D4A843) !important;
-  margin: 0 8px;
-  opacity: 0.8;
-  animation: sepSpin 4s linear infinite;
-}
-@keyframes sepSpin {
-  0%   { transform: rotate(0deg)   scale(1);   opacity: 0.5; }
-  50%  { transform: rotate(180deg) scale(1.4); opacity: 1;   }
-  100% { transform: rotate(360deg) scale(1);   opacity: 0.5; }
-}
-
-/* النص العادي في الشريط */
-.ticker-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  color: var(--text-200, #c0c8d8);
-  font-size: 13px;
-  white-space: nowrap;
-}
-</style>
 </head>
     <body>
       <div class="receipt-container">
@@ -4916,7 +4841,9 @@ window.deleteBuyerPayment = async function(id) { if (!confirm('حذف هذه ا�
 // PRINT STATEMENTS (A4 Professional)
 // ══════════════════════════════════════════════════════════════════
 function printA4Header(title, infoRows) {
-  return `<h1 style="text-align:center;color:#D4A843;font-size:20px;margin-bottom:4px">${infoRows.factoryName || 'مصنع الألبان'}</h1><div style="text-align:center;color:#666;font-size:13px;margin-bottom:20px">${title}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;font-size:13px">${infoRows.rows.map(r => `<div style="display:flex;gap:8px"><span style="font-weight:bold;color:#555;min-width:80px">${r[0]}:</span><span>${r[1]}</span></div>`).join('')}</div>`;
+  return `<h1 style="text-align:center;color:#b8860b;font-size:20px;margin-bottom:4px">${infoRows.factoryName || 'مصنع الألبان'}</h1>
+    <div style="text-align:center;color:#777;font-size:13px;margin-bottom:14px;border-bottom:2px solid #D4A843;padding-bottom:8px">${title}</div>
+    <div class="info-grid">${infoRows.rows.map(r => `<div class="info-row"><span>${r[0]}:</span><span>${r[1]}</span></div>`).join('')}</div>`;
 }
 
 window.printSupplierStatement = function() {
@@ -4937,66 +4864,16 @@ window.printSupplierStatement = function() {
   const balance = milkSum - paySum - advSum - purSum;
   const nowStr = new Date().toLocaleString('ar-EG', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
   const pw = window.open('','_blank');
-  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#333;padding:20px}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:8px;text-align:center}td{border:1px solid #ddd;padding:6px 8px;text-align:center}.totals{margin-top:16px;padding:12px;border:2px solid #D4A843;border-radius:8px}.total-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:8px}.footer{text-align:center;margin-top:24px;color:#999;font-size:11px}</style><style id="ticker-enhancements">
-/* ══════════════════════════════════════════
-   TICKER BAR — Numbers White+Big, Icons Animated
-   ══════════════════════════════════════════ */
-
-/* الأرقام: أبيض + حجم أكبر + توهج */
-.ticker-val {
-  color: #ffffff !important;
-  font-size: 1.2em !important;
-  font-weight: 900 !important;
-  letter-spacing: 0.5px;
-  text-shadow:
-    0 0 8px rgba(255, 255, 255, 0.6),
-    0 0 18px rgba(212, 168, 67, 0.4);
-  display: inline-block;
-  padding: 0 2px;
-}
-
-/* الإيموجي: نبضة + دوران خفيف */
-.ticker-emoji {
-  display: inline-block;
-  animation: emojiPulse 2.2s ease-in-out infinite;
-  filter: drop-shadow(0 0 5px rgba(212, 168, 67, 0.7));
-  transform-origin: center bottom;
-}
-.ticker-emoji:nth-of-type(3n+2) { animation-delay: 0.7s;  }
-.ticker-emoji:nth-of-type(3n+3) { animation-delay: 1.4s;  }
-
-@keyframes emojiPulse {
-  0%,100% { transform: scale(1)    rotate(0deg);    opacity: 1;   }
-  25%     { transform: scale(1.3)  rotate(-10deg);  opacity: 0.9; }
-  50%     { transform: scale(1.05) rotate(0deg);    opacity: 1;   }
-  75%     { transform: scale(1.2)  rotate(6deg);    opacity: 0.9; }
-}
-
-/* الفاصل ◆ يدور */
-.ticker-sep {
-  display: inline-block;
-  color: var(--gold, #D4A843) !important;
-  margin: 0 8px;
-  opacity: 0.8;
-  animation: sepSpin 4s linear infinite;
-}
-@keyframes sepSpin {
-  0%   { transform: rotate(0deg)   scale(1);   opacity: 0.5; }
-  50%  { transform: rotate(180deg) scale(1.4); opacity: 1;   }
-  100% { transform: rotate(360deg) scale(1);   opacity: 0.5; }
-}
-
-/* النص العادي في الشريط */
-.ticker-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  color: var(--text-200, #c0c8d8);
-  font-size: 13px;
-  white-space: nowrap;
-}
-</style>
-</head><body>${printA4Header('كشف حساب مورد', {factoryName: state.settings.factoryName || 'مصنع الألبان', rows: [['المورد',s.name],['الهاتف',s.phone||'—'],['الفترة',(df.from||'الكل')+' ← '+(df.to||'الكل')],['تاريخ الطباعة',nowStr]]})}<h3 style="color:#D4A843">سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي الحليب:</span><span>${fmt(milkSum,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${balance>0?'green':'red'}">${fmt(balance,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
+  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff}h1{color:#b8860b;font-size:20px;margin-bottom:4px;text-align:center}h2,h3{color:#b8860b;font-size:14px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a}td{border:1px solid #ddd;padding:6px 8px;text-align:center}tr:nth-child(even) td{background:#fffbf0}.totals{margin-top:16px;padding:12px 16px;border:2px solid #D4A843;border-radius:8px;background:#fffdf5}.total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #f0e8cc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:10px;color:#333}.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.summary-card{border:2px solid #D4A843;border-radius:8px;padding:10px;text-align:center;background:#fffdf5}.summary-card .val{font-size:18px;font-weight:900;color:#b8860b}.summary-card .lbl{font-size:10px;color:#888;margin-top:3px}.summary-card.green .val{color:#16a34a}.summary-card.red .val{color:#dc2626}.summary-card.blue .val{color:#2563eb}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px}.info-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f0ead0}.info-row span:first-child{font-weight:bold;color:#666;min-width:90px}.footer{text-align:center;margin-top:24px;color:#aaa;font-size:11px;border-top:1px solid #eee;padding-top:8px}a{display:none!important}@media print{a{display:none!important}}</style></head><body>
+      <h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
+      <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب مورد</div>
+      <div class="info-grid">
+        <div class="info-row"><span>المورد:</span><span>${s.name}</span></div>
+        <div class="info-row"><span>الهاتف:</span><span>${s.phone||'—'}</span></div>
+        <div class="info-row"><span>الفترة:</span><span>${(df.from||'الكل')+' ← '+(df.to||'الكل')}</span></div>
+        <div class="info-row"><span>تاريخ الطباعة:</span><span>${nowStr}</span></div>
+      </div>
+      <h3>سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي الحليب:</span><span>${fmt(milkSum,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${balance>0?'green':'red'}">${fmt(balance,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
   pw.document.close(); setTimeout(()=>pw.print(), 600);
 };
 
@@ -5019,66 +4896,15 @@ window.printWorkerStatement = function() {
   const remaining = totalEarned - paySum - advSum - purSum;
   const nowStr = new Date().toLocaleString('ar-EG',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
   const pw = window.open('','_blank');
-  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#333;padding:20px}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:8px;text-align:center}td{border:1px solid #ddd;padding:6px 8px;text-align:center}.totals{margin-top:16px;padding:12px;border:2px solid #D4A843;border-radius:8px}.total-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:8px}.footer{text-align:center;margin-top:24px;color:#999;font-size:11px}</style><style id="ticker-enhancements">
-/* ══════════════════════════════════════════
-   TICKER BAR — Numbers White+Big, Icons Animated
-   ══════════════════════════════════════════ */
-
-/* الأرقام: أبيض + حجم أكبر + توهج */
-.ticker-val {
-  color: #ffffff !important;
-  font-size: 1.2em !important;
-  font-weight: 900 !important;
-  letter-spacing: 0.5px;
-  text-shadow:
-    0 0 8px rgba(255, 255, 255, 0.6),
-    0 0 18px rgba(212, 168, 67, 0.4);
-  display: inline-block;
-  padding: 0 2px;
-}
-
-/* الإيموجي: نبضة + دوران خفيف */
-.ticker-emoji {
-  display: inline-block;
-  animation: emojiPulse 2.2s ease-in-out infinite;
-  filter: drop-shadow(0 0 5px rgba(212, 168, 67, 0.7));
-  transform-origin: center bottom;
-}
-.ticker-emoji:nth-of-type(3n+2) { animation-delay: 0.7s;  }
-.ticker-emoji:nth-of-type(3n+3) { animation-delay: 1.4s;  }
-
-@keyframes emojiPulse {
-  0%,100% { transform: scale(1)    rotate(0deg);    opacity: 1;   }
-  25%     { transform: scale(1.3)  rotate(-10deg);  opacity: 0.9; }
-  50%     { transform: scale(1.05) rotate(0deg);    opacity: 1;   }
-  75%     { transform: scale(1.2)  rotate(6deg);    opacity: 0.9; }
-}
-
-/* الفاصل ◆ يدور */
-.ticker-sep {
-  display: inline-block;
-  color: var(--gold, #D4A843) !important;
-  margin: 0 8px;
-  opacity: 0.8;
-  animation: sepSpin 4s linear infinite;
-}
-@keyframes sepSpin {
-  0%   { transform: rotate(0deg)   scale(1);   opacity: 0.5; }
-  50%  { transform: rotate(180deg) scale(1.4); opacity: 1;   }
-  100% { transform: rotate(360deg) scale(1);   opacity: 0.5; }
-}
-
-/* النص العادي في الشريط */
-.ticker-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  color: var(--text-200, #c0c8d8);
-  font-size: 13px;
-  white-space: nowrap;
-}
-</style>
-</head><body>${printA4Header('كشف حساب عامل',{factoryName:state.settings.factoryName||'مصنع الألبان',rows:[['العامل',w.name],['اليومية',fmt(dailyRate,2)+' ج'],['الفترة',(df.from||'الكل')+' ← '+(df.to||'الكل')],['تاريخ الطباعة',nowStr]]})}<h3 style="color:#D4A843">سجل الحضور (${totalDays} يوم)</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${att.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>المستحق (${totalDays} يوم):</span><span>${fmt(totalEarned,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
+  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff}h1{color:#b8860b;font-size:20px;margin-bottom:4px;text-align:center}h2,h3{color:#b8860b;font-size:14px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a}td{border:1px solid #ddd;padding:6px 8px;text-align:center}tr:nth-child(even) td{background:#fffbf0}.totals{margin-top:16px;padding:12px 16px;border:2px solid #D4A843;border-radius:8px;background:#fffdf5}.total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #f0e8cc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:10px;color:#333}.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.summary-card{border:2px solid #D4A843;border-radius:8px;padding:10px;text-align:center;background:#fffdf5}.summary-card .val{font-size:18px;font-weight:900;color:#b8860b}.summary-card .lbl{font-size:10px;color:#888;margin-top:3px}.summary-card.green .val{color:#16a34a}.summary-card.red .val{color:#dc2626}.summary-card.blue .val{color:#2563eb}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px}.info-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f0ead0}.info-row span:first-child{font-weight:bold;color:#666;min-width:90px}.footer{text-align:center;margin-top:24px;color:#aaa;font-size:11px;border-top:1px solid #eee;padding-top:8px}a{display:none!important}@media print{a{display:none!important}}</style></head><body>
+      <h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
+      <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب عامل</div>
+      <div class="info-grid">
+        <div class="info-row"><span>العامل:</span><span>${w.name}</span></div>
+        <div class="info-row"><span>اليومية:</span><span>${fmt(dailyRate,2)} ج</span></div>
+        <div class="info-row"><span>الفترة:</span><span>${(df.from||'الكل')+' ← '+(df.to||'الكل')}</span></div>
+        <div class="info-row"><span>تاريخ الطباعة:</span><span>${nowStr}</span></div>
+      </div><h3 style="color:#D4A843">سجل الحضور (${totalDays} يوم)</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${att.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>المستحق (${totalDays} يوم):</span><span>${fmt(totalEarned,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
   pw.document.close(); setTimeout(()=>pw.print(), 600);
 };
 
@@ -5099,66 +4925,15 @@ window.printBuyerStatement = function() {
   const remaining = salesTotal - salesPaid - paySum - purSum;
   const nowStr = new Date().toLocaleString('ar-EG',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
   const pw = window.open('','_blank');
-  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#333;padding:20px}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:8px;text-align:center}td{border:1px solid #ddd;padding:6px 8px;text-align:center}.totals{margin-top:16px;padding:12px;border:2px solid #D4A843;border-radius:8px}.total-row{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:8px}.footer{text-align:center;margin-top:24px;color:#999;font-size:11px}</style><style id="ticker-enhancements">
-/* ══════════════════════════════════════════
-   TICKER BAR — Numbers White+Big, Icons Animated
-   ══════════════════════════════════════════ */
-
-/* الأرقام: أبيض + حجم أكبر + توهج */
-.ticker-val {
-  color: #ffffff !important;
-  font-size: 1.2em !important;
-  font-weight: 900 !important;
-  letter-spacing: 0.5px;
-  text-shadow:
-    0 0 8px rgba(255, 255, 255, 0.6),
-    0 0 18px rgba(212, 168, 67, 0.4);
-  display: inline-block;
-  padding: 0 2px;
-}
-
-/* الإيموجي: نبضة + دوران خفيف */
-.ticker-emoji {
-  display: inline-block;
-  animation: emojiPulse 2.2s ease-in-out infinite;
-  filter: drop-shadow(0 0 5px rgba(212, 168, 67, 0.7));
-  transform-origin: center bottom;
-}
-.ticker-emoji:nth-of-type(3n+2) { animation-delay: 0.7s;  }
-.ticker-emoji:nth-of-type(3n+3) { animation-delay: 1.4s;  }
-
-@keyframes emojiPulse {
-  0%,100% { transform: scale(1)    rotate(0deg);    opacity: 1;   }
-  25%     { transform: scale(1.3)  rotate(-10deg);  opacity: 0.9; }
-  50%     { transform: scale(1.05) rotate(0deg);    opacity: 1;   }
-  75%     { transform: scale(1.2)  rotate(6deg);    opacity: 0.9; }
-}
-
-/* الفاصل ◆ يدور */
-.ticker-sep {
-  display: inline-block;
-  color: var(--gold, #D4A843) !important;
-  margin: 0 8px;
-  opacity: 0.8;
-  animation: sepSpin 4s linear infinite;
-}
-@keyframes sepSpin {
-  0%   { transform: rotate(0deg)   scale(1);   opacity: 0.5; }
-  50%  { transform: rotate(180deg) scale(1.4); opacity: 1;   }
-  100% { transform: rotate(360deg) scale(1);   opacity: 0.5; }
-}
-
-/* النص العادي في الشريط */
-.ticker-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  color: var(--text-200, #c0c8d8);
-  font-size: 13px;
-  white-space: nowrap;
-}
-</style>
-</head><body>${printA4Header('كشف حساب مشترٍ',{factoryName:state.settings.factoryName||'مصنع الألبان',rows:[['المشتري',b.name],['الهاتف',b.phone||'—'],['الفترة',(df.from||'الكل')+' ← '+(df.to||'الكل')],['تاريخ الطباعة',nowStr]]})}<h3 style="color:#D4A843">المبيعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${sales.map(([,s],i)=>{const pd=Number(s.paidNow??s.total??0);return`<tr><td>${i+1}</td><td>${s.date}</td><td>${sanitize(s.product)}</td><td>${fmt(s.qty,2)}</td><td>${fmt(s.total,2)}</td><td>${fmt(pd,2)}</td><td>${fmt(Number(s.total||0)-pd,2)}</td></tr>`;}).join('')||'<tr><td colspan="7">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي المبيعات:</span><span>${fmt(salesTotal,2)} ج</span></div><div class="total-row"><span>المدفوع:</span><span>${fmt(salesPaid+paySum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
+  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff}h1{color:#b8860b;font-size:20px;margin-bottom:4px;text-align:center}h2,h3{color:#b8860b;font-size:14px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a}td{border:1px solid #ddd;padding:6px 8px;text-align:center}tr:nth-child(even) td{background:#fffbf0}.totals{margin-top:16px;padding:12px 16px;border:2px solid #D4A843;border-radius:8px;background:#fffdf5}.total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #f0e8cc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:10px;color:#333}.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.summary-card{border:2px solid #D4A843;border-radius:8px;padding:10px;text-align:center;background:#fffdf5}.summary-card .val{font-size:18px;font-weight:900;color:#b8860b}.summary-card .lbl{font-size:10px;color:#888;margin-top:3px}.summary-card.green .val{color:#16a34a}.summary-card.red .val{color:#dc2626}.summary-card.blue .val{color:#2563eb}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px}.info-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f0ead0}.info-row span:first-child{font-weight:bold;color:#666;min-width:90px}.footer{text-align:center;margin-top:24px;color:#aaa;font-size:11px;border-top:1px solid #eee;padding-top:8px}a{display:none!important}@media print{a{display:none!important}}</style></head><body>
+      <h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
+      <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب مشترٍ</div>
+      <div class="info-grid">
+        <div class="info-row"><span>المشتري:</span><span>${b.name}</span></div>
+        <div class="info-row"><span>الهاتف:</span><span>${b.phone||'—'}</span></div>
+        <div class="info-row"><span>الفترة:</span><span>${(df.from||'الكل')+' ← '+(df.to||'الكل')}</span></div>
+        <div class="info-row"><span>تاريخ الطباعة:</span><span>${nowStr}</span></div>
+      </div><h3 style="color:#D4A843">المبيعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${sales.map(([,s],i)=>{const pd=Number(s.paidNow??s.total??0);return`<tr><td>${i+1}</td><td>${s.date}</td><td>${sanitize(s.product)}</td><td>${fmt(s.qty,2)}</td><td>${fmt(s.total,2)}</td><td>${fmt(pd,2)}</td><td>${fmt(Number(s.total||0)-pd,2)}</td></tr>`;}).join('')||'<tr><td colspan="7">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي المبيعات:</span><span>${fmt(salesTotal,2)} ج</span></div><div class="total-row"><span>المدفوع:</span><span>${fmt(salesPaid+paySum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
   pw.document.close(); setTimeout(()=>pw.print(), 600);
 };
 
@@ -5896,29 +5671,32 @@ if ('serviceWorker' in navigator) {
     // ══════════════════════════════════════════════════════════
 
     function getPrintStyles() {
-      return `
-        <style>
-          * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: 'Cairo', 'Tajawal', Arial, sans-serif; direction: rtl; background: #fff; color: #222; padding: 20px; font-size: 13px; }
-          h1 { color: #b8860b; font-size: 18px; margin-bottom: 4px; }
-          h2 { color: #b8860b; font-size: 15px; margin: 16px 0 8px; border-bottom: 2px solid #b8860b; padding-bottom: 4px; }
-          h3 { color: #555; font-size: 13px; margin: 12px 0 6px; }
-          .meta { color: #888; font-size: 11px; margin-bottom: 16px; }
-          table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 12px; }
-          th { background: #b8860b; color: #fff; padding: 6px 8px; text-align: right; }
-          td { border: 1px solid #ddd; padding: 5px 8px; text-align: right; }
-          tr:nth-child(even) td { background: #fafafa; }
-          .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 16px 0; }
-          .summary-card { border: 1px solid #ddd; border-radius: 6px; padding: 10px; text-align: center; }
-          .summary-card .val { font-size: 18px; font-weight: 900; color: #b8860b; }
-          .summary-card .lbl { font-size: 10px; color: #888; margin-top: 2px; }
-          .summary-card.green .val { color: #16a34a; }
-          .summary-card.red .val { color: #dc2626; }
-          .summary-card.blue .val { color: #2563eb; }
-          .section-factory .val { color: #d97706; }
-          .footer { margin-top: 20px; text-align: center; font-size: 10px; color: #aaa; border-top: 1px solid #eee; padding-top: 8px; }
-          @media print { body { padding: 8px; } }
-        </style>`;
+      return `<style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Cairo','Tajawal',Arial,sans-serif;direction:rtl;background:#fff;color:#222;padding:20px;font-size:13px}
+        h1{color:#b8860b;font-size:20px;margin-bottom:4px;text-align:center}
+        h2{color:#b8860b;font-size:15px;margin:16px 0 8px;border-bottom:2px solid #D4A843;padding-bottom:4px}
+        h3{color:#555;font-size:13px;margin:12px 0 6px}
+        .meta{color:#888;font-size:11px;margin-bottom:16px;text-align:center}
+        table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px}
+        th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a}
+        td{border:1px solid #ddd;padding:5px 8px;text-align:center}
+        tr:nth-child(even) td{background:#fffbf0}
+        .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0}
+        .summary-card{border:2px solid #D4A843;border-radius:8px;padding:10px;text-align:center;background:#fffdf5}
+        .summary-card .val{font-size:18px;font-weight:900;color:#b8860b}
+        .summary-card .lbl{font-size:10px;color:#888;margin-top:2px}
+        .summary-card.green .val{color:#16a34a}
+        .summary-card.red .val{color:#dc2626}
+        .summary-card.blue .val{color:#2563eb}
+        .section-factory .val{color:#d97706}
+        .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px}
+        .info-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f0ead0}
+        .info-row span:first-child{font-weight:bold;color:#666;min-width:90px}
+        .footer{margin-top:20px;text-align:center;font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:8px}
+        a{display:none!important}
+        @media print{body{padding:8px}a{display:none!important}}
+      </style>`;
     }
 
     function getReportData() {
