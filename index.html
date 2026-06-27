@@ -4040,7 +4040,7 @@ function fuzzyMatch(query, text) {
       const nonNumericKeywords = ['تاريخ', 'وقت', 'ساعة', 'دقيقة', 'ثانية', 'تليفون', 'هاتف', 'موبايل', 'رقم الهاتف', 
         'بريد', 'اميل', 'عنوان', 'اسم', 'الاسم', 'المسلسل', '#', 'ملاحظات', 'ملاحظة', 'وصف', 'الوصف',
         'فئة', 'نوع', 'الحالة', 'حالة', 'طريقة', 'وسيلة', 'منطقة', 'مدينة', 'محافظة', 'دولة',
-        'سعر الكيلو', 'سعر الوحدة', 'سعر كجم', 'سعر', 'إجمالي', 'الإجمالي'];
+        'سعر الكيلو', 'سعر الوحدة', 'سعر كجم', 'سعر'];
       
       const tbodyHTML = '<tbody>' + rows.map(r => {
         const cells = Array.from(r.querySelectorAll('td')).filter(td => !td.querySelector('button') && !td.querySelector('.btn'));
@@ -4080,10 +4080,17 @@ function fuzzyMatch(query, text) {
       });
       const tfootHTML = thEls.length ? `<tfoot><tr>${totalCells.join('')}</tr></tfoot>` : '';
 
-      // بطاقات الإجمالي
+      // بطاقات الإجمالي مع اختصار أسماء الأعمدة
       const summaryItems = Object.entries(colTotals)
         .filter(([ci, v]) => v > 0 && thEls[ci])
-        .map(([ci, v]) => ({ label: thEls[ci].innerText.trim(), value: v }));
+        .map(([ci, v]) => {
+          let label = thEls[ci].innerText.trim();
+          // اختصار أسماء الأعمدة التي تحتوي على "إجمالي"
+          if (label.includes('إجمالي') || label.includes('الإجمالي')) {
+            label = label.replace(/إجمالي\s*/g, 'ج. ').replace(/الإجمالي\s*/g, 'ج. ').trim();
+          }
+          return { label, value: v };
+        });
       const colors = ['#D4A843','#8B6914','#A0826D','#2c7a4b','#2563eb','#dc2626'];
       const summaryCards = summaryItems.map((s,i) => `
         <div style="border:1px solid #D4A843;border-radius:8px;padding:12px;text-align:center;background:#fffdf5">
