@@ -4014,207 +4014,160 @@ function fuzzyMatch(query, text) {
       const tbody = document.querySelector(selector);
       if (!tbody) { toast('لم يتم العثور على الجدول', 'error'); return; }
 
-      const table     = tbody.closest('table');
-      const thead     = table ? table.querySelector('thead') : null;
-      const page      = tbody.closest('.page');
-      const title     = page?.querySelector('h2')?.innerText?.trim() || 'تقرير';
+      const table = tbody.closest('table');
+      const thead = table ? table.querySelector('thead') : null;
+      const page  = tbody.closest('.page');
+      const title = page?.querySelector('h2')?.innerText?.trim() || 'تقرير';
       const factoryName = state?.settings?.factoryName || 'نظام إدارة مصنع الألبان';
+      const now = new Date().toLocaleString('ar-EG',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
 
-      // ─── رؤوس الجدول (بدون أعمدة الأزرار) ───
-      let colCount = 0;
-      let theadHTML = '';
-      if (thead) {
-        const ths = Array.from(thead.querySelectorAll('th')).filter(th => {
-          const t = th.innerText.trim();
-          return t !== 'حذف' && t !== 'تعديل' && t !== 'إجراءات' && t !== '';
-        });
-        colCount  = ths.length;
-        theadHTML = `<thead><tr>${ths.map(th => `<th>${th.innerText.trim()}</th>`).join('')}</tr></thead>`;
-      }
+      // رؤوس الجدول بدون أعمدة الأزرار
+      const thEls = thead ? Array.from(thead.querySelectorAll('th')).filter(th => {
+        const t = th.innerText.trim();
+        return t !== 'حذف' && t !== 'تعديل' && t !== 'إجراءات' && t !== '';
+      }) : [];
+      const theadHTML = thEls.length
+        ? `<thead><tr>${thEls.map(th=>`<th>${th.innerText.trim()}</th>`).join('')}</tr></thead>`
+        : '';
 
-      // ─── صفوف البيانات (بدون أزرار ولا empty-state) ───
+      // صفوف البيانات + حساب إجماليات الأعمدة
       const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state'));
       if (!rows.length) { toast('لا توجد بيانات للطباعة', 'warning'); return; }
 
-      // ─── استخراج الخلايا الرقمية لحساب الإجماليات ───
-      const colTotals = {};
-      const tbodyHTML = '<tbody>' + rows.map((r, ri) => {
-        const cells = Array.from(r.querySelectorAll('td'))
-          .filter(td => !td.querySelector('button') && !td.querySelector('.btn'));
+      const colTotals = {}, colIsNum = {};
+      const tbodyHTML = '<tbody>' + rows.map(r => {
+        const cells = Array.from(r.querySelectorAll('td')).filter(td => !td.querySelector('button') && !td.querySelector('.btn'));
         cells.forEach((td, ci) => {
-          const raw = td.innerText.trim().replace(/[٠-٩]/g, d => d.charCodeAt(0) - 1632).replace(/,/g,'');
-          const num = parseFloat(raw.replace(/[^\d.]/g,''));
-          if (!isNaN(num) && num !== ri + 1) {
+          const raw = td.innerText.trim().replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0)-1584));
+          const num = parseFloat(raw.replace(/[^\d.-]/g,''));
+          if (!isNaN(num) && raw.match(/[\d٠-٩]/)) {
             colTotals[ci] = (colTotals[ci] || 0) + num;
+            colIsNum[ci]  = true;
           }
         });
-        return cells.length ? `<tr>${cells.map(td => `<td>${td.innerText.trim()}</td>`).join('')}</tr>` : '';
+        return cells.length ? `<tr>${cells.map(td=>`<td>${td.innerText.trim()}</td>`).join('')}</tr>` : '';
       }).filter(Boolean).join('') + '</tbody>';
 
-      // ─── صف الإجماليات ───
-      let totalRowHTML = '';
-      if (colCount > 0) {
-        const totalCells = Array.from({length: colCount}, (_, i) => {
-          if (i === 0) return `<td class="total-label">الإجمالي</td>`;
-          if (colTotals[i] !== undefined && colTotals[i] > 0) {
-            const formatted = colTotals[i].toLocaleString('ar-EG', {minimumFractionDigits:2, maximumFractionDigits:2});
-            return `<td class="total-val">${formatted}</td>`;
-          }
-          return `<td></td>`;
-        });
-        totalRowHTML = `<tfoot><tr class="total-row">${totalCells.join('')}</tr></tfoot>`;
-      }
-
-      const now = new Date().toLocaleString('ar-EG');
-      const dateStr = new Date().toLocaleDateString('ar-EG');
-
-      // ══════════════════════════════════════════════════════
-      // بناء HTML "كافة التفاصيل"
-      // ══════════════════════════════════════════════════════
-      function buildFullHTML() {
-        return `<!DOCTYPE html>
-<html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${title} — تفاصيل كاملة</title>
-${getPrintStyles()}
-</head><body>
-  <div class="doc-header">
-    <div>
-      <div class="factory-name">${factoryName}</div>
-      <div class="section-name">${title} — كافة التفاصيل</div>
-    </div>
-    <div class="doc-date">طُبع: ${now}</div>
-  </div>
-  <div class="doc-meta">إجمالي السجلات: ${rows.length} &nbsp;|&nbsp; التاريخ: ${dateStr}</div>
-  <table>${theadHTML}${tbodyHTML}${totalRowHTML}</table>
-  <div class="doc-footer">
-    <span>${factoryName}</span><span>${dateStr}</span>
-  </div>
-</body></html>`;
-      }
-
-      // ══════════════════════════════════════════════════════
-      // بناء HTML "الإجمالي فقط"
-      // ══════════════════════════════════════════════════════
-      function buildSummaryHTML() {
-        const summaryItems = [];
-        if (thead) {
-          const ths = Array.from(thead.querySelectorAll('th')).filter(th => {
-            const t = th.innerText.trim();
-            return t !== 'حذف' && t !== 'تعديل' && t !== 'إجراءات' && t !== '';
-          });
-          Object.entries(colTotals).forEach(([ci, val]) => {
-            if (val > 0 && ths[ci]) {
-              summaryItems.push({ label: ths[ci].innerText.trim(), value: val });
-            }
-          });
+      // صف الإجماليات
+      const totalCells = thEls.map((th, i) => {
+        if (i === 0) return `<td style="font-weight:700;text-align:right;background:#D4A843;color:#fff">الإجمالي</td>`;
+        if (colIsNum[i] && colTotals[i] > 0) {
+          const val = colTotals[i].toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2});
+          return `<td style="font-weight:900;color:#8B6914;background:#fffbf0">${val}</td>`;
         }
+        return `<td style="background:#fffbf0"></td>`;
+      });
+      const tfootHTML = thEls.length ? `<tfoot><tr>${totalCells.join('')}</tr></tfoot>` : '';
 
-        const colors = ['#D4A843','#A0826D','#8B6914','#2c7a4b','#2563eb','#dc2626','#7c3aed'];
-        const cards = summaryItems.map((item, i) => `
-          <div class="sum-card">
-            <div class="sum-val" style="color:${colors[i % colors.length]}">
-              ${item.value.toLocaleString('ar-EG', {minimumFractionDigits:2, maximumFractionDigits:2})}
-            </div>
-            <div class="sum-lbl">إجمالي ${item.label}</div>
-          </div>`).join('');
+      // بطاقات الإجمالي
+      const summaryItems = Object.entries(colTotals)
+        .filter(([ci, v]) => v > 0 && thEls[ci])
+        .map(([ci, v]) => ({ label: thEls[ci].innerText.trim(), value: v }));
+      const colors = ['#D4A843','#8B6914','#A0826D','#2c7a4b','#2563eb','#dc2626'];
+      const summaryCards = summaryItems.map((s,i) => `
+        <div style="border:1px solid #D4A843;border-radius:8px;padding:12px;text-align:center;background:#fffdf5">
+          <div style="font-size:20px;font-weight:900;color:${colors[i%colors.length]};margin-bottom:4px">
+            ${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}
+          </div>
+          <div style="font-size:10px;color:#888">إجمالي ${s.label}</div>
+        </div>`).join('');
 
-        const tableRows = summaryItems.map((item, i) => `
+      const CSS = `<style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+        @page{size:A4;margin:15mm}
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Cairo',Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff;font-size:12px}
+        .doc-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #D4A843;padding-bottom:12px;margin-bottom:10px}
+        .doc-top h1{color:#8B6914;font-size:20px;margin-bottom:2px}
+        .doc-top .sub{font-size:11px;color:#A0826D;font-weight:600}
+        .doc-top .meta{font-size:10px;color:#999;text-align:left}
+        .sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0 18px}
+        h3{color:#b8860b;font-size:13px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}
+        table{width:100%;border-collapse:collapse;margin:8px 0;font-size:11px}
+        th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a;font-weight:700}
+        td{border:1px solid #ddd;padding:6px 8px;text-align:center}
+        tr:nth-child(even) td{background:#fffbf0}
+        tfoot tr td{background:#fffdf5;border-top:2px solid #D4A843}
+        .footer{margin-top:16px;padding-top:10px;border-top:1px solid #e8d5c4;display:flex;justify-content:space-between;font-size:10px;color:#aaa}
+        @media print{th{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+      </style>`;
+
+      function buildFull() {
+        return `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${title}</title>${CSS}</head><body>
+          <div class="doc-top">
+            <div><h1>${factoryName}</h1><div class="sub">${title}</div></div>
+            <div class="meta">طُبع: ${now}<br>السجلات: ${rows.length}</div>
+          </div>
+          ${summaryCards ? `<div class="sum-grid">${summaryCards}</div>` : ''}
+          <h3>التفاصيل الكاملة</h3>
+          <table>${theadHTML}${tbodyHTML}${tfootHTML}</table>
+          <div class="footer"><span>${factoryName}</span><span>${new Date().toLocaleDateString('ar-EG')}</span></div>
+        </body></html>`;
+      }
+
+      function buildSummary() {
+        const tableRows = summaryItems.map((s,i) => `
           <tr>
             <td>${i+1}</td>
-            <td>إجمالي ${item.label}</td>
-            <td class="total-val">${item.value.toLocaleString('ar-EG', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+            <td style="text-align:right;font-weight:600">إجمالي ${s.label}</td>
+            <td style="font-weight:900;color:#8B6914;font-size:14px">
+              ${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}
+            </td>
           </tr>`).join('');
-
-        return `<!DOCTYPE html>
-<html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${title} — إجمالي</title>
-${getPrintStyles()}
-<style>
-  .sum-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:16px 0 24px; }
-  .sum-card { border:1px solid #e8d5c4; border-radius:8px; padding:14px; text-align:center; background:#FFFBF0; }
-  .sum-val  { font-size:20px; font-weight:900; margin-bottom:4px; }
-  .sum-lbl  { font-size:11px; color:#888; }
-</style>
-</head><body>
-  <div class="doc-header">
-    <div>
-      <div class="factory-name">${factoryName}</div>
-      <div class="section-name">${title} — ملخص الإجماليات</div>
-    </div>
-    <div class="doc-date">طُبع: ${now}</div>
-  </div>
-  <div class="doc-meta">بناءً على ${rows.length} سجل &nbsp;|&nbsp; ${dateStr}</div>
-
-  ${cards ? `<div class="sum-grid">${cards}</div>` : ''}
-
-  <table>
-    <thead><tr><th>#</th><th>البيان</th><th>القيمة / الإجمالي</th></tr></thead>
-    <tbody>${tableRows || '<tr><td colspan="3" class="no-data">لا توجد أعمدة رقمية</td></tr>'}</tbody>
-    <tfoot>
-      <tr class="total-row">
-        <td colspan="2" class="total-label">عدد السجلات</td>
-        <td class="total-val">${rows.length}</td>
-      </tr>
-    </tfoot>
-  </table>
-  <div class="doc-footer">
-    <span>${factoryName}</span><span>${dateStr}</span>
-  </div>
-</body></html>`;
+        return `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${title} — إجمالي</title>${CSS}</head><body>
+          <div class="doc-top">
+            <div><h1>${factoryName}</h1><div class="sub">${title} — ملخص الإجماليات</div></div>
+            <div class="meta">طُبع: ${now}<br>بناءً على ${rows.length} سجل</div>
+          </div>
+          ${summaryCards ? `<div class="sum-grid">${summaryCards}</div>` : ''}
+          <h3>جدول الإجماليات</h3>
+          <table>
+            <thead><tr><th>#</th><th>البيان</th><th>الإجمالي</th></tr></thead>
+            <tbody>
+              ${tableRows || '<tr><td colspan="3">لا توجد أعمدة رقمية</td></tr>'}
+              <tr><td colspan="2" style="font-weight:700;text-align:right">عدد السجلات</td><td style="font-weight:900;color:#8B6914">${rows.length}</td></tr>
+            </tbody>
+          </table>
+          <div class="footer"><span>${factoryName}</span><span>${new Date().toLocaleDateString('ar-EG')}</span></div>
+        </body></html>`;
       }
 
-      // ══════════════════════════════════════════════════════
       // نافذة الاختيار
-      // ══════════════════════════════════════════════════════
-      // نزيل نافذة سابقة إن وجدت
       const old = document.getElementById('print-choice-modal');
       if (old) old.remove();
-
       const modal = document.createElement('div');
       modal.id = 'print-choice-modal';
-      modal.style.cssText = [
-        'position:fixed','inset:0','background:rgba(0,0,0,0.6)',
-        'display:flex','align-items:center','justify-content:center',
-        'z-index:99999','direction:rtl','font-family:Cairo,Arial,sans-serif'
-      ].join(';');
-
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;z-index:99999;direction:rtl;font-family:Cairo,Arial,sans-serif';
       modal.innerHTML = `
-        <div style="background:#1e2235;border:1px solid #d4a843;border-radius:16px;padding:32px;width:360px;max-width:92vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
-          <div style="font-size:28px;margin-bottom:8px">🖨️</div>
+        <div style="background:#1e2235;border:1px solid #D4A843;border-radius:16px;padding:32px;width:380px;max-width:92vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+          <div style="font-size:30px;margin-bottom:8px">🖨️</div>
           <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:4px">${title}</div>
-          <div style="font-size:12px;color:#888;margin-bottom:24px">اختر نوع الطباعة</div>
-
-          <button id="pcm-full" style="width:100%;padding:14px;margin-bottom:10px;background:#8B6914;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+          <div style="font-size:12px;color:#aaa;margin-bottom:24px">اختر نوع الطباعة</div>
+          <button id="pcm-full" style="width:100%;padding:14px 10px;margin-bottom:10px;background:#8B6914;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.5">
             📋 طباعة كافة التفاصيل
-            <div style="font-size:10px;font-weight:400;opacity:0.8;margin-top:3px">كل السجلات مع الإجمالي في الأسفل</div>
+            <div style="font-size:10px;font-weight:400;opacity:0.85;margin-top:2px">كل السجلات + الإجمالي في الأسفل</div>
           </button>
-
-          <button id="pcm-summary" style="width:100%;padding:14px;margin-bottom:10px;background:#A0826D;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+          <button id="pcm-sum" style="width:100%;padding:14px 10px;margin-bottom:10px;background:#A0826D;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.5">
             📊 طباعة الإجمالي فقط
-            <div style="font-size:10px;font-weight:400;opacity:0.8;margin-top:3px">ملخص الأعمدة الرقمية فقط</div>
+            <div style="font-size:10px;font-weight:400;opacity:0.85;margin-top:2px">ملخص الأرقام والإجماليات فقط</div>
           </button>
-
-          <button id="pcm-cancel" style="width:100%;padding:10px;background:transparent;color:#888;border:1px solid #444;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">
-            إلغاء
-          </button>
+          <button id="pcm-cancel" style="width:100%;padding:10px;background:transparent;color:#888;border:1px solid #444;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">إلغاء</button>
         </div>`;
-
       document.body.appendChild(modal);
 
-      function openPrintWindow(html) {
-        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      function openWin(html) {
+        const blob = new Blob([html], {type:'text/html;charset=utf-8'});
         const url  = URL.createObjectURL(blob);
-        const pw   = window.open(url, '_blank');
-        if (!pw) { toast('يرجى السماح بالنوافذ المنبثقة', 'warning'); return; }
+        const pw   = window.open(url,'_blank');
+        if (!pw) { toast('يرجى السماح بالنوافذ المنبثقة','warning'); return; }
         pw.onload = () => { setTimeout(() => { pw.focus(); pw.print(); URL.revokeObjectURL(url); }, 500); };
       }
 
-      document.getElementById('pcm-full').onclick    = () => { modal.remove(); openPrintWindow(buildFullHTML()); };
-      document.getElementById('pcm-summary').onclick = () => { modal.remove(); openPrintWindow(buildSummaryHTML()); };
-      document.getElementById('pcm-cancel').onclick  = () => modal.remove();
-      modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+      document.getElementById('pcm-full').onclick   = () => { modal.remove(); openWin(buildFull()); };
+      document.getElementById('pcm-sum').onclick    = () => { modal.remove(); openWin(buildSummary()); };
+      document.getElementById('pcm-cancel').onclick = () => modal.remove();
+      modal.onclick = e => { if (e.target === modal) modal.remove(); };
     };
-
-
-    
 
 window.exportTableToPDF = async function(selector, fileName) {
   if (typeof isViewerMode === 'function' && isViewerMode()) {
