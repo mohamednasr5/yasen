@@ -4014,53 +4014,207 @@ function fuzzyMatch(query, text) {
       const tbody = document.querySelector(selector);
       if (!tbody) { toast('لم يتم العثور على الجدول', 'error'); return; }
 
-      const table = tbody.closest('table');
-      const thead = table ? table.querySelector('thead') : null;
-      const page  = tbody.closest('.page');
-      const title = page?.querySelector('h2')?.innerText?.trim() || 'تقرير';
+      const table     = tbody.closest('table');
+      const thead     = table ? table.querySelector('thead') : null;
+      const page      = tbody.closest('.page');
+      const title     = page?.querySelector('h2')?.innerText?.trim() || 'تقرير';
       const factoryName = state?.settings?.factoryName || 'نظام إدارة مصنع الألبان';
-      const now = new Date().toLocaleString('ar-EG');
 
+      // ─── رؤوس الجدول (بدون أعمدة الأزرار) ───
+      let colCount = 0;
       let theadHTML = '';
       if (thead) {
         const ths = Array.from(thead.querySelectorAll('th')).filter(th => {
           const t = th.innerText.trim();
           return t !== 'حذف' && t !== 'تعديل' && t !== 'إجراءات' && t !== '';
         });
+        colCount  = ths.length;
         theadHTML = `<thead><tr>${ths.map(th => `<th>${th.innerText.trim()}</th>`).join('')}</tr></thead>`;
       }
 
+      // ─── صفوف البيانات (بدون أزرار ولا empty-state) ───
       const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state'));
       if (!rows.length) { toast('لا توجد بيانات للطباعة', 'warning'); return; }
 
-      const tbodyHTML = '<tbody>' + rows.map(r => {
+      // ─── استخراج الخلايا الرقمية لحساب الإجماليات ───
+      const colTotals = {};
+      const tbodyHTML = '<tbody>' + rows.map((r, ri) => {
         const cells = Array.from(r.querySelectorAll('td'))
           .filter(td => !td.querySelector('button') && !td.querySelector('.btn'));
+        cells.forEach((td, ci) => {
+          const raw = td.innerText.trim().replace(/[٠-٩]/g, d => d.charCodeAt(0) - 1632).replace(/,/g,'');
+          const num = parseFloat(raw.replace(/[^\d.]/g,''));
+          if (!isNaN(num) && num !== ri + 1) {
+            colTotals[ci] = (colTotals[ci] || 0) + num;
+          }
+        });
         return cells.length ? `<tr>${cells.map(td => `<td>${td.innerText.trim()}</td>`).join('')}</tr>` : '';
       }).filter(Boolean).join('') + '</tbody>';
 
-      const html = `<!DOCTYPE html>
-<html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${title}</title>
+      // ─── صف الإجماليات ───
+      let totalRowHTML = '';
+      if (colCount > 0) {
+        const totalCells = Array.from({length: colCount}, (_, i) => {
+          if (i === 0) return `<td class="total-label">الإجمالي</td>`;
+          if (colTotals[i] !== undefined && colTotals[i] > 0) {
+            const formatted = colTotals[i].toLocaleString('ar-EG', {minimumFractionDigits:2, maximumFractionDigits:2});
+            return `<td class="total-val">${formatted}</td>`;
+          }
+          return `<td></td>`;
+        });
+        totalRowHTML = `<tfoot><tr class="total-row">${totalCells.join('')}</tr></tfoot>`;
+      }
+
+      const now = new Date().toLocaleString('ar-EG');
+      const dateStr = new Date().toLocaleDateString('ar-EG');
+
+      // ══════════════════════════════════════════════════════
+      // بناء HTML "كافة التفاصيل"
+      // ══════════════════════════════════════════════════════
+      function buildFullHTML() {
+        return `<!DOCTYPE html>
+<html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${title} — تفاصيل كاملة</title>
 ${getPrintStyles()}
 </head><body>
   <div class="doc-header">
-    <div><div class="factory-name">${factoryName}</div><div class="section-name">${title}</div></div>
+    <div>
+      <div class="factory-name">${factoryName}</div>
+      <div class="section-name">${title} — كافة التفاصيل</div>
+    </div>
     <div class="doc-date">طُبع: ${now}</div>
   </div>
-  <div class="doc-meta">عدد السجلات: ${rows.length}</div>
-  <table>${theadHTML}${tbodyHTML}</table>
+  <div class="doc-meta">إجمالي السجلات: ${rows.length} &nbsp;|&nbsp; التاريخ: ${dateStr}</div>
+  <table>${theadHTML}${tbodyHTML}${totalRowHTML}</table>
   <div class="doc-footer">
-    <span>${factoryName}</span>
-    <span>${new Date().toLocaleDateString('ar-EG')}</span>
+    <span>${factoryName}</span><span>${dateStr}</span>
   </div>
 </body></html>`;
+      }
 
-      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-      const url  = URL.createObjectURL(blob);
-      const pw   = window.open(url, '_blank');
-      if (!pw) { toast('يرجى السماح بالنوافذ المنبثقة', 'warning'); return; }
-      pw.onload = () => { setTimeout(() => { pw.focus(); pw.print(); URL.revokeObjectURL(url); }, 500); };
+      // ══════════════════════════════════════════════════════
+      // بناء HTML "الإجمالي فقط"
+      // ══════════════════════════════════════════════════════
+      function buildSummaryHTML() {
+        const summaryItems = [];
+        if (thead) {
+          const ths = Array.from(thead.querySelectorAll('th')).filter(th => {
+            const t = th.innerText.trim();
+            return t !== 'حذف' && t !== 'تعديل' && t !== 'إجراءات' && t !== '';
+          });
+          Object.entries(colTotals).forEach(([ci, val]) => {
+            if (val > 0 && ths[ci]) {
+              summaryItems.push({ label: ths[ci].innerText.trim(), value: val });
+            }
+          });
+        }
+
+        const colors = ['#D4A843','#A0826D','#8B6914','#2c7a4b','#2563eb','#dc2626','#7c3aed'];
+        const cards = summaryItems.map((item, i) => `
+          <div class="sum-card">
+            <div class="sum-val" style="color:${colors[i % colors.length]}">
+              ${item.value.toLocaleString('ar-EG', {minimumFractionDigits:2, maximumFractionDigits:2})}
+            </div>
+            <div class="sum-lbl">إجمالي ${item.label}</div>
+          </div>`).join('');
+
+        const tableRows = summaryItems.map((item, i) => `
+          <tr>
+            <td>${i+1}</td>
+            <td>إجمالي ${item.label}</td>
+            <td class="total-val">${item.value.toLocaleString('ar-EG', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+          </tr>`).join('');
+
+        return `<!DOCTYPE html>
+<html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${title} — إجمالي</title>
+${getPrintStyles()}
+<style>
+  .sum-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:16px 0 24px; }
+  .sum-card { border:1px solid #e8d5c4; border-radius:8px; padding:14px; text-align:center; background:#FFFBF0; }
+  .sum-val  { font-size:20px; font-weight:900; margin-bottom:4px; }
+  .sum-lbl  { font-size:11px; color:#888; }
+</style>
+</head><body>
+  <div class="doc-header">
+    <div>
+      <div class="factory-name">${factoryName}</div>
+      <div class="section-name">${title} — ملخص الإجماليات</div>
+    </div>
+    <div class="doc-date">طُبع: ${now}</div>
+  </div>
+  <div class="doc-meta">بناءً على ${rows.length} سجل &nbsp;|&nbsp; ${dateStr}</div>
+
+  ${cards ? `<div class="sum-grid">${cards}</div>` : ''}
+
+  <table>
+    <thead><tr><th>#</th><th>البيان</th><th>القيمة / الإجمالي</th></tr></thead>
+    <tbody>${tableRows || '<tr><td colspan="3" class="no-data">لا توجد أعمدة رقمية</td></tr>'}</tbody>
+    <tfoot>
+      <tr class="total-row">
+        <td colspan="2" class="total-label">عدد السجلات</td>
+        <td class="total-val">${rows.length}</td>
+      </tr>
+    </tfoot>
+  </table>
+  <div class="doc-footer">
+    <span>${factoryName}</span><span>${dateStr}</span>
+  </div>
+</body></html>`;
+      }
+
+      // ══════════════════════════════════════════════════════
+      // نافذة الاختيار
+      // ══════════════════════════════════════════════════════
+      // نزيل نافذة سابقة إن وجدت
+      const old = document.getElementById('print-choice-modal');
+      if (old) old.remove();
+
+      const modal = document.createElement('div');
+      modal.id = 'print-choice-modal';
+      modal.style.cssText = [
+        'position:fixed','inset:0','background:rgba(0,0,0,0.6)',
+        'display:flex','align-items:center','justify-content:center',
+        'z-index:99999','direction:rtl','font-family:Cairo,Arial,sans-serif'
+      ].join(';');
+
+      modal.innerHTML = `
+        <div style="background:#1e2235;border:1px solid #d4a843;border-radius:16px;padding:32px;width:360px;max-width:92vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+          <div style="font-size:28px;margin-bottom:8px">🖨️</div>
+          <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:4px">${title}</div>
+          <div style="font-size:12px;color:#888;margin-bottom:24px">اختر نوع الطباعة</div>
+
+          <button id="pcm-full" style="width:100%;padding:14px;margin-bottom:10px;background:#8B6914;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+            📋 طباعة كافة التفاصيل
+            <div style="font-size:10px;font-weight:400;opacity:0.8;margin-top:3px">كل السجلات مع الإجمالي في الأسفل</div>
+          </button>
+
+          <button id="pcm-summary" style="width:100%;padding:14px;margin-bottom:10px;background:#A0826D;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+            📊 طباعة الإجمالي فقط
+            <div style="font-size:10px;font-weight:400;opacity:0.8;margin-top:3px">ملخص الأعمدة الرقمية فقط</div>
+          </button>
+
+          <button id="pcm-cancel" style="width:100%;padding:10px;background:transparent;color:#888;border:1px solid #444;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">
+            إلغاء
+          </button>
+        </div>`;
+
+      document.body.appendChild(modal);
+
+      function openPrintWindow(html) {
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const url  = URL.createObjectURL(blob);
+        const pw   = window.open(url, '_blank');
+        if (!pw) { toast('يرجى السماح بالنوافذ المنبثقة', 'warning'); return; }
+        pw.onload = () => { setTimeout(() => { pw.focus(); pw.print(); URL.revokeObjectURL(url); }, 500); };
+      }
+
+      document.getElementById('pcm-full').onclick    = () => { modal.remove(); openPrintWindow(buildFullHTML()); };
+      document.getElementById('pcm-summary').onclick = () => { modal.remove(); openPrintWindow(buildSummaryHTML()); };
+      document.getElementById('pcm-cancel').onclick  = () => modal.remove();
+      modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
     };
+
+
+    
 
 window.exportTableToPDF = async function(selector, fileName) {
   if (typeof isViewerMode === 'function' && isViewerMode()) {
@@ -5793,6 +5947,14 @@ if ('serviceWorker' in navigator) {
           }
           tbody tr:nth-child(even) td { background: #FFFBF0; }
           tbody tr:nth-child(odd)  td { background: #FFF8F3; }
+          tfoot tr.total-row td {
+            background: #E8D5C4 !important;
+            font-weight: 700; border-top: 2px solid #A0826D;
+            font-size: 12px;
+          }
+          .total-label { text-align: right; font-weight: 700; }
+          .total-val   { text-align: left;  font-weight: 900; color: #8B6914; font-size: 13px; }
+          tfoot { display: table-footer-group; }
           tbody tr.total-row td {
             background: #E8D5C4 !important;
             font-weight: 700; border-top: 2px solid #A0826D;
