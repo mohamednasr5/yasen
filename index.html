@@ -4052,9 +4052,20 @@ function fuzzyMatch(query, text) {
           // إذا لم يكن من الأعمدة المسموحة، تخطيه
           if (!shouldSum) return;
           
-          const raw = td.innerText.trim().replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0)-1584));
-          const num = parseFloat(raw.replace(/[^\d.-]/g,''));
-          if (!isNaN(num) && raw.match(/[\d٠-٩]/)) {
+          // تنظيف الرقم: تحويل عربي لإنجليزي وإزالة الفواصل والمسافات
+          let raw = td.innerText.trim();
+          
+          // تحويل الأرقام العربية إلى إنجليزية
+          raw = raw.replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0) - 1584));
+          
+          // إزالة الفواصل والمسافات والفواصل العربية
+          raw = raw.replace(/[,،\s]/g, '');
+          
+          // استخراج الأرقام (بما فيها العلامة العشرية والسالب)
+          const num = parseFloat(raw.replace(/[^\d.-]/g, ''));
+          
+          // إضافة الرقم إلى المجموع
+          if (!isNaN(num) && num !== 0) {
             colTotals[ci] = (colTotals[ci] || 0) + num;
             colIsNum[ci]  = true;
           }
