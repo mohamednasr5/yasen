@@ -6430,61 +6430,118 @@ if ('serviceWorker' in navigator) {
     }
 
     window.printPageSection = function(pageId) {
-      const html = buildPrintHTML(pageId, false);
-      if (!html) { toast('لا يمكن الطباعة', 'error'); return; }
-      const pw = window.open('', '_blank');
-      pw.document.write(html);
-      pw.document.close();
-      setTimeout(() => pw.print(), 700);
+      try {
+        const html = buildPrintHTML(pageId, false);
+        if (!html) { toast('لا توجد بيانات للطباعة', 'warning'); return; }
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const url  = URL.createObjectURL(blob);
+        const pw   = window.open(url, '_blank');
+        if (!pw) { toast('يرجى السماح بالنوافذ المنبثقة في المتصفح', 'warning'); return; }
+        pw.onload = () => { setTimeout(() => { pw.focus(); pw.print(); URL.revokeObjectURL(url); }, 400); };
+      } catch(e) { toast('خطأ في الطباعة: ' + e.message, 'error'); }
     };
 
     window.exportPagePDF = async function(pageId) {
       const cfg = PAGE_PRINT_CONFIG[pageId];
-      if (!cfg) { toast('غير متاح', 'error'); return; }
-      if (isViewerMode) { toast('غير متاح في وضع المشاهدة', 'warning'); return; }
-      loading(true, 'جاري تصدير PDF...');
+      if (!cfg) { toast('القسم غير موجود', 'error'); return; }
+      if (typeof isViewerMode !== 'undefined' && isViewerMode) {
+        toast('غير متاح في وضع المشاهدة', 'warning'); return;
+      }
+      if (!window.html2canvas) { toast('مكتبة التصدير غير محملة بعد، انتظر قليلاً', 'warning'); return; }
+      if (!window.jspdf)       { toast('مكتبة PDF غير محملة بعد، انتظر قليلاً', 'warning'); return; }
+
+      loading(true, 'جاري إنشاء PDF...');
       try {
-        // نبني HTML مؤقت في iframe مخفي
-        const html = buildPrintHTML(pageId, true);
-        const iframe = document.createElement('iframe');
-        iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:794px;height:1123px;border:none;';
-        document.body.appendChild(iframe);
-        iframe.contentDocument.open();
-        iframe.contentDocument.write(html);
-        iframe.contentDocument.close();
-        await new Promise(r => setTimeout(r, 800));
-        const canvas = await html2canvas(iframe.contentDocument.body, {
+        const html   = buildPrintHTML(pageId, true);
+        const blob   = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const url    = URL.createObjectURL(blob);
+
+        // نستخدم div مرئي مؤقت خارج الشاشة بدلاً من iframe مخفي
+        const container = document.createElement('div');
+        container.style.cssText = [
+          'position:fixed','top:0','left:-9999px',
+          'width:794px','background:#fff','z-index:-1',
+          'padding:20px','font-family:Cairo,Arial,sans-serif',
+          'direction:rtl','color:#1a1a2e','font-size:12px'
+        ].join(';');
+        document.body.appendChild(container);
+
+        // نبني المحتوى مباشرة في container بدلاً من HTML كامل
+        const factoryName = state.settings?.factoryName || 'نظام إدارة مصنع الألبان';
+        const now = new Date().toLocaleString('ar-EG');
+        const summary = cfg.getSummary ? cfg.getSummary() : [];
+
+        container.innerHTML = `
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;padding-bottom:10px;border-bottom:3px solid #d4a843">
+            <span style="font-size:28px">${cfg.icon}</span>
+            <div>
+              <div style="font-size:12px;font-weight:700;color:#d4a843">${factoryName}</div>
+              <div style="font-size:18px;font-weight:900;color:#1a1a2e">${cfg.title}</div>
+            </div>
+          </div>
+          <div style="font-size:10px;color:#999;margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid #eee">
+            📅 ${now}
+          </div>
+          ${summary.length ? `<div style="display:grid;grid-template-columns:repeat(${Math.min(summary.length,4)},1fr);gap:8px;margin-bottom:16px">
+            ${summary.map(s=>`<div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;text-align:center;background:#fafafa">
+              <div style="font-size:16px;font-weight:900;color:${s.color};margin-bottom:3px">${s.value}</div>
+              <div style="font-size:10px;color:#777">${s.label}</div>
+            </div>`).join('')}
+          </div>` : ''}
+          ${cfg.tables.map(t => {
+            const tbody = document.getElementById(t.id);
+            if (!tbody) return '<p style="color:#aaa;text-align:center;padding:16px">لا توجد بيانات</p>';
+            const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state'));
+            if (!rows.length) return '<p style="color:#aaa;text-align:center;padding:16px">لا توجد بيانات حالياً</p>';
+            return `<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px">
+              <thead><tr>${t.headers.map(h=>`<th style="background:#1a1a2e;color:#d4a843;padding:7px 6px;text-align:right;font-size:10px">${h}</th>`).join('')}</tr></thead>
+              <tbody>${rows.map((r,ri)=>{
+                const cells=Array.from(r.querySelectorAll('td')).filter(td=>!td.querySelector('button')).map(td=>`<td style="border-bottom:1px solid #f0f0f0;padding:5px 6px;text-align:right;background:${ri%2?'#fafbff':'#fff'}">${td.innerText.trim()}</td>`);
+                return cells.length?`<tr>${cells.join('')}</tr>`:'';
+              }).filter(Boolean).join('')}</tbody>
+            </table>`;
+          }).join('')}
+          <div style="margin-top:16px;padding-top:8px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:10px;color:#aaa">
+            <span>${factoryName} — ${cfg.title}</span>
+            <span>${new Date().toLocaleDateString('ar-EG')}</span>
+          </div>`;
+
+        await new Promise(r => setTimeout(r, 300));
+
+        const canvas = await html2canvas(container, {
           scale: 2, backgroundColor: '#ffffff',
-          width: 794, windowWidth: 794
+          useCORS: true, allowTaint: true,
+          width: 794, scrollX: 0, scrollY: 0
         });
-        document.body.removeChild(iframe);
+        document.body.removeChild(container);
+        URL.revokeObjectURL(url);
+
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({ orientation:'p', unit:'mm', format:'a4' });
-        const imgW = 190, imgH = canvas.height * imgW / canvas.width;
-        let y = 10;
-        if (imgH <= 277) {
-          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, y, imgW, imgH);
+        const pdf  = new jsPDF({ orientation:'p', unit:'mm', format:'a4' });
+        const imgW = 190;
+        const imgH = canvas.height * imgW / canvas.width;
+        const pageH = 277;
+
+        if (imgH <= pageH) {
+          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgW, imgH);
         } else {
-          // تقسيم لصفحات
-          const pageH = 277;
+          const rowH  = pageH * canvas.width / imgW;
           let srcY = 0;
           while (srcY < canvas.height) {
-            const sliceH = Math.min(pageH * canvas.width / imgW, canvas.height - srcY);
-            const sliceCanvas = document.createElement('canvas');
-            sliceCanvas.width = canvas.width;
-            sliceCanvas.height = sliceH;
-            sliceCanvas.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
-            const sliceImg = sliceCanvas.toDataURL('image/png');
-            const sliceImgH = sliceH * imgW / canvas.width;
+            const sliceH = Math.min(rowH, canvas.height - srcY);
+            const sc = document.createElement('canvas');
+            sc.width = canvas.width; sc.height = sliceH;
+            sc.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
             if (srcY > 0) pdf.addPage();
-            pdf.addImage(sliceImg, 'PNG', 10, 10, imgW, sliceImgH);
+            pdf.addImage(sc.toDataURL('image/png'), 'PNG', 10, 10, imgW, sliceH * imgW / canvas.width);
             srcY += sliceH;
           }
         }
-        const factoryName = (state.settings?.factoryName || 'مصنع').replace(/\s+/g,'-');
-        pdf.save(`${factoryName}-${cfg.title}-${new Date().toLocaleDateString('ar-EG').replace(/\//g,'-')}.pdf`);
-        toast('تم تصدير PDF ✅', 'success');
-      } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+
+        const fname = (state.settings?.factoryName || 'مصنع').replace(/\s+/g,'_');
+        pdf.save(`${fname}_${cfg.title}_${new Date().toISOString().slice(0,10)}.pdf`);
+        toast('تم تصدير PDF بنجاح ✅', 'success');
+      } catch(e) { toast('خطأ: ' + e.message, 'error'); console.error(e); }
       finally { loading(false); }
     };
 
