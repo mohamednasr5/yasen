@@ -3858,12 +3858,12 @@ window.changeOwnPwd = function() {
 };
 
 // Check session on load
-if (isAuthenticated()) {
-  $('login-screen').style.display = 'none';
-  updateUIForRole();
-} else {
-  setTimeout(() => $('login-pin').focus(), 100);
-}
+// تم تعطيل شاشة تسجيل الدخول
+localStorage.setItem(SESSIONKEY, '1');
+localStorage.setItem(ROLEKEY, 'owner');
+currentUserRole = 'owner';
+$('login-screen').style.display = 'none';
+updateUIForRole();
 
 // ── requirePin: wraps any delete/edit action ────────────────────
 function updateUIForRole() {
@@ -4127,14 +4127,14 @@ function fuzzyMatch(query, text) {
           <h3>التفاصيل الكاملة</h3>
           <table>${theadHTML}${tbodyHTML}${tfootHTML}</table>
           <div class="footer"><span>${factoryName}</span><span>${new Date().toLocaleDateString('ar-EG')}</span></div>
-        
-<script>
-// ============ إجماليات الأعمدة - Column Totals ============
+        <script>
 (function() {
   function renderTotalsRow(tbody, colsConfig) {
     const old = tbody.querySelector('tr.totals-row');
     if (old) old.remove();
-    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state') && !r.classList.contains('totals-row'));
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r =>
+      !r.querySelector('.empty-state') && !r.classList.contains('totals-row')
+    );
     if (!rows.length) return;
     const maxCols = Math.max(...rows.map(r => r.querySelectorAll('td').length));
     const totals = {};
@@ -4143,14 +4143,14 @@ function fuzzyMatch(query, text) {
       colsConfig.forEach(cfg => {
         const cell = cells[cfg.index];
         if (!cell) return;
-        const raw = cell.innerText.replace(/,/g,'').trim();
+        const raw = cell.innerText.replace(/,/g,'').replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0)-1584)).trim();
         const val = parseFloat(raw) || 0;
         totals[cfg.index] = (totals[cfg.index] || 0) + val;
       });
     });
     const tr = document.createElement('tr');
     tr.className = 'totals-row';
-    tr.style.cssText = 'background:linear-gradient(135deg,#fffbea,#fff3c4);font-weight:900;border-top:2px solid #D4A843;position:sticky;bottom:0;';
+    tr.style.cssText = 'background:linear-gradient(135deg,#fffbea,#fff3c4);font-weight:900;border-top:2px solid #D4A843;';
     for (let i = 0; i < maxCols; i++) {
       const td = document.createElement('td');
       td.style.cssText = 'padding:8px 10px;text-align:center;font-size:12.5px;border-top:2px solid #D4A843;';
@@ -4158,10 +4158,10 @@ function fuzzyMatch(query, text) {
         td.innerHTML = '<span style="color:#8B6914;font-size:11px;">&#x1F4CA; إجمالي</span>';
         td.style.textAlign = 'right';
       } else if (totals[i] !== undefined) {
-        td.textContent = (isNaN(totals[i]) ? 0 : totals[i]).toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2});
+        const v = isNaN(totals[i]) ? 0 : totals[i];
+        td.textContent = v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
         td.style.color = '#16a34a';
         td.style.fontWeight = '900';
-        td.style.fontSize = '13px';
       } else {
         td.textContent = '';
       }
@@ -4169,55 +4169,37 @@ function fuzzyMatch(query, text) {
     }
     tbody.appendChild(tr);
   }
-
   function watchTable(tbodyId, colsConfig) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
     renderTotalsRow(tbody, colsConfig);
-    const obs = new MutationObserver(() => renderTotalsRow(tbody, colsConfig));
-    obs.observe(tbody, { childList: true, subtree: false });
+    new MutationObserver(() => renderTotalsRow(tbody, colsConfig)).observe(tbody, { childList: true });
   }
-
   function initTotals() {
-    // استلام الحليب: الكمية(4), الإجمالي(6)
-    watchTable('milk-tbody', [{index:4},{index:6}]);
-    // المصاريف: المبلغ(4)
-    watchTable('expenses-tbody', [{index:4}]);
-    // سلف العمال: المبلغ(3)
-    watchTable('worker-advances-tbody', [{index:3}]);
-    // سلف الموردين: المبلغ(3)
+    watchTable('milk-tbody',                  [{index:4},{index:6}]);
+    watchTable('expenses-tbody',              [{index:4}]);
+    watchTable('worker-advances-tbody',       [{index:3}]);
     watchTable('supplier-advances-new-tbody', [{index:3}]);
-    // المبيعات: الكمية(4), الإجمالي(6), المدفوع(7), المتبقي(8)
-    watchTable('sales-tbody', [{index:4},{index:6},{index:7},{index:8}]);
-    // حسابات الموردين: إجمالي الحليب(2), المدفوعات(3), السلف(4)
-    watchTable('accounts-tbody', [{index:2},{index:3},{index:4}]);
-    // حسابات المشترين: إجمالي المشتريات(2), المدفوع(3), المتبقي(4)
-    watchTable('buyer-accounts-tbody', [{index:2},{index:3},{index:4}]);
-    // خارج من المعمل: الوزن(3), العدد(4)
-    watchTable('fo-tbody', [{index:3},{index:4}]);
-    // المخزن الأول: الكمية(3), القيمة الإجمالية(5)
-    watchTable('wh1-tbody', [{index:3},{index:5}]);
-    // المخزن الثاني: الكمية(3), القيمة الإجمالية(5)
-    watchTable('wh2-tbody', [{index:3},{index:5}]);
-    // الصادرات: الوزن(4), العدد(5)
-    watchTable('exports-tbody', [{index:4},{index:5}]);
+    watchTable('sales-tbody',                 [{index:4},{index:6},{index:7},{index:8}]);
+    watchTable('accounts-tbody',              [{index:2},{index:3},{index:4}]);
+    watchTable('buyer-accounts-tbody',        [{index:2},{index:3},{index:4}]);
+    watchTable('fo-tbody',                    [{index:3},{index:4}]);
+    watchTable('wh1-tbody',                   [{index:3},{index:5}]);
+    watchTable('wh2-tbody',                   [{index:3},{index:5}]);
+    watchTable('exports-tbody',               [{index:4},{index:5}]);
   }
-
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(initTotals, 1000));
+    document.addEventListener('DOMContentLoaded', () => setTimeout(initTotals, 1200));
   } else {
-    setTimeout(initTotals, 1000);
+    setTimeout(initTotals, 1200);
   }
-
-  // Re-init on page navigation (SPA support)
-  const _origShowPage = window.showPage;
-  window.showPage = function(page) {
-    if (_origShowPage) _origShowPage.apply(this, arguments);
+  const _origNav = window.navigate;
+  window.navigate = function(page) {
+    if (_origNav) _origNav.apply(this, arguments);
     setTimeout(initTotals, 800);
   };
 })();
 </script>
-
 </body></html>`;
       }
 
@@ -4245,14 +4227,14 @@ function fuzzyMatch(query, text) {
             </tbody>
           </table>
           <div class="footer"><span>${factoryName}</span><span>${new Date().toLocaleDateString('ar-EG')}</span></div>
-        
-<script>
-// ============ إجماليات الأعمدة - Column Totals ============
+        <script>
 (function() {
   function renderTotalsRow(tbody, colsConfig) {
     const old = tbody.querySelector('tr.totals-row');
     if (old) old.remove();
-    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state') && !r.classList.contains('totals-row'));
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r =>
+      !r.querySelector('.empty-state') && !r.classList.contains('totals-row')
+    );
     if (!rows.length) return;
     const maxCols = Math.max(...rows.map(r => r.querySelectorAll('td').length));
     const totals = {};
@@ -4261,14 +4243,14 @@ function fuzzyMatch(query, text) {
       colsConfig.forEach(cfg => {
         const cell = cells[cfg.index];
         if (!cell) return;
-        const raw = cell.innerText.replace(/,/g,'').trim();
+        const raw = cell.innerText.replace(/,/g,'').replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0)-1584)).trim();
         const val = parseFloat(raw) || 0;
         totals[cfg.index] = (totals[cfg.index] || 0) + val;
       });
     });
     const tr = document.createElement('tr');
     tr.className = 'totals-row';
-    tr.style.cssText = 'background:linear-gradient(135deg,#fffbea,#fff3c4);font-weight:900;border-top:2px solid #D4A843;position:sticky;bottom:0;';
+    tr.style.cssText = 'background:linear-gradient(135deg,#fffbea,#fff3c4);font-weight:900;border-top:2px solid #D4A843;';
     for (let i = 0; i < maxCols; i++) {
       const td = document.createElement('td');
       td.style.cssText = 'padding:8px 10px;text-align:center;font-size:12.5px;border-top:2px solid #D4A843;';
@@ -4276,10 +4258,10 @@ function fuzzyMatch(query, text) {
         td.innerHTML = '<span style="color:#8B6914;font-size:11px;">&#x1F4CA; إجمالي</span>';
         td.style.textAlign = 'right';
       } else if (totals[i] !== undefined) {
-        td.textContent = (isNaN(totals[i]) ? 0 : totals[i]).toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2});
+        const v = isNaN(totals[i]) ? 0 : totals[i];
+        td.textContent = v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
         td.style.color = '#16a34a';
         td.style.fontWeight = '900';
-        td.style.fontSize = '13px';
       } else {
         td.textContent = '';
       }
@@ -4287,55 +4269,37 @@ function fuzzyMatch(query, text) {
     }
     tbody.appendChild(tr);
   }
-
   function watchTable(tbodyId, colsConfig) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
     renderTotalsRow(tbody, colsConfig);
-    const obs = new MutationObserver(() => renderTotalsRow(tbody, colsConfig));
-    obs.observe(tbody, { childList: true, subtree: false });
+    new MutationObserver(() => renderTotalsRow(tbody, colsConfig)).observe(tbody, { childList: true });
   }
-
   function initTotals() {
-    // استلام الحليب: الكمية(4), الإجمالي(6)
-    watchTable('milk-tbody', [{index:4},{index:6}]);
-    // المصاريف: المبلغ(4)
-    watchTable('expenses-tbody', [{index:4}]);
-    // سلف العمال: المبلغ(3)
-    watchTable('worker-advances-tbody', [{index:3}]);
-    // سلف الموردين: المبلغ(3)
+    watchTable('milk-tbody',                  [{index:4},{index:6}]);
+    watchTable('expenses-tbody',              [{index:4}]);
+    watchTable('worker-advances-tbody',       [{index:3}]);
     watchTable('supplier-advances-new-tbody', [{index:3}]);
-    // المبيعات: الكمية(4), الإجمالي(6), المدفوع(7), المتبقي(8)
-    watchTable('sales-tbody', [{index:4},{index:6},{index:7},{index:8}]);
-    // حسابات الموردين: إجمالي الحليب(2), المدفوعات(3), السلف(4)
-    watchTable('accounts-tbody', [{index:2},{index:3},{index:4}]);
-    // حسابات المشترين: إجمالي المشتريات(2), المدفوع(3), المتبقي(4)
-    watchTable('buyer-accounts-tbody', [{index:2},{index:3},{index:4}]);
-    // خارج من المعمل: الوزن(3), العدد(4)
-    watchTable('fo-tbody', [{index:3},{index:4}]);
-    // المخزن الأول: الكمية(3), القيمة الإجمالية(5)
-    watchTable('wh1-tbody', [{index:3},{index:5}]);
-    // المخزن الثاني: الكمية(3), القيمة الإجمالية(5)
-    watchTable('wh2-tbody', [{index:3},{index:5}]);
-    // الصادرات: الوزن(4), العدد(5)
-    watchTable('exports-tbody', [{index:4},{index:5}]);
+    watchTable('sales-tbody',                 [{index:4},{index:6},{index:7},{index:8}]);
+    watchTable('accounts-tbody',              [{index:2},{index:3},{index:4}]);
+    watchTable('buyer-accounts-tbody',        [{index:2},{index:3},{index:4}]);
+    watchTable('fo-tbody',                    [{index:3},{index:4}]);
+    watchTable('wh1-tbody',                   [{index:3},{index:5}]);
+    watchTable('wh2-tbody',                   [{index:3},{index:5}]);
+    watchTable('exports-tbody',               [{index:4},{index:5}]);
   }
-
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(initTotals, 1000));
+    document.addEventListener('DOMContentLoaded', () => setTimeout(initTotals, 1200));
   } else {
-    setTimeout(initTotals, 1000);
+    setTimeout(initTotals, 1200);
   }
-
-  // Re-init on page navigation (SPA support)
-  const _origShowPage = window.showPage;
-  window.showPage = function(page) {
-    if (_origShowPage) _origShowPage.apply(this, arguments);
+  const _origNav = window.navigate;
+  window.navigate = function(page) {
+    if (_origNav) _origNav.apply(this, arguments);
     setTimeout(initTotals, 800);
   };
 })();
 </script>
-
 </body></html>`;
       }
 
@@ -4659,14 +4623,14 @@ function generateThermalReceiptHTML(type, data) {
       <div class="receipt-container">
         ${content}
       </div>
-    
-<script>
-// ============ إجماليات الأعمدة - Column Totals ============
+    <script>
 (function() {
   function renderTotalsRow(tbody, colsConfig) {
     const old = tbody.querySelector('tr.totals-row');
     if (old) old.remove();
-    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state') && !r.classList.contains('totals-row'));
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r =>
+      !r.querySelector('.empty-state') && !r.classList.contains('totals-row')
+    );
     if (!rows.length) return;
     const maxCols = Math.max(...rows.map(r => r.querySelectorAll('td').length));
     const totals = {};
@@ -4675,14 +4639,14 @@ function generateThermalReceiptHTML(type, data) {
       colsConfig.forEach(cfg => {
         const cell = cells[cfg.index];
         if (!cell) return;
-        const raw = cell.innerText.replace(/,/g,'').trim();
+        const raw = cell.innerText.replace(/,/g,'').replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0)-1584)).trim();
         const val = parseFloat(raw) || 0;
         totals[cfg.index] = (totals[cfg.index] || 0) + val;
       });
     });
     const tr = document.createElement('tr');
     tr.className = 'totals-row';
-    tr.style.cssText = 'background:linear-gradient(135deg,#fffbea,#fff3c4);font-weight:900;border-top:2px solid #D4A843;position:sticky;bottom:0;';
+    tr.style.cssText = 'background:linear-gradient(135deg,#fffbea,#fff3c4);font-weight:900;border-top:2px solid #D4A843;';
     for (let i = 0; i < maxCols; i++) {
       const td = document.createElement('td');
       td.style.cssText = 'padding:8px 10px;text-align:center;font-size:12.5px;border-top:2px solid #D4A843;';
@@ -4690,10 +4654,10 @@ function generateThermalReceiptHTML(type, data) {
         td.innerHTML = '<span style="color:#8B6914;font-size:11px;">&#x1F4CA; إجمالي</span>';
         td.style.textAlign = 'right';
       } else if (totals[i] !== undefined) {
-        td.textContent = (isNaN(totals[i]) ? 0 : totals[i]).toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2});
+        const v = isNaN(totals[i]) ? 0 : totals[i];
+        td.textContent = v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
         td.style.color = '#16a34a';
         td.style.fontWeight = '900';
-        td.style.fontSize = '13px';
       } else {
         td.textContent = '';
       }
@@ -4701,55 +4665,37 @@ function generateThermalReceiptHTML(type, data) {
     }
     tbody.appendChild(tr);
   }
-
   function watchTable(tbodyId, colsConfig) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
     renderTotalsRow(tbody, colsConfig);
-    const obs = new MutationObserver(() => renderTotalsRow(tbody, colsConfig));
-    obs.observe(tbody, { childList: true, subtree: false });
+    new MutationObserver(() => renderTotalsRow(tbody, colsConfig)).observe(tbody, { childList: true });
   }
-
   function initTotals() {
-    // استلام الحليب: الكمية(4), الإجمالي(6)
-    watchTable('milk-tbody', [{index:4},{index:6}]);
-    // المصاريف: المبلغ(4)
-    watchTable('expenses-tbody', [{index:4}]);
-    // سلف العمال: المبلغ(3)
-    watchTable('worker-advances-tbody', [{index:3}]);
-    // سلف الموردين: المبلغ(3)
+    watchTable('milk-tbody',                  [{index:4},{index:6}]);
+    watchTable('expenses-tbody',              [{index:4}]);
+    watchTable('worker-advances-tbody',       [{index:3}]);
     watchTable('supplier-advances-new-tbody', [{index:3}]);
-    // المبيعات: الكمية(4), الإجمالي(6), المدفوع(7), المتبقي(8)
-    watchTable('sales-tbody', [{index:4},{index:6},{index:7},{index:8}]);
-    // حسابات الموردين: إجمالي الحليب(2), المدفوعات(3), السلف(4)
-    watchTable('accounts-tbody', [{index:2},{index:3},{index:4}]);
-    // حسابات المشترين: إجمالي المشتريات(2), المدفوع(3), المتبقي(4)
-    watchTable('buyer-accounts-tbody', [{index:2},{index:3},{index:4}]);
-    // خارج من المعمل: الوزن(3), العدد(4)
-    watchTable('fo-tbody', [{index:3},{index:4}]);
-    // المخزن الأول: الكمية(3), القيمة الإجمالية(5)
-    watchTable('wh1-tbody', [{index:3},{index:5}]);
-    // المخزن الثاني: الكمية(3), القيمة الإجمالية(5)
-    watchTable('wh2-tbody', [{index:3},{index:5}]);
-    // الصادرات: الوزن(4), العدد(5)
-    watchTable('exports-tbody', [{index:4},{index:5}]);
+    watchTable('sales-tbody',                 [{index:4},{index:6},{index:7},{index:8}]);
+    watchTable('accounts-tbody',              [{index:2},{index:3},{index:4}]);
+    watchTable('buyer-accounts-tbody',        [{index:2},{index:3},{index:4}]);
+    watchTable('fo-tbody',                    [{index:3},{index:4}]);
+    watchTable('wh1-tbody',                   [{index:3},{index:5}]);
+    watchTable('wh2-tbody',                   [{index:3},{index:5}]);
+    watchTable('exports-tbody',               [{index:4},{index:5}]);
   }
-
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(initTotals, 1000));
+    document.addEventListener('DOMContentLoaded', () => setTimeout(initTotals, 1200));
   } else {
-    setTimeout(initTotals, 1000);
+    setTimeout(initTotals, 1200);
   }
-
-  // Re-init on page navigation (SPA support)
-  const _origShowPage = window.showPage;
-  window.showPage = function(page) {
-    if (_origShowPage) _origShowPage.apply(this, arguments);
+  const _origNav = window.navigate;
+  window.navigate = function(page) {
+    if (_origNav) _origNav.apply(this, arguments);
     setTimeout(initTotals, 800);
   };
 })();
 </script>
-
 </body>
     </html>`;
 }
@@ -5366,14 +5312,14 @@ window.printSupplierStatement = function() {
         <div class="info-row"><span>الفترة:</span><span>${(df.from||'الكل')+' ← '+(df.to||'الكل')}</span></div>
         <div class="info-row"><span>تاريخ الطباعة:</span><span>${nowStr}</span></div>
       </div>
-      <h3>سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي الحليب:</span><span>${fmt(milkSum,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${balance>0?'green':'red'}">${fmt(balance,2)} ج</span></div></div><div class="footer">تم بحمد الله</div>
-<script>
-// ============ إجماليات الأعمدة - Column Totals ============
+      <h3>سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي الحليب:</span><span>${fmt(milkSum,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${balance>0?'green':'red'}">${fmt(balance,2)} ج</span></div></div><div class="footer">تم بحمد الله</div><script>
 (function() {
   function renderTotalsRow(tbody, colsConfig) {
     const old = tbody.querySelector('tr.totals-row');
     if (old) old.remove();
-    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state') && !r.classList.contains('totals-row'));
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r =>
+      !r.querySelector('.empty-state') && !r.classList.contains('totals-row')
+    );
     if (!rows.length) return;
     const maxCols = Math.max(...rows.map(r => r.querySelectorAll('td').length));
     const totals = {};
@@ -5382,14 +5328,14 @@ window.printSupplierStatement = function() {
       colsConfig.forEach(cfg => {
         const cell = cells[cfg.index];
         if (!cell) return;
-        const raw = cell.innerText.replace(/,/g,'').trim();
+        const raw = cell.innerText.replace(/,/g,'').replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0)-1584)).trim();
         const val = parseFloat(raw) || 0;
         totals[cfg.index] = (totals[cfg.index] || 0) + val;
       });
     });
     const tr = document.createElement('tr');
     tr.className = 'totals-row';
-    tr.style.cssText = 'background:linear-gradient(135deg,#fffbea,#fff3c4);font-weight:900;border-top:2px solid #D4A843;position:sticky;bottom:0;';
+    tr.style.cssText = 'background:linear-gradient(135deg,#fffbea,#fff3c4);font-weight:900;border-top:2px solid #D4A843;';
     for (let i = 0; i < maxCols; i++) {
       const td = document.createElement('td');
       td.style.cssText = 'padding:8px 10px;text-align:center;font-size:12.5px;border-top:2px solid #D4A843;';
@@ -5397,10 +5343,10 @@ window.printSupplierStatement = function() {
         td.innerHTML = '<span style="color:#8B6914;font-size:11px;">&#x1F4CA; إجمالي</span>';
         td.style.textAlign = 'right';
       } else if (totals[i] !== undefined) {
-        td.textContent = (isNaN(totals[i]) ? 0 : totals[i]).toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2});
+        const v = isNaN(totals[i]) ? 0 : totals[i];
+        td.textContent = v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
         td.style.color = '#16a34a';
         td.style.fontWeight = '900';
-        td.style.fontSize = '13px';
       } else {
         td.textContent = '';
       }
@@ -5408,55 +5354,37 @@ window.printSupplierStatement = function() {
     }
     tbody.appendChild(tr);
   }
-
   function watchTable(tbodyId, colsConfig) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
     renderTotalsRow(tbody, colsConfig);
-    const obs = new MutationObserver(() => renderTotalsRow(tbody, colsConfig));
-    obs.observe(tbody, { childList: true, subtree: false });
+    new MutationObserver(() => renderTotalsRow(tbody, colsConfig)).observe(tbody, { childList: true });
   }
-
   function initTotals() {
-    // استلام الحليب: الكمية(4), الإجمالي(6)
-    watchTable('milk-tbody', [{index:4},{index:6}]);
-    // المصاريف: المبلغ(4)
-    watchTable('expenses-tbody', [{index:4}]);
-    // سلف العمال: المبلغ(3)
-    watchTable('worker-advances-tbody', [{index:3}]);
-    // سلف الموردين: المبلغ(3)
+    watchTable('milk-tbody',                  [{index:4},{index:6}]);
+    watchTable('expenses-tbody',              [{index:4}]);
+    watchTable('worker-advances-tbody',       [{index:3}]);
     watchTable('supplier-advances-new-tbody', [{index:3}]);
-    // المبيعات: الكمية(4), الإجمالي(6), المدفوع(7), المتبقي(8)
-    watchTable('sales-tbody', [{index:4},{index:6},{index:7},{index:8}]);
-    // حسابات الموردين: إجمالي الحليب(2), المدفوعات(3), السلف(4)
-    watchTable('accounts-tbody', [{index:2},{index:3},{index:4}]);
-    // حسابات المشترين: إجمالي المشتريات(2), المدفوع(3), المتبقي(4)
-    watchTable('buyer-accounts-tbody', [{index:2},{index:3},{index:4}]);
-    // خارج من المعمل: الوزن(3), العدد(4)
-    watchTable('fo-tbody', [{index:3},{index:4}]);
-    // المخزن الأول: الكمية(3), القيمة الإجمالية(5)
-    watchTable('wh1-tbody', [{index:3},{index:5}]);
-    // المخزن الثاني: الكمية(3), القيمة الإجمالية(5)
-    watchTable('wh2-tbody', [{index:3},{index:5}]);
-    // الصادرات: الوزن(4), العدد(5)
-    watchTable('exports-tbody', [{index:4},{index:5}]);
+    watchTable('sales-tbody',                 [{index:4},{index:6},{index:7},{index:8}]);
+    watchTable('accounts-tbody',              [{index:2},{index:3},{index:4}]);
+    watchTable('buyer-accounts-tbody',        [{index:2},{index:3},{index:4}]);
+    watchTable('fo-tbody',                    [{index:3},{index:4}]);
+    watchTable('wh1-tbody',                   [{index:3},{index:5}]);
+    watchTable('wh2-tbody',                   [{index:3},{index:5}]);
+    watchTable('exports-tbody',               [{index:4},{index:5}]);
   }
-
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(initTotals, 1000));
+    document.addEventListener('DOMContentLoaded', () => setTimeout(initTotals, 1200));
   } else {
-    setTimeout(initTotals, 1000);
+    setTimeout(initTotals, 1200);
   }
-
-  // Re-init on page navigation (SPA support)
-  const _origShowPage = window.showPage;
-  window.showPage = function(page) {
-    if (_origShowPage) _origShowPage.apply(this, arguments);
+  const _origNav = window.navigate;
+  window.navigate = function(page) {
+    if (_origNav) _origNav.apply(this, arguments);
     setTimeout(initTotals, 800);
   };
 })();
 </script>
-
 </body></html>`);
   pw.document.close(); setTimeout(()=>pw.print(), 600);
 };
@@ -5488,14 +5416,14 @@ window.printWorkerStatement = function() {
         <div class="info-row"><span>اليومية:</span><span>${fmt(dailyRate,2)} ج</span></div>
         <div class="info-row"><span>الفترة:</span><span>${(df.from||'الكل')+' ← '+(df.to||'الكل')}</span></div>
         <div class="info-row"><span>تاريخ الطباعة:</span><span>${nowStr}</span></div>
-      </div><h3 style="color:#D4A843">سجل الحضور (${totalDays} يوم)</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${att.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>المستحق (${totalDays} يوم):</span><span>${fmt(totalEarned,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div>
-<script>
-// ============ إجماليات الأعمدة - Column Totals ============
+      </div><h3 style="color:#D4A843">سجل الحضور (${totalDays} يوم)</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${att.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>المستحق (${totalDays} يوم):</span><span>${fmt(totalEarned,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div><script>
 (function() {
   function renderTotalsRow(tbody, colsConfig) {
     const old = tbody.querySelector('tr.totals-row');
     if (old) old.remove();
-    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state') && !r.classList.contains('totals-row'));
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r =>
+      !r.querySelector('.empty-state') && !r.classList.contains('totals-row')
+    );
     if (!rows.length) return;
     const maxCols = Math.max(...rows.map(r => r.querySelectorAll('td').length));
     const totals = {};
@@ -5504,14 +5432,14 @@ window.printWorkerStatement = function() {
       colsConfig.forEach(cfg => {
         const cell = cells[cfg.index];
         if (!cell) return;
-        const raw = cell.innerText.replace(/,/g,'').trim();
+        const raw = cell.innerText.replace(/,/g,'').replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0)-1584)).trim();
         const val = parseFloat(raw) || 0;
         totals[cfg.index] = (totals[cfg.index] || 0) + val;
       });
     });
     const tr = document.createElement('tr');
     tr.className = 'totals-row';
-    tr.style.cssText = 'background:linear-gradient(135deg,#fffbea,#fff3c4);font-weight:900;border-top:2px solid #D4A843;position:sticky;bottom:0;';
+    tr.style.cssText = 'background:linear-gradient(135deg,#fffbea,#fff3c4);font-weight:900;border-top:2px solid #D4A843;';
     for (let i = 0; i < maxCols; i++) {
       const td = document.createElement('td');
       td.style.cssText = 'padding:8px 10px;text-align:center;font-size:12.5px;border-top:2px solid #D4A843;';
@@ -5519,10 +5447,10 @@ window.printWorkerStatement = function() {
         td.innerHTML = '<span style="color:#8B6914;font-size:11px;">&#x1F4CA; إجمالي</span>';
         td.style.textAlign = 'right';
       } else if (totals[i] !== undefined) {
-        td.textContent = (isNaN(totals[i]) ? 0 : totals[i]).toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2});
+        const v = isNaN(totals[i]) ? 0 : totals[i];
+        td.textContent = v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
         td.style.color = '#16a34a';
         td.style.fontWeight = '900';
-        td.style.fontSize = '13px';
       } else {
         td.textContent = '';
       }
@@ -5530,55 +5458,37 @@ window.printWorkerStatement = function() {
     }
     tbody.appendChild(tr);
   }
-
   function watchTable(tbodyId, colsConfig) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
     renderTotalsRow(tbody, colsConfig);
-    const obs = new MutationObserver(() => renderTotalsRow(tbody, colsConfig));
-    obs.observe(tbody, { childList: true, subtree: false });
+    new MutationObserver(() => renderTotalsRow(tbody, colsConfig)).observe(tbody, { childList: true });
   }
-
   function initTotals() {
-    // استلام الحليب: الكمية(4), الإجمالي(6)
-    watchTable('milk-tbody', [{index:4},{index:6}]);
-    // المصاريف: المبلغ(4)
-    watchTable('expenses-tbody', [{index:4}]);
-    // سلف العمال: المبلغ(3)
-    watchTable('worker-advances-tbody', [{index:3}]);
-    // سلف الموردين: المبلغ(3)
+    watchTable('milk-tbody',                  [{index:4},{index:6}]);
+    watchTable('expenses-tbody',              [{index:4}]);
+    watchTable('worker-advances-tbody',       [{index:3}]);
     watchTable('supplier-advances-new-tbody', [{index:3}]);
-    // المبيعات: الكمية(4), الإجمالي(6), المدفوع(7), المتبقي(8)
-    watchTable('sales-tbody', [{index:4},{index:6},{index:7},{index:8}]);
-    // حسابات الموردين: إجمالي الحليب(2), المدفوعات(3), السلف(4)
-    watchTable('accounts-tbody', [{index:2},{index:3},{index:4}]);
-    // حسابات المشترين: إجمالي المشتريات(2), المدفوع(3), المتبقي(4)
-    watchTable('buyer-accounts-tbody', [{index:2},{index:3},{index:4}]);
-    // خارج من المعمل: الوزن(3), العدد(4)
-    watchTable('fo-tbody', [{index:3},{index:4}]);
-    // المخزن الأول: الكمية(3), القيمة الإجمالية(5)
-    watchTable('wh1-tbody', [{index:3},{index:5}]);
-    // المخزن الثاني: الكمية(3), القيمة الإجمالية(5)
-    watchTable('wh2-tbody', [{index:3},{index:5}]);
-    // الصادرات: الوزن(4), العدد(5)
-    watchTable('exports-tbody', [{index:4},{index:5}]);
+    watchTable('sales-tbody',                 [{index:4},{index:6},{index:7},{index:8}]);
+    watchTable('accounts-tbody',              [{index:2},{index:3},{index:4}]);
+    watchTable('buyer-accounts-tbody',        [{index:2},{index:3},{index:4}]);
+    watchTable('fo-tbody',                    [{index:3},{index:4}]);
+    watchTable('wh1-tbody',                   [{index:3},{index:5}]);
+    watchTable('wh2-tbody',                   [{index:3},{index:5}]);
+    watchTable('exports-tbody',               [{index:4},{index:5}]);
   }
-
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(initTotals, 1000));
+    document.addEventListener('DOMContentLoaded', () => setTimeout(initTotals, 1200));
   } else {
-    setTimeout(initTotals, 1000);
+    setTimeout(initTotals, 1200);
   }
-
-  // Re-init on page navigation (SPA support)
-  const _origShowPage = window.showPage;
-  window.showPage = function(page) {
-    if (_origShowPage) _origShowPage.apply(this, arguments);
+  const _origNav = window.navigate;
+  window.navigate = function(page) {
+    if (_origNav) _origNav.apply(this, arguments);
     setTimeout(initTotals, 800);
   };
 })();
 </script>
-
 </body></html>`);
   pw.document.close(); setTimeout(()=>pw.print(), 600);
 };
@@ -5608,14 +5518,14 @@ window.printBuyerStatement = function() {
         <div class="info-row"><span>الهاتف:</span><span>${b.phone||'—'}</span></div>
         <div class="info-row"><span>الفترة:</span><span>${(df.from||'الكل')+' ← '+(df.to||'الكل')}</span></div>
         <div class="info-row"><span>تاريخ الطباعة:</span><span>${nowStr}</span></div>
-      </div><h3 style="color:#D4A843">المبيعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${sales.map(([,s],i)=>{const pd=Number(s.paidNow??s.total??0);return`<tr><td>${i+1}</td><td>${s.date}</td><td>${sanitize(s.product)}</td><td>${fmt(s.qty,2)}</td><td>${fmt(s.total,2)}</td><td>${fmt(pd,2)}</td><td>${fmt(Number(s.total||0)-pd,2)}</td></tr>`;}).join('')||'<tr><td colspan="7">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي المبيعات:</span><span>${fmt(salesTotal,2)} ج</span></div><div class="total-row"><span>المدفوع:</span><span>${fmt(salesPaid+paySum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div>
-<script>
-// ============ إجماليات الأعمدة - Column Totals ============
+      </div><h3 style="color:#D4A843">المبيعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${sales.map(([,s],i)=>{const pd=Number(s.paidNow??s.total??0);return`<tr><td>${i+1}</td><td>${s.date}</td><td>${sanitize(s.product)}</td><td>${fmt(s.qty,2)}</td><td>${fmt(s.total,2)}</td><td>${fmt(pd,2)}</td><td>${fmt(Number(s.total||0)-pd,2)}</td></tr>`;}).join('')||'<tr><td colspan="7">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي المبيعات:</span><span>${fmt(salesTotal,2)} ج</span></div><div class="total-row"><span>المدفوع:</span><span>${fmt(salesPaid+paySum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div><script>
 (function() {
   function renderTotalsRow(tbody, colsConfig) {
     const old = tbody.querySelector('tr.totals-row');
     if (old) old.remove();
-    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state') && !r.classList.contains('totals-row'));
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r =>
+      !r.querySelector('.empty-state') && !r.classList.contains('totals-row')
+    );
     if (!rows.length) return;
     const maxCols = Math.max(...rows.map(r => r.querySelectorAll('td').length));
     const totals = {};
@@ -5624,14 +5534,14 @@ window.printBuyerStatement = function() {
       colsConfig.forEach(cfg => {
         const cell = cells[cfg.index];
         if (!cell) return;
-        const raw = cell.innerText.replace(/,/g,'').trim();
+        const raw = cell.innerText.replace(/,/g,'').replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0)-1584)).trim();
         const val = parseFloat(raw) || 0;
         totals[cfg.index] = (totals[cfg.index] || 0) + val;
       });
     });
     const tr = document.createElement('tr');
     tr.className = 'totals-row';
-    tr.style.cssText = 'background:linear-gradient(135deg,#fffbea,#fff3c4);font-weight:900;border-top:2px solid #D4A843;position:sticky;bottom:0;';
+    tr.style.cssText = 'background:linear-gradient(135deg,#fffbea,#fff3c4);font-weight:900;border-top:2px solid #D4A843;';
     for (let i = 0; i < maxCols; i++) {
       const td = document.createElement('td');
       td.style.cssText = 'padding:8px 10px;text-align:center;font-size:12.5px;border-top:2px solid #D4A843;';
@@ -5639,10 +5549,10 @@ window.printBuyerStatement = function() {
         td.innerHTML = '<span style="color:#8B6914;font-size:11px;">&#x1F4CA; إجمالي</span>';
         td.style.textAlign = 'right';
       } else if (totals[i] !== undefined) {
-        td.textContent = (isNaN(totals[i]) ? 0 : totals[i]).toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2});
+        const v = isNaN(totals[i]) ? 0 : totals[i];
+        td.textContent = v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
         td.style.color = '#16a34a';
         td.style.fontWeight = '900';
-        td.style.fontSize = '13px';
       } else {
         td.textContent = '';
       }
@@ -5650,55 +5560,37 @@ window.printBuyerStatement = function() {
     }
     tbody.appendChild(tr);
   }
-
   function watchTable(tbodyId, colsConfig) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
     renderTotalsRow(tbody, colsConfig);
-    const obs = new MutationObserver(() => renderTotalsRow(tbody, colsConfig));
-    obs.observe(tbody, { childList: true, subtree: false });
+    new MutationObserver(() => renderTotalsRow(tbody, colsConfig)).observe(tbody, { childList: true });
   }
-
   function initTotals() {
-    // استلام الحليب: الكمية(4), الإجمالي(6)
-    watchTable('milk-tbody', [{index:4},{index:6}]);
-    // المصاريف: المبلغ(4)
-    watchTable('expenses-tbody', [{index:4}]);
-    // سلف العمال: المبلغ(3)
-    watchTable('worker-advances-tbody', [{index:3}]);
-    // سلف الموردين: المبلغ(3)
+    watchTable('milk-tbody',                  [{index:4},{index:6}]);
+    watchTable('expenses-tbody',              [{index:4}]);
+    watchTable('worker-advances-tbody',       [{index:3}]);
     watchTable('supplier-advances-new-tbody', [{index:3}]);
-    // المبيعات: الكمية(4), الإجمالي(6), المدفوع(7), المتبقي(8)
-    watchTable('sales-tbody', [{index:4},{index:6},{index:7},{index:8}]);
-    // حسابات الموردين: إجمالي الحليب(2), المدفوعات(3), السلف(4)
-    watchTable('accounts-tbody', [{index:2},{index:3},{index:4}]);
-    // حسابات المشترين: إجمالي المشتريات(2), المدفوع(3), المتبقي(4)
-    watchTable('buyer-accounts-tbody', [{index:2},{index:3},{index:4}]);
-    // خارج من المعمل: الوزن(3), العدد(4)
-    watchTable('fo-tbody', [{index:3},{index:4}]);
-    // المخزن الأول: الكمية(3), القيمة الإجمالية(5)
-    watchTable('wh1-tbody', [{index:3},{index:5}]);
-    // المخزن الثاني: الكمية(3), القيمة الإجمالية(5)
-    watchTable('wh2-tbody', [{index:3},{index:5}]);
-    // الصادرات: الوزن(4), العدد(5)
-    watchTable('exports-tbody', [{index:4},{index:5}]);
+    watchTable('sales-tbody',                 [{index:4},{index:6},{index:7},{index:8}]);
+    watchTable('accounts-tbody',              [{index:2},{index:3},{index:4}]);
+    watchTable('buyer-accounts-tbody',        [{index:2},{index:3},{index:4}]);
+    watchTable('fo-tbody',                    [{index:3},{index:4}]);
+    watchTable('wh1-tbody',                   [{index:3},{index:5}]);
+    watchTable('wh2-tbody',                   [{index:3},{index:5}]);
+    watchTable('exports-tbody',               [{index:4},{index:5}]);
   }
-
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(initTotals, 1000));
+    document.addEventListener('DOMContentLoaded', () => setTimeout(initTotals, 1200));
   } else {
-    setTimeout(initTotals, 1000);
+    setTimeout(initTotals, 1200);
   }
-
-  // Re-init on page navigation (SPA support)
-  const _origShowPage = window.showPage;
-  window.showPage = function(page) {
-    if (_origShowPage) _origShowPage.apply(this, arguments);
+  const _origNav = window.navigate;
+  window.navigate = function(page) {
+    if (_origNav) _origNav.apply(this, arguments);
     setTimeout(initTotals, 800);
   };
 })();
 </script>
-
 </body></html>`);
   pw.document.close(); setTimeout(()=>pw.print(), 600);
 };
@@ -6530,14 +6422,14 @@ if ('serviceWorker' in navigator) {
           <tr><td><strong>الإجمالي</strong></td><td><strong>${fmt(d.expTotal,2)}</strong></td><td>100%</td></tr>
         </tbody></table>` : '<p>لا توجد بيانات</p>'}
         <div class="footer">نظام إدارة مصنع الألبان | ${new Date().toLocaleDateString('ar-EG')}</div>
-      
-<script>
-// ============ إجماليات الأعمدة - Column Totals ============
+      <script>
 (function() {
   function renderTotalsRow(tbody, colsConfig) {
     const old = tbody.querySelector('tr.totals-row');
     if (old) old.remove();
-    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state') && !r.classList.contains('totals-row'));
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r =>
+      !r.querySelector('.empty-state') && !r.classList.contains('totals-row')
+    );
     if (!rows.length) return;
     const maxCols = Math.max(...rows.map(r => r.querySelectorAll('td').length));
     const totals = {};
@@ -6546,14 +6438,14 @@ if ('serviceWorker' in navigator) {
       colsConfig.forEach(cfg => {
         const cell = cells[cfg.index];
         if (!cell) return;
-        const raw = cell.innerText.replace(/,/g,'').trim();
+        const raw = cell.innerText.replace(/,/g,'').replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0)-1584)).trim();
         const val = parseFloat(raw) || 0;
         totals[cfg.index] = (totals[cfg.index] || 0) + val;
       });
     });
     const tr = document.createElement('tr');
     tr.className = 'totals-row';
-    tr.style.cssText = 'background:linear-gradient(135deg,#fffbea,#fff3c4);font-weight:900;border-top:2px solid #D4A843;position:sticky;bottom:0;';
+    tr.style.cssText = 'background:linear-gradient(135deg,#fffbea,#fff3c4);font-weight:900;border-top:2px solid #D4A843;';
     for (let i = 0; i < maxCols; i++) {
       const td = document.createElement('td');
       td.style.cssText = 'padding:8px 10px;text-align:center;font-size:12.5px;border-top:2px solid #D4A843;';
@@ -6561,10 +6453,10 @@ if ('serviceWorker' in navigator) {
         td.innerHTML = '<span style="color:#8B6914;font-size:11px;">&#x1F4CA; إجمالي</span>';
         td.style.textAlign = 'right';
       } else if (totals[i] !== undefined) {
-        td.textContent = (isNaN(totals[i]) ? 0 : totals[i]).toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2});
+        const v = isNaN(totals[i]) ? 0 : totals[i];
+        td.textContent = v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
         td.style.color = '#16a34a';
         td.style.fontWeight = '900';
-        td.style.fontSize = '13px';
       } else {
         td.textContent = '';
       }
@@ -6572,55 +6464,37 @@ if ('serviceWorker' in navigator) {
     }
     tbody.appendChild(tr);
   }
-
   function watchTable(tbodyId, colsConfig) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
     renderTotalsRow(tbody, colsConfig);
-    const obs = new MutationObserver(() => renderTotalsRow(tbody, colsConfig));
-    obs.observe(tbody, { childList: true, subtree: false });
+    new MutationObserver(() => renderTotalsRow(tbody, colsConfig)).observe(tbody, { childList: true });
   }
-
   function initTotals() {
-    // استلام الحليب: الكمية(4), الإجمالي(6)
-    watchTable('milk-tbody', [{index:4},{index:6}]);
-    // المصاريف: المبلغ(4)
-    watchTable('expenses-tbody', [{index:4}]);
-    // سلف العمال: المبلغ(3)
-    watchTable('worker-advances-tbody', [{index:3}]);
-    // سلف الموردين: المبلغ(3)
+    watchTable('milk-tbody',                  [{index:4},{index:6}]);
+    watchTable('expenses-tbody',              [{index:4}]);
+    watchTable('worker-advances-tbody',       [{index:3}]);
     watchTable('supplier-advances-new-tbody', [{index:3}]);
-    // المبيعات: الكمية(4), الإجمالي(6), المدفوع(7), المتبقي(8)
-    watchTable('sales-tbody', [{index:4},{index:6},{index:7},{index:8}]);
-    // حسابات الموردين: إجمالي الحليب(2), المدفوعات(3), السلف(4)
-    watchTable('accounts-tbody', [{index:2},{index:3},{index:4}]);
-    // حسابات المشترين: إجمالي المشتريات(2), المدفوع(3), المتبقي(4)
-    watchTable('buyer-accounts-tbody', [{index:2},{index:3},{index:4}]);
-    // خارج من المعمل: الوزن(3), العدد(4)
-    watchTable('fo-tbody', [{index:3},{index:4}]);
-    // المخزن الأول: الكمية(3), القيمة الإجمالية(5)
-    watchTable('wh1-tbody', [{index:3},{index:5}]);
-    // المخزن الثاني: الكمية(3), القيمة الإجمالية(5)
-    watchTable('wh2-tbody', [{index:3},{index:5}]);
-    // الصادرات: الوزن(4), العدد(5)
-    watchTable('exports-tbody', [{index:4},{index:5}]);
+    watchTable('sales-tbody',                 [{index:4},{index:6},{index:7},{index:8}]);
+    watchTable('accounts-tbody',              [{index:2},{index:3},{index:4}]);
+    watchTable('buyer-accounts-tbody',        [{index:2},{index:3},{index:4}]);
+    watchTable('fo-tbody',                    [{index:3},{index:4}]);
+    watchTable('wh1-tbody',                   [{index:3},{index:5}]);
+    watchTable('wh2-tbody',                   [{index:3},{index:5}]);
+    watchTable('exports-tbody',               [{index:4},{index:5}]);
   }
-
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(initTotals, 1000));
+    document.addEventListener('DOMContentLoaded', () => setTimeout(initTotals, 1200));
   } else {
-    setTimeout(initTotals, 1000);
+    setTimeout(initTotals, 1200);
   }
-
-  // Re-init on page navigation (SPA support)
-  const _origShowPage = window.showPage;
-  window.showPage = function(page) {
-    if (_origShowPage) _origShowPage.apply(this, arguments);
+  const _origNav = window.navigate;
+  window.navigate = function(page) {
+    if (_origNav) _origNav.apply(this, arguments);
     setTimeout(initTotals, 800);
   };
 })();
 </script>
-
 </body></html>`);
       pw.document.close();
       setTimeout(()=>pw.print(), 600);
@@ -6735,14 +6609,14 @@ if ('serviceWorker' in navigator) {
 
     
 </script>
-
 <script>
-// ============ إجماليات الأعمدة - Column Totals ============
 (function() {
   function renderTotalsRow(tbody, colsConfig) {
     const old = tbody.querySelector('tr.totals-row');
     if (old) old.remove();
-    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state') && !r.classList.contains('totals-row'));
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(r =>
+      !r.querySelector('.empty-state') && !r.classList.contains('totals-row')
+    );
     if (!rows.length) return;
     const maxCols = Math.max(...rows.map(r => r.querySelectorAll('td').length));
     const totals = {};
@@ -6751,14 +6625,14 @@ if ('serviceWorker' in navigator) {
       colsConfig.forEach(cfg => {
         const cell = cells[cfg.index];
         if (!cell) return;
-        const raw = cell.innerText.replace(/,/g,'').trim();
+        const raw = cell.innerText.replace(/,/g,'').replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0)-1584)).trim();
         const val = parseFloat(raw) || 0;
         totals[cfg.index] = (totals[cfg.index] || 0) + val;
       });
     });
     const tr = document.createElement('tr');
     tr.className = 'totals-row';
-    tr.style.cssText = 'background:linear-gradient(135deg,#fffbea,#fff3c4);font-weight:900;border-top:2px solid #D4A843;position:sticky;bottom:0;';
+    tr.style.cssText = 'background:linear-gradient(135deg,#fffbea,#fff3c4);font-weight:900;border-top:2px solid #D4A843;';
     for (let i = 0; i < maxCols; i++) {
       const td = document.createElement('td');
       td.style.cssText = 'padding:8px 10px;text-align:center;font-size:12.5px;border-top:2px solid #D4A843;';
@@ -6766,10 +6640,10 @@ if ('serviceWorker' in navigator) {
         td.innerHTML = '<span style="color:#8B6914;font-size:11px;">&#x1F4CA; إجمالي</span>';
         td.style.textAlign = 'right';
       } else if (totals[i] !== undefined) {
-        td.textContent = (isNaN(totals[i]) ? 0 : totals[i]).toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2});
+        const v = isNaN(totals[i]) ? 0 : totals[i];
+        td.textContent = v.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
         td.style.color = '#16a34a';
         td.style.fontWeight = '900';
-        td.style.fontSize = '13px';
       } else {
         td.textContent = '';
       }
@@ -6777,54 +6651,36 @@ if ('serviceWorker' in navigator) {
     }
     tbody.appendChild(tr);
   }
-
   function watchTable(tbodyId, colsConfig) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
     renderTotalsRow(tbody, colsConfig);
-    const obs = new MutationObserver(() => renderTotalsRow(tbody, colsConfig));
-    obs.observe(tbody, { childList: true, subtree: false });
+    new MutationObserver(() => renderTotalsRow(tbody, colsConfig)).observe(tbody, { childList: true });
   }
-
   function initTotals() {
-    // استلام الحليب: الكمية(4), الإجمالي(6)
-    watchTable('milk-tbody', [{index:4},{index:6}]);
-    // المصاريف: المبلغ(4)
-    watchTable('expenses-tbody', [{index:4}]);
-    // سلف العمال: المبلغ(3)
-    watchTable('worker-advances-tbody', [{index:3}]);
-    // سلف الموردين: المبلغ(3)
+    watchTable('milk-tbody',                  [{index:4},{index:6}]);
+    watchTable('expenses-tbody',              [{index:4}]);
+    watchTable('worker-advances-tbody',       [{index:3}]);
     watchTable('supplier-advances-new-tbody', [{index:3}]);
-    // المبيعات: الكمية(4), الإجمالي(6), المدفوع(7), المتبقي(8)
-    watchTable('sales-tbody', [{index:4},{index:6},{index:7},{index:8}]);
-    // حسابات الموردين: إجمالي الحليب(2), المدفوعات(3), السلف(4)
-    watchTable('accounts-tbody', [{index:2},{index:3},{index:4}]);
-    // حسابات المشترين: إجمالي المشتريات(2), المدفوع(3), المتبقي(4)
-    watchTable('buyer-accounts-tbody', [{index:2},{index:3},{index:4}]);
-    // خارج من المعمل: الوزن(3), العدد(4)
-    watchTable('fo-tbody', [{index:3},{index:4}]);
-    // المخزن الأول: الكمية(3), القيمة الإجمالية(5)
-    watchTable('wh1-tbody', [{index:3},{index:5}]);
-    // المخزن الثاني: الكمية(3), القيمة الإجمالية(5)
-    watchTable('wh2-tbody', [{index:3},{index:5}]);
-    // الصادرات: الوزن(4), العدد(5)
-    watchTable('exports-tbody', [{index:4},{index:5}]);
+    watchTable('sales-tbody',                 [{index:4},{index:6},{index:7},{index:8}]);
+    watchTable('accounts-tbody',              [{index:2},{index:3},{index:4}]);
+    watchTable('buyer-accounts-tbody',        [{index:2},{index:3},{index:4}]);
+    watchTable('fo-tbody',                    [{index:3},{index:4}]);
+    watchTable('wh1-tbody',                   [{index:3},{index:5}]);
+    watchTable('wh2-tbody',                   [{index:3},{index:5}]);
+    watchTable('exports-tbody',               [{index:4},{index:5}]);
   }
-
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(initTotals, 1000));
+    document.addEventListener('DOMContentLoaded', () => setTimeout(initTotals, 1200));
   } else {
-    setTimeout(initTotals, 1000);
+    setTimeout(initTotals, 1200);
   }
-
-  // Re-init on page navigation (SPA support)
-  const _origShowPage = window.showPage;
-  window.showPage = function(page) {
-    if (_origShowPage) _origShowPage.apply(this, arguments);
+  const _origNav = window.navigate;
+  window.navigate = function(page) {
+    if (_origNav) _origNav.apply(this, arguments);
     setTimeout(initTotals, 800);
   };
 })();
 </script>
-
 </body>
 </html>
