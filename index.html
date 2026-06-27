@@ -5672,30 +5672,152 @@ if ('serviceWorker' in navigator) {
 
     function getPrintStyles() {
       return `<style>
-        *{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:'Cairo','Tajawal',Arial,sans-serif;direction:rtl;background:#fff;color:#222;padding:20px;font-size:13px}
-        h1{color:#b8860b;font-size:20px;margin-bottom:4px;text-align:center}
-        h2{color:#b8860b;font-size:15px;margin:16px 0 8px;border-bottom:2px solid #D4A843;padding-bottom:4px}
-        h3{color:#555;font-size:13px;margin:12px 0 6px}
-        .meta{color:#888;font-size:11px;margin-bottom:16px;text-align:center}
-        table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px}
-        th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a}
-        td{border:1px solid #ddd;padding:5px 8px;text-align:center}
-        tr:nth-child(even) td{background:#fffbf0}
-        .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0}
-        .summary-card{border:2px solid #D4A843;border-radius:8px;padding:10px;text-align:center;background:#fffdf5}
-        .summary-card .val{font-size:18px;font-weight:900;color:#b8860b}
-        .summary-card .lbl{font-size:10px;color:#888;margin-top:2px}
-        .summary-card.green .val{color:#16a34a}
-        .summary-card.red .val{color:#dc2626}
-        .summary-card.blue .val{color:#2563eb}
-        .section-factory .val{color:#d97706}
-        .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px}
-        .info-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f0ead0}
-        .info-row span:first-child{font-weight:bold;color:#666;min-width:90px}
-        .footer{margin-top:20px;text-align:center;font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:8px}
-        a{display:none!important}
-        @media print{body{padding:8px}a{display:none!important}}
+        * {box-sizing: border-box; margin: 0; padding: 0}
+        body {
+          font-family: 'Cairo', 'Tajawal', Arial, sans-serif;
+          direction: rtl;
+          background: #ffffff;
+          color: #333333;
+          padding: 25px;
+          font-size: 12px;
+          line-height: 1.6;
+        }
+        
+        h1 {
+          color: #8B6914;
+          font-size: 24px;
+          margin-bottom: 8px;
+          text-align: center;
+          font-weight: 900;
+          border-bottom: 3px solid #D4A843;
+          padding-bottom: 10px;
+        }
+        
+        h2 {
+          color: #ffffff;
+          background: #A0826D;
+          font-size: 14px;
+          margin: 20px 0 12px 0;
+          padding: 8px 12px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+        }
+        
+        .meta {
+          color: #666666;
+          font-size: 11px;
+          margin-bottom: 20px;
+          text-align: center;
+          background: #f5f5f5;
+          padding: 8px;
+          border-radius: 4px;
+        }
+        
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 20px;
+          font-size: 11px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        thead {
+          background: #D4A843;
+          color: #ffffff;
+        }
+        
+        th {
+          background: #D4A843;
+          color: #ffffff;
+          padding: 10px 8px;
+          text-align: center;
+          font-weight: 700;
+          border: 1px solid #B8860B;
+          word-wrap: break-word;
+        }
+        
+        td {
+          border: 1px solid #E5D4C1;
+          padding: 8px;
+          text-align: center;
+          background: #ffffff;
+        }
+        
+        tbody tr:nth-child(odd) td {
+          background: #FFFBF0;
+        }
+        
+        tbody tr:nth-child(even) td {
+          background: #FFF8F3;
+        }
+        
+        tbody tr:last-child td {
+          background: #E8D5C4;
+          font-weight: 700;
+          color: #5C3D2E;
+          border-top: 2px solid #D4A843;
+        }
+        
+        .summary-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
+          margin: 20px 0;
+          page-break-inside: avoid;
+        }
+        
+        .summary-card {
+          border: 2px solid #D4A843;
+          border-radius: 6px;
+          padding: 12px;
+          text-align: center;
+          background: linear-gradient(135deg, #FFFBF0 0%, #FFF8F3 100%);
+        }
+        
+        .summary-card .val {
+          font-size: 16px;
+          font-weight: 900;
+          color: #8B6914;
+          display: block;
+          margin-bottom: 4px;
+        }
+        
+        .summary-card .lbl {
+          font-size: 9px;
+          color: #666666;
+          font-weight: 600;
+        }
+        
+        .summary-card.green .val {color: #228B22}
+        .summary-card.red .val {color: #DC143C}
+        .summary-card.blue .val {color: #1E40AF}
+        
+        .section-factory .val {color: #D97706}
+        
+        .footer {
+          margin-top: 30px;
+          text-align: center;
+          font-size: 9px;
+          color: #999999;
+          border-top: 2px solid #D4A843;
+          padding-top: 12px;
+        }
+        
+        a {display: none !important}
+        button {display: none !important}
+        .wa-btn {display: none !important}
+        .btn-whatsapp {display: none !important}
+        .btn {display: none !important}
+        
+        @media print {
+          body {padding: 10px; margin: 0}
+          h1 {page-break-after: avoid}
+          h2 {page-break-after: avoid}
+          table {page-break-inside: avoid}
+          .summary-grid {page-break-inside: avoid}
+          a {display: none !important}
+          button {display: none !important}
+        }
       </style>`;
     }
 
@@ -5739,8 +5861,9 @@ if ('serviceWorker' in navigator) {
       const pw = window.open('','_blank');
       pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">
         <title>تقرير كامل — ${d.factoryName}</title>${getPrintStyles()}</head><body>
-        <h1>🏭 ${d.factoryName}</h1>
-        <div class="meta">📅 الفترة: ${d.periodLabel} | 🖨️ طُبع: ${new Date().toLocaleString('ar-EG')}</div>
+        <h1>${d.factoryName}</h1>
+        <div class="meta">الفترة: ${d.periodLabel} | التاريخ: ${new Date().toLocaleDateString('ar-EG')}</div>
+        
         <div class="summary-grid">
           <div class="summary-card green"><div class="val">${fmt(d.salesTotal,2)}</div><div class="lbl">إجمالي المبيعات</div></div>
           <div class="summary-card red"><div class="val">${fmt(d.expTotal,2)}</div><div class="lbl">إجمالي المصاريف</div></div>
@@ -5751,61 +5874,67 @@ if ('serviceWorker' in navigator) {
           <div class="summary-card"><div class="val">${fmt(d.exp2Tot,2)} كجم</div><div class="lbl">صادرات المخزن 2</div></div>
         </div>
 
-        <h2>🥛 سجل استلام الحليب (${d.milkRows.length} سجل)</h2>
-        ${d.milkRows.length ? `<table><thead><tr><th>التاريخ</th><th>المورد</th><th>الكمية (كجم)</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>
+        ${d.milkRows.length ? `
+        <h2>سجل استلام الحليب (${d.milkRows.length} سجل)</h2>
+        <table><thead><tr><th>التاريخ</th><th>المورد</th><th>الكمية (كجم)</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>
           ${d.milkRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,r])=>`<tr>
             <td>${r.date}</td><td>${sanitize(state.suppliers?.[r.supplierId]?.name||'')}</td>
             <td>${fmt(r.qty,2)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td>
           </tr>`).join('')}
           <tr><td colspan="2"><strong>الإجمالي</strong></td><td><strong>${fmt(d.milkQty,2)}</strong></td><td></td><td><strong>${fmt(d.milkAmt,2)}</strong></td></tr>
-        </tbody></table>` : '<p>لا توجد بيانات</p>'}
+        </tbody></table>` : ''}
 
-        <h2>🏭 خارج من المعمل (${d.factoryRows.length} عملية)</h2>
-        ${d.factoryRows.length ? `<table><thead><tr><th>التاريخ</th><th>المنتج</th><th>الوزن (كجم)</th><th>العدد</th><th>العميل</th></tr></thead><tbody>
+        ${d.factoryRows.length ? `
+        <h2>خارج من المعمل (${d.factoryRows.length} عملية)</h2>
+        <table><thead><tr><th>التاريخ</th><th>المنتج</th><th>الوزن (كجم)</th><th>العدد</th><th>العميل</th></tr></thead><tbody>
           ${d.factoryRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,e])=>`<tr>
             <td>${e.date}</td><td>${sanitize(e.itemName||e.itemId||'')}</td>
             <td>${fmt(e.qty,2)}</td><td>${e.count?fmt(e.count,0)+' '+(e.countUnit||''):'—'}</td>
             <td>${sanitize(e.client||'—')}</td>
           </tr>`).join('')}
           <tr><td colspan="2"><strong>الإجمالي</strong></td><td><strong>${fmt(d.factoryTot,2)} كجم</strong></td><td colspan="2"></td></tr>
-        </tbody></table>` : '<p>لا توجد بيانات في هذه الفترة</p>'}
+        </tbody></table>` : ''}
 
-        <h2>📦 صادرات المخزن الأول (${d.exp1Rows.length} عملية)</h2>
-        ${d.exp1Rows.length ? `<table><thead><tr><th>التاريخ</th><th>الصنف</th><th>الوزن (كجم)</th><th>العدد</th><th>العميل</th></tr></thead><tbody>
+        ${d.exp1Rows.length ? `
+        <h2>صادرات المخزن الأول (${d.exp1Rows.length} عملية)</h2>
+        <table><thead><tr><th>التاريخ</th><th>الصنف</th><th>الوزن (كجم)</th><th>العدد</th><th>العميل</th></tr></thead><tbody>
           ${d.exp1Rows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,e])=>`<tr>
             <td>${e.date}</td><td>${sanitize(state.warehouse1?.[e.itemId]?.name||e.itemName||'')}</td>
             <td>${fmt(e.qty,2)}</td><td>${e.count?fmt(e.count,0)+' '+(e.countUnit||''):'—'}</td>
             <td>${sanitize(e.client||'—')}</td>
           </tr>`).join('')}
           <tr><td colspan="2"><strong>الإجمالي</strong></td><td><strong>${fmt(d.exp1Tot,2)} كجم</strong></td><td colspan="2"></td></tr>
-        </tbody></table>` : '<p>لا توجد بيانات</p>'}
+        </tbody></table>` : ''}
 
-        <h2>🏪 صادرات المخزن الثاني (${d.exp2Rows.length} عملية)</h2>
-        ${d.exp2Rows.length ? `<table><thead><tr><th>التاريخ</th><th>الصنف</th><th>الوزن (كجم)</th><th>العدد</th><th>العميل</th></tr></thead><tbody>
+        ${d.exp2Rows.length ? `
+        <h2>صادرات المخزن الثاني (${d.exp2Rows.length} عملية)</h2>
+        <table><thead><tr><th>التاريخ</th><th>الصنف</th><th>الوزن (كجم)</th><th>العدد</th><th>العميل</th></tr></thead><tbody>
           ${d.exp2Rows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,e])=>`<tr>
             <td>${e.date}</td><td>${sanitize(state.warehouse2?.[e.itemId]?.name||e.itemName||'')}</td>
             <td>${fmt(e.qty,2)}</td><td>${e.count?fmt(e.count,0)+' '+(e.countUnit||''):'—'}</td>
             <td>${sanitize(e.client||'—')}</td>
           </tr>`).join('')}
           <tr><td colspan="2"><strong>الإجمالي</strong></td><td><strong>${fmt(d.exp2Tot,2)} كجم</strong></td><td colspan="2"></td></tr>
-        </tbody></table>` : '<p>لا توجد بيانات</p>'}
+        </tbody></table>` : ''}
 
-        <h2>💰 المبيعات (${d.salesRows.length} فاتورة)</h2>
-        ${d.salesRows.length ? `<table><thead><tr><th>التاريخ</th><th>العميل</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th></tr></thead><tbody>
+        ${d.salesRows.length ? `
+        <h2>المبيعات (${d.salesRows.length} فاتورة)</h2>
+        <table><thead><tr><th>التاريخ</th><th>العميل</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th></tr></thead><tbody>
           ${d.salesRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,s])=>`<tr>
             <td>${s.date}</td><td>${sanitize(s.client||'')}</td><td>${sanitize(s.product||'')}</td>
             <td>${fmt(s.qty,2)}</td><td>${fmt(s.total,2)}</td>
           </tr>`).join('')}
           <tr><td colspan="4"><strong>الإجمالي</strong></td><td><strong>${fmt(d.salesTotal,2)}</strong></td></tr>
-        </tbody></table>` : '<p>لا توجد بيانات</p>'}
+        </tbody></table>` : ''}
 
-        <h2>💸 المصاريف (${d.expRows.length} عملية)</h2>
-        ${d.expRows.length ? `<table><thead><tr><th>التاريخ</th><th>البيان</th><th>الفئة</th><th>المبلغ</th></tr></thead><tbody>
+        ${d.expRows.length ? `
+        <h2>المصاريف (${d.expRows.length} عملية)</h2>
+        <table><thead><tr><th>التاريخ</th><th>البيان</th><th>الفئة</th><th>المبلغ</th></tr></thead><tbody>
           ${d.expRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,e])=>`<tr>
             <td>${e.date}</td><td>${sanitize(e.desc||'')}</td><td>${sanitize(e.category||'')}</td><td>${fmt(e.amount,2)}</td>
           </tr>`).join('')}
           <tr><td colspan="3"><strong>الإجمالي</strong></td><td><strong>${fmt(d.expTotal,2)}</strong></td></tr>
-        </tbody></table>` : '<p>لا توجد بيانات</p>'}
+        </tbody></table>` : ''}
 
         <div class="footer">نظام إدارة مصنع الألبان | ${new Date().toLocaleDateString('ar-EG')}</div>
       </body></html>`);
@@ -5817,10 +5946,11 @@ if ('serviceWorker' in navigator) {
       const d = getReportData();
       const pw = window.open('','_blank');
       pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">
-        <title>إجماليات — ${d.factoryName}</title>${getPrintStyles()}</head><body>
-        <h1>🏭 ${d.factoryName}</h1>
-        <h2 style="color:#555;border:none;font-size:14px">ملخص إجماليات الفترة</h2>
-        <div class="meta">📅 الفترة: ${d.periodLabel} | 🖨️ طُبع: ${new Date().toLocaleString('ar-EG')}</div>
+        <title>ملخص الإجماليات — ${d.factoryName}</title>${getPrintStyles()}</head><body>
+        <h1>${d.factoryName}</h1>
+        <h2 style="text-align:center;border:none;background:none;color:#8B6914">ملخص إجماليات الفترة</h2>
+        <div class="meta">الفترة: ${d.periodLabel} | التاريخ: ${new Date().toLocaleDateString('ar-EG')}</div>
+        
         <div class="summary-grid">
           <div class="summary-card blue"><div class="val">${fmt(d.milkQty,1)} كجم</div><div class="lbl">إجمالي الحليب</div></div>
           <div class="summary-card blue"><div class="val">${fmt(d.milkAmt,2)}</div><div class="lbl">قيمة الحليب</div></div>
@@ -5831,14 +5961,17 @@ if ('serviceWorker' in navigator) {
           <div class="summary-card red"><div class="val">${fmt(d.expTotal,2)}</div><div class="lbl">إجمالي المصاريف</div></div>
           <div class="summary-card ${d.netProfit>=0?'green':'red'}"><div class="val">${fmt(d.netProfit,2)}</div><div class="lbl">صافي الربح</div></div>
         </div>
-        <h2>💸 المصاريف حسب الفئة</h2>
-        ${Object.keys(d.expByCat).length ? `<table><thead><tr><th>الفئة</th><th>المبلغ</th><th>النسبة</th></tr></thead><tbody>
+        
+        ${Object.keys(d.expByCat).length ? `
+        <h2>المصاريف حسب الفئة</h2>
+        <table><thead><tr><th>الفئة</th><th>المبلغ</th><th>النسبة</th></tr></thead><tbody>
           ${Object.entries(d.expByCat).sort((a,b)=>b[1]-a[1]).map(([cat,amt])=>`<tr>
             <td>${sanitize(cat)}</td><td>${fmt(amt,2)}</td>
             <td>${d.expTotal?fmt(amt/d.expTotal*100,1)+'%':'—'}</td>
           </tr>`).join('')}
           <tr><td><strong>الإجمالي</strong></td><td><strong>${fmt(d.expTotal,2)}</strong></td><td>100%</td></tr>
-        </tbody></table>` : '<p>لا توجد بيانات</p>'}
+        </tbody></table>` : ''}
+        
         <div class="footer">نظام إدارة مصنع الألبان | ${new Date().toLocaleDateString('ar-EG')}</div>
       </body></html>`);
       pw.document.close();
@@ -5949,9 +6082,193 @@ if ('serviceWorker' in navigator) {
 
 
     // ══════════════════════════════════════════════════════════
-    // UNIVERSAL PRINT & PDF — كل الأقسام
+    // PDF EXPORT — تصدير PDF احترافي
     // ══════════════════════════════════════════════════════════
 
+    window.exportToPDF = function(reportType = 'full') {
+      const d = getReportData();
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      let yPosition = 15;
+
+      // الدالة لإضافة رأس الصفحة
+      const addHeader = () => {
+        pdf.setFont('Cairo', 'bold');
+        pdf.setFontSize(18);
+        pdf.setTextColor(139, 105, 20);
+        pdf.text(d.factoryName, pageWidth / 2, yPosition, { align: 'center' });
+        
+        yPosition += 8;
+        pdf.setFont('Cairo', 'normal');
+        pdf.setFontSize(10);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(`الفترة: ${d.periodLabel} | التاريخ: ${new Date().toLocaleDateString('ar-EG')}`, pageWidth / 2, yPosition, { align: 'center' });
+        
+        yPosition += 10;
+        pdf.setDrawColor(212, 168, 67);
+        pdf.setLineWidth(0.5);
+        pdf.line(10, yPosition - 2, pageWidth - 10, yPosition - 2);
+        yPosition += 5;
+      };
+
+      // الدالة لإضافة جدول
+      const addTable = (columns, rows, title) => {
+        if (yPosition > pageHeight - 40) {
+          pdf.addPage();
+          yPosition = 15;
+        }
+
+        pdf.setFont('Cairo', 'bold');
+        pdf.setFontSize(12);
+        pdf.setTextColor(212, 168, 67);
+        pdf.text(title, pageWidth - 15, yPosition, { align: 'right' });
+        yPosition += 8;
+
+        const colWidths = columns.map(c => (pageWidth - 20) / columns.length);
+        const cellHeight = 6;
+
+        // رأس الجدول
+        pdf.setFont('Cairo', 'bold');
+        pdf.setFontSize(10);
+        pdf.setFillColor(212, 168, 67);
+        pdf.setTextColor(255, 255, 255);
+        
+        columns.forEach((col, i) => {
+          const x = 10 + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
+          pdf.cell(colWidths[i], cellHeight, col, 1, 0, 'center', true);
+        });
+        
+        yPosition += cellHeight;
+
+        // صفوف الجدول
+        pdf.setFont('Cairo', 'normal');
+        pdf.setFontSize(9);
+        pdf.setTextColor(50, 50, 50);
+
+        rows.forEach((row, idx) => {
+          if (yPosition > pageHeight - 20) {
+            pdf.addPage();
+            yPosition = 15;
+            addHeader();
+          }
+
+          const isLast = idx === rows.length - 1;
+          pdf.setFillColor(isLast ? 232, 213, 196 : (idx % 2 === 0 ? 255, 251, 240 : 255, 248, 243));
+          
+          if (isLast) {
+            pdf.setFont('Cairo', 'bold');
+            pdf.setTextColor(92, 61, 46);
+          } else {
+            pdf.setFont('Cairo', 'normal');
+            pdf.setTextColor(50, 50, 50);
+          }
+
+          row.forEach((cell, i) => {
+            const x = 10 + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
+            pdf.cell(colWidths[i], cellHeight, String(cell), 1, 0, 'center', isLast);
+          });
+
+          yPosition += cellHeight;
+        });
+
+        yPosition += 5;
+      };
+
+      addHeader();
+
+      // إضافة ملخص الأرقام
+      pdf.setFont('Cairo', 'bold');
+      pdf.setFontSize(11);
+      pdf.setTextColor(212, 168, 67);
+      pdf.text('ملخص الأرقام الرئيسية', pageWidth - 15, yPosition, { align: 'right' });
+      yPosition += 8;
+
+      const summaryData = [
+        ['إجمالي المبيعات', fmt(d.salesTotal, 2)],
+        ['إجمالي المصاريف', fmt(d.expTotal, 2)],
+        ['صافي الربح', fmt(d.netProfit, 2)],
+        ['استلام الحليب', fmt(d.milkQty, 1) + ' كجم'],
+        ['خارج من المعمل', fmt(d.factoryTot, 2) + ' كجم']
+      ];
+
+      pdf.setFont('Cairo', 'normal');
+      pdf.setFontSize(10);
+      pdf.setTextColor(80, 80, 80);
+
+      summaryData.forEach(([label, value]) => {
+        pdf.text(`${label}:`, 20, yPosition, { align: 'right' });
+        pdf.setFont('Cairo', 'bold');
+        pdf.setTextColor(139, 105, 20);
+        pdf.text(value, pageWidth - 20, yPosition, { align: 'left' });
+        pdf.setFont('Cairo', 'normal');
+        pdf.setTextColor(80, 80, 80);
+        yPosition += 6;
+      });
+
+      yPosition += 5;
+
+      // إضافة الجداول حسب نوع التقرير
+      if (reportType === 'full' || reportType === 'all') {
+        if (d.milkRows.length) {
+          addTable(
+            ['التاريخ', 'المورد', 'الكمية', 'السعر', 'الإجمالي'],
+            d.milkRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,r]) => [
+              r.date,
+              sanitize(state.suppliers?.[r.supplierId]?.name||''),
+              fmt(r.qty, 2),
+              fmt(r.price, 2),
+              fmt(r.total, 2)
+            ]).concat([['الإجمالي', '', fmt(d.milkQty, 2), '', fmt(d.milkAmt, 2)]]),
+            'سجل استلام الحليب'
+          );
+        }
+
+        if (d.salesRows.length) {
+          addTable(
+            ['التاريخ', 'العميل', 'المنتج', 'الكمية', 'الإجمالي'],
+            d.salesRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,s]) => [
+              s.date,
+              sanitize(s.client||''),
+              sanitize(s.product||''),
+              fmt(s.qty, 2),
+              fmt(s.total, 2)
+            ]).concat([['الإجمالي', '', '', '', fmt(d.salesTotal, 2)]]),
+            'المبيعات'
+          );
+        }
+
+        if (d.expRows.length) {
+          addTable(
+            ['التاريخ', 'البيان', 'الفئة', 'المبلغ'],
+            d.expRows.sort((a,b)=>a[1].date>b[1].date?1:-1).map(([,e]) => [
+              e.date,
+              sanitize(e.desc||''),
+              sanitize(e.category||''),
+              fmt(e.amount, 2)
+            ]).concat([['الإجمالي', '', '', fmt(d.expTotal, 2)]]),
+            'المصاريف'
+          );
+        }
+      }
+
+      // إضافة التذييل
+      pdf.setFont('Cairo', 'normal');
+      pdf.setFontSize(8);
+      pdf.setTextColor(150, 150, 150);
+      pdf.text(`نظام إدارة مصنع الألبان | تم الإنشاء: ${new Date().toLocaleString('ar-EG')}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
+
+      const fileName = `تقرير_${reportType === 'summary' ? 'ملخص_' : ''}${new Date().getTime()}.pdf`;
+      pdf.save(fileName);
+      toast('تم تنزيل التقرير بنجاح ✅', 'success');
+    };
     
 </script>
 </body>
