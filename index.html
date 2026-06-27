@@ -1756,10 +1756,16 @@
       <button class="btn btn-secondary btn-icon" type="button" onclick="closeModal('modal-worker-account')">✕</button>
     </div>
     <div class="modal-body" id="worker-account-body"></div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px;padding:0 4px">
-        <div class="form-group" style="min-width:150px;margin:0"><label>من تاريخ</label><input type="date" id="wstmt-from" onchange="showWorkerAccount(currentWorkerStmtId)"></div>
-        <div class="form-group" style="min-width:150px;margin:0"><label>إلى تاريخ</label><input type="date" id="wstmt-to" onchange="showWorkerAccount(currentWorkerStmtId)"></div>
-        <button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="document.getElementById('wstmt-from').value='';document.getElementById('wstmt-to').value='';showWorkerAccount(currentWorkerStmtId)">الكل</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;padding:0 4px">
+        <div class="form-group" style="min-width:140px;margin:0"><label>من تاريخ</label><input type="date" id="wstmt-from" onchange="showWorkerAccount(currentWorkerStmtId)"></div>
+        <div class="form-group" style="min-width:140px;margin:0"><label>إلى تاريخ</label><input type="date" id="wstmt-to" onchange="showWorkerAccount(currentWorkerStmtId)"></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:22px">
+          <button class="btn btn-secondary btn-sm" onclick="setWorkerStmtRange(7)">٧ أيام</button>
+          <button class="btn btn-secondary btn-sm" onclick="setWorkerStmtRange(14)">١٤ يوم</button>
+          <button class="btn btn-secondary btn-sm" onclick="setWorkerStmtRange(22)">٢٢ يوم</button>
+          <button class="btn btn-secondary btn-sm" onclick="setWorkerStmtRange(30)">شهر</button>
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('wstmt-from').value='';document.getElementById('wstmt-to').value='';showWorkerAccount(currentWorkerStmtId)">الكل</button>
+        </div>
       </div>
     <div class="modal-footer">
       <button class="btn btn-primary" onclick="printWorkerStatement()">🖨️ طباعة</button>
@@ -4052,7 +4058,10 @@ function fuzzyMatch(query, text) {
           // إذا لم يكن من الأعمدة المسموحة، تخطيه
           if (!shouldSum) return;
           
-          const raw = td.innerText.trim().replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0)-1584));
+          const raw = td.innerText.trim()
+            .replace(/[\u0660-\u0669]/g, d => d.charCodeAt(0) - 0x0660)
+            .replace(/[\u066C\u060C،,]/g, '')
+            .replace(/\u066B/g, '.');
           const num = parseFloat(raw.replace(/[^\d.-]/g,''));
           if (!isNaN(num) && raw.match(/[\d٠-٩]/)) {
             colTotals[ci] = (colTotals[ci] || 0) + num;
@@ -4729,8 +4738,20 @@ let currentWorkerStmtId = '';
 let currentBuyerStmtId = '';
 
 // ══════════════════════════════════════════════════════════════════
-// DATE FILTER HELPER
+// QUICK DATE RANGE HELPER FOR WORKER STATEMENT
 // ══════════════════════════════════════════════════════════════════
+function setWorkerStmtRange(days) {
+  const to = new Date();
+  const from = new Date();
+  from.setDate(to.getDate() - (days - 1));
+  const pad = n => String(n).padStart(2,'0');
+  const fmt2 = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const fromEl = document.getElementById('wstmt-from');
+  const toEl = document.getElementById('wstmt-to');
+  if (fromEl) fromEl.value = fmt2(from);
+  if (toEl) toEl.value = fmt2(to);
+  showWorkerAccount(currentWorkerStmtId);
+}
 function getDateFilter(prefix) {
   const fromEl = $(prefix + '-from');
   const toEl = $(prefix + '-to');
@@ -5113,7 +5134,7 @@ window.printWorkerStatement = function() {
         <div class="info-row"><span>اليومية:</span><span>${fmt(dailyRate,2)} ج</span></div>
         <div class="info-row"><span>الفترة:</span><span>${(df.from||'الكل')+' ← '+(df.to||'الكل')}</span></div>
         <div class="info-row"><span>تاريخ الطباعة:</span><span>${nowStr}</span></div>
-      </div><h3 style="color:#D4A843">سجل الحضور (${totalDays} يوم)</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${att.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>المستحق (${totalDays} يوم):</span><span>${fmt(totalEarned,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
+      </div><h3 style="color:#D4A843">سجل الحضور (${totalDays} يوم)</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${att.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلفة</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>المستحق (${totalDays} يوم):</span><span>${fmt(totalEarned,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلفة:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
   pw.document.close(); setTimeout(()=>pw.print(), 600);
 };
 
@@ -5191,7 +5212,30 @@ window.showWorkerAccount = function(workerId) {
   const advSum = advances.reduce((s,[,a])=>s+Number(a.amount||0),0);
   const purSum = purchases.reduce((s,[,p])=>s+Number(p.totalPrice||0),0);
   const remaining = totalEarned - paySum - advSum - purSum;
-  $('worker-account-body').innerHTML = `<div class="summary-bar" style="margin-bottom:20px"><div class="summary-item"><div class="val" style="color:var(--info)">${totalDays}</div><div class="lbl">أيام الحضور</div></div><div class="summary-item"><div class="val" style="color:var(--gold)">${fmt(totalEarned,2)}</div><div class="lbl">المستحق (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--success)">${fmt(paySum,2)}</div><div class="lbl">المدفوع (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(advSum,2)}</div><div class="lbl">السلف (ج)</div></div>${purSum>0?`<div class="summary-item"><div class="val" style="color:var(--info)">${fmt(purSum,2)}</div><div class="lbl">المشتريات (ج)</div></div>`:''}<div class="summary-item"><div class="val" style="color:${remaining>0?'var(--danger)':'var(--success)'}">${fmt(remaining,2)}</div><div class="lbl">المتبقي (ج)</div></div></div><h4 style="color:var(--gold);margin-bottom:10px">الحضور (${totalDays} يوم)</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${attRecords.map(([,a])=>`<tr><td>${a.date}</td><td style="color:var(--gold)">${fmt(dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="2">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">المدفوعات</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${payments.map(([,p])=>`<tr><td>${p.date}</td><td style="color:var(--danger)">${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="2">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">السلف</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${advances.map(([,a])=>`<tr><td>${a.date}</td><td style="color:var(--warning)">${fmt(a.amount,2)} ج</td><td>${sanitize(a.description||'')}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div>${purchases.length?`<h4 style="color:var(--gold);margin-bottom:10px">المشتريات</h4><div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${purchases.map(([,p])=>`<tr><td>${p.date}</td><td>${sanitize(p.desc)}</td><td style="color:var(--danger)">${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table></div>`:''}`;
+  $('worker-account-body').innerHTML = `
+    <div class="summary-bar" style="margin-bottom:20px">
+      <div class="summary-item"><div class="val" style="color:var(--info)">${totalDays}</div><div class="lbl">أيام الحضور</div></div>
+      <div class="summary-item"><div class="val" style="color:var(--gold)">${fmt(totalEarned,2)}</div><div class="lbl">المستحق (ج)</div></div>
+      <div class="summary-item"><div class="val" style="color:var(--success)">${fmt(paySum,2)}</div><div class="lbl">المدفوعات (ج)</div></div>
+      <div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(advSum,2)}</div><div class="lbl">السلفة (ج)</div></div>
+      ${purSum>0?`<div class="summary-item"><div class="val" style="color:var(--info)">${fmt(purSum,2)}</div><div class="lbl">المشتريات (ج)</div></div>`:''}
+      <div class="summary-item"><div class="val" style="color:${remaining>0?'var(--danger)':'var(--success)'}">${fmt(remaining,2)}</div><div class="lbl">المتبقي (ج)</div></div>
+    </div>
+    <h4 style="color:var(--gold);margin-bottom:10px">الحضور (${totalDays} يوم)</h4>
+    <div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${attRecords.map(([,a])=>`<tr><td>${a.date}</td><td style="color:var(--gold)">${fmt(dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="2">لا توجد</td></tr>'}</tbody></table></div>
+    <h4 style="color:var(--gold);margin-bottom:10px">المدفوعات</h4>
+    <div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${payments.map(([,p])=>`<tr><td>${p.date}</td><td style="color:var(--success)">${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="2">لا توجد</td></tr>'}</tbody></table></div>
+    <h4 style="color:var(--gold);margin-bottom:10px">السلفة</h4>
+    <div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${advances.map(([,a])=>`<tr><td>${a.date}</td><td style="color:var(--warning)">${fmt(a.amount,2)} ج</td><td>${sanitize(a.description||'')}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div>
+    ${purchases.length?`<h4 style="color:var(--gold);margin-bottom:10px">المشتريات</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${purchases.map(([,p])=>`<tr><td>${p.date}</td><td>${sanitize(p.desc)}</td><td style="color:var(--danger)">${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table></div>`:''}
+    <div style="background:var(--bg-300);border-radius:10px;padding:14px 18px;margin-top:8px">
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg-500)"><span>المستحق (${totalDays} يوم × ${fmt(dailyRate,2)} ج)</span><span style="color:var(--gold);font-weight:700">${fmt(totalEarned,2)} ج</span></div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg-500)"><span>المدفوعات</span><span style="color:var(--success);font-weight:700">- ${fmt(paySum,2)} ج</span></div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg-500)"><span>السلفة</span><span style="color:var(--warning);font-weight:700">- ${fmt(advSum,2)} ج</span></div>
+      ${purSum>0?`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg-500)"><span>المشتريات</span><span style="color:var(--danger);font-weight:700">- ${fmt(purSum,2)} ج</span></div>`:''}
+      <div style="display:flex;justify-content:space-between;padding:10px 0 0;font-size:17px;font-weight:900"><span>المتبقي</span><span style="color:${remaining>0?'var(--danger)':'var(--success)'}"> ${fmt(remaining,2)} ج</span></div>
+    </div>
+  `;
   const waPhone = (w.phone||'').replace(/\D/g,'');
   const waBtnEl = $('worker-wa-btn');
   if (waPhone && waBtnEl) {
