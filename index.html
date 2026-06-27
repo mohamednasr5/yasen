@@ -4035,12 +4035,32 @@ function fuzzyMatch(query, text) {
       if (!rows.length) { toast('لا توجد بيانات للطباعة', 'warning'); return; }
 
       const colTotals = {}, colIsNum = {};
+      
+      // قائمة بالكلمات المفتاحية التي تشير إلى أعمدة لا يجب جمعها
+      const nonNumericKeywords = ['تاريخ', 'وقت', 'ساعة', 'دقيقة', 'ثانية', 'تليفون', 'هاتف', 'موبايل', 'رقم الهاتف', 
+        'بريد', 'اميل', 'عنوان', 'اسم', 'الاسم', 'المسلسل', '#', 'ملاحظات', 'ملاحظة', 'وصف', 'الوصف',
+        'فئة', 'نوع', 'الحالة', 'حالة', 'طريقة', 'وسيلة', 'منطقة', 'مدينة', 'محافظة', 'دولة'];
+      
       const tbodyHTML = '<tbody>' + rows.map(r => {
         const cells = Array.from(r.querySelectorAll('td')).filter(td => !td.querySelector('button') && !td.querySelector('.btn'));
         cells.forEach((td, ci) => {
+          // التحقق من اسم العمود (header)
+          const headerText = thEls[ci]?.innerText?.toLowerCase() || '';
+          const isNonNumericColumn = nonNumericKeywords.some(keyword => headerText.includes(keyword.toLowerCase()));
+          
+          // إذا كان العمود من نوع لا يصح جمعه، تخطيه
+          if (isNonNumericColumn) return;
+          
+          // محاولة استخراج الرقم من الخلية
           const raw = td.innerText.trim().replace(/[٠-٩]/g, d => String.fromCharCode(d.charCodeAt(0)-1584));
           const num = parseFloat(raw.replace(/[^\d.-]/g,''));
-          if (!isNaN(num) && raw.match(/[\d٠-٩]/)) {
+          
+          // التحقق من أن النص يحتوي على أرقام فقط (أو أرقام مع وحدات مثل "جنيه" أو "كجم")
+          // ولكن ليس نصاً مختلطاً بشكل غريب
+          const isValidNumber = !isNaN(num) && raw.match(/[\d٠-٩]/);
+          const isNotTooLong = num >= -9999999 && num <= 9999999; // تصفية الأرقام غير المعقولة
+          
+          if (isValidNumber && isNotTooLong) {
             colTotals[ci] = (colTotals[ci] || 0) + num;
             colIsNum[ci]  = true;
           }
