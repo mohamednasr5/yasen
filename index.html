@@ -3171,15 +3171,12 @@ function renderSuppliers(search='') {
         </div>
       </td>
     </tr>`;
-  // Calculate grand total balance
-  let grandTotalBalance = 0;
-  rows.forEach(([id]) => { grandTotalBalance += calcSupplierBalance(id); });
-  $('suppliers-tbody').innerHTML += `
+  }).join('') + `
     <tr style="background:var(--bg-300);border-top:2px solid var(--gold)">
-      <td colspan="4" style="font-weight:900;color:var(--gold);font-size:15px;text-align:center">الإجمالي الكلي</td>
+      <td colspan="4" style="font-weight:900;color:var(--gold);font-size:15px;text-align:center">الإجمالي الكلي للحليب</td>
       <td style="font-weight:900;color:var(--success);font-size:15px">${fmt(grandTotalMilkQty,1)} كجم</td>
       <td></td>
-      <td style="font-weight:900;color:${grandTotalBalance>0?'var(--success)':'var(--danger)'};font-size:15px">${fmt(grandTotalBalance,2)} ج</td>
+      <td style="font-weight:900;color:var(--info);font-size:15px">${fmt(grandTotalMilkAmt,2)} ج</td>
       <td colspan="2"></td>
     </tr>`;
 }
