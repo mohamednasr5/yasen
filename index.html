@@ -1268,6 +1268,7 @@
                 <th>اسم المورد</th>
                 <th>رقم الهاتف</th>
                 <th>المنطقة</th>
+                <th>إجمالي الحليب (كجم)</th>
                 <th>سعر الكيلو</th>
                 <th>الرصيد</th>
                 <th>الحالة</th>
@@ -1275,7 +1276,7 @@
               </tr>
             </thead>
             <tbody id="suppliers-tbody">
-              <tr><td colspan="8"><div class="empty-state"><span class="empty-icon">👥</span><p>لا يوجد موردون</p></div></td></tr>
+              <tr><td colspan="9"><div class="empty-state"><span class="empty-icon">👥</span><p>لا يوجد موردون</p></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -1386,7 +1387,8 @@
                 <tr>
                   <th>#</th>
                   <th>المورد</th>
-                  <th>إجمالي الحليب</th>
+                  <th>إجمالي الحليب (كجم)</th>
+                  <th>إجمالي الحليب (ج)</th>
                   <th>إجمالي المدفوعات</th>
                   <th>السلف</th>
                   <th>الرصيد المستحق</th>
@@ -1453,6 +1455,14 @@
             <div class="form-group" style="min-width:180px"><label>بحث بالمنتج</label>
               <input type="text" id="fo-search" placeholder="اسم المنتج..." oninput="loadFactoryOut()">
             </div>
+            <div class="form-group" style="min-width:150px"><label>نوع المنتج</label>
+              <select id="fo-type-filter" onchange="loadFactoryOut()">
+                <option value="">الكل</option>
+                <option value="رومي">رومي</option>
+                <option value="قشطة">قشطة</option>
+                <option value="أخرى">أخرى</option>
+              </select>
+            </div>
             <button class="btn btn-secondary" style="margin-top:22px"
               onclick="['fo-from','fo-to','fo-search'].forEach(id=>{document.getElementById(id).value='';});loadFactoryOut()">
               🔄 مسح
@@ -1461,6 +1471,26 @@
         </div>
       </div>
 
+      <div id="fo-type-cards" class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:16px;display:none">
+        <div class="stat-card" style="--accent:#f59e0b;background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(245,158,11,0.05))">
+          <span class="stat-icon">🧀</span>
+          <div class="stat-value" id="fo-romi-qty">0 كجم</div>
+          <div class="stat-label">رومي — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="fo-romi-price">—</strong></div>
+        </div>
+        <div class="stat-card" style="--accent:#10b981;background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(16,185,129,0.05))">
+          <span class="stat-icon">🥛</span>
+          <div class="stat-value" id="fo-quesha-qty">0 كجم</div>
+          <div class="stat-label">قشطة — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="fo-quesha-price">—</strong></div>
+        </div>
+        <div class="stat-card" style="--accent:#6366f1;background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(99,102,241,0.05))">
+          <span class="stat-icon">📦</span>
+          <div class="stat-value" id="fo-other-qty">0 كجم</div>
+          <div class="stat-label">أخرى — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="fo-other-price">—</strong></div>
+        </div>
+      </div>
       <div id="fo-summary" class="summary-bar" style="display:none;margin-bottom:20px">
         <div class="summary-item"><div class="val" id="fo-sum-qty" style="color:var(--gold)">0</div><div class="lbl">إجمالي الوزن (كجم)</div></div>
         <div class="summary-item"><div class="val" id="fo-sum-count" style="color:var(--info)">0</div><div class="lbl">إجمالي العدد</div></div>
@@ -1472,7 +1502,7 @@
           <table>
             <thead>
               <tr>
-                <th>#</th><th>التاريخ</th><th>المنتج</th>
+                <th>#</th><th>التاريخ</th><th>نوع المنتج</th><th>المنتج</th>
                 <th>الوزن (كجم)</th><th>العدد</th><th>الوحدة</th><th>السعر</th>
                 <th>العميل / الجهة</th><th>ملاحظات</th><th>حذف</th>
               </tr>
@@ -1490,10 +1520,42 @@
         <span class="section-icon">🏭</span>
         <h2>المخزن الأول</h2>
         <button class="btn btn-primary" onclick="openWH1Modal()">➕ إضافة صنف</button>
-      
         <div style="display:flex;gap:6px">
           <button class="btn btn-secondary btn-sm" onclick="printTable('#wh1-tbody')" title="طباعة">🖨️</button>
           <button class="btn btn-secondary btn-sm" onclick="exportTableToPDF('#wh1-tbody', 'المخزن-الأول.pdf')" title="تصدير PDF">📄</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportWHToCSV('warehouse1')" title="تصدير Excel">📊</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px"><div class="card-body">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <div class="form-group" style="min-width:150px;margin:0"><label>فلتر حسب النوع</label>
+            <select id="wh1-type-filter" onchange="renderWarehouse('warehouse1')">
+              <option value="">الكل</option>
+              <option value="رومي">رومي</option>
+              <option value="قشطة">قشطة</option>
+              <option value="أخرى">أخرى</option>
+            </select>
+          </div>
+        </div>
+      </div></div>
+      <div id="wh1-type-cards" class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:16px;display:none">
+        <div class="stat-card" style="--accent:#f59e0b;background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(245,158,11,0.05))">
+          <span class="stat-icon">🧀</span>
+          <div class="stat-value" id="wh1-romi-qty">0 كجم</div>
+          <div class="stat-label">رومي — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="wh1-romi-price">—</strong></div>
+        </div>
+        <div class="stat-card" style="--accent:#10b981;background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(16,185,129,0.05))">
+          <span class="stat-icon">🥛</span>
+          <div class="stat-value" id="wh1-quesha-qty">0 كجم</div>
+          <div class="stat-label">قشطة — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="wh1-quesha-price">—</strong></div>
+        </div>
+        <div class="stat-card" style="--accent:#6366f1;background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(99,102,241,0.05))">
+          <span class="stat-icon">📦</span>
+          <div class="stat-value" id="wh1-other-qty">0 كجم</div>
+          <div class="stat-label">أخرى — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="wh1-other-price">—</strong></div>
         </div>
       </div>
       <div id="wh1-stats" class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:20px"></div>
@@ -1515,10 +1577,42 @@
         <span class="section-icon">🏪</span>
         <h2>المخزن الثاني</h2>
         <button class="btn btn-primary" onclick="openWH2Modal()">➕ إضافة صنف</button>
-      
         <div style="display:flex;gap:6px">
           <button class="btn btn-secondary btn-sm" onclick="printTable('#wh2-tbody')" title="طباعة">🖨️</button>
           <button class="btn btn-secondary btn-sm" onclick="exportTableToPDF('#wh2-tbody', 'المخزن-الثاني.pdf')" title="تصدير PDF">📄</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportWHToCSV('warehouse2')" title="تصدير Excel">📊</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px"><div class="card-body">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <div class="form-group" style="min-width:150px;margin:0"><label>فلتر حسب النوع</label>
+            <select id="wh2-type-filter" onchange="renderWarehouse('warehouse2')">
+              <option value="">الكل</option>
+              <option value="رومي">رومي</option>
+              <option value="قشطة">قشطة</option>
+              <option value="أخرى">أخرى</option>
+            </select>
+          </div>
+        </div>
+      </div></div>
+      <div id="wh2-type-cards" class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:16px;display:none">
+        <div class="stat-card" style="--accent:#f59e0b;background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(245,158,11,0.05))">
+          <span class="stat-icon">🧀</span>
+          <div class="stat-value" id="wh2-romi-qty">0 كجم</div>
+          <div class="stat-label">رومي — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="wh2-romi-price">—</strong></div>
+        </div>
+        <div class="stat-card" style="--accent:#10b981;background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(16,185,129,0.05))">
+          <span class="stat-icon">🥛</span>
+          <div class="stat-value" id="wh2-quesha-qty">0 كجم</div>
+          <div class="stat-label">قشطة — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="wh2-quesha-price">—</strong></div>
+        </div>
+        <div class="stat-card" style="--accent:#6366f1;background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(99,102,241,0.05))">
+          <span class="stat-icon">📦</span>
+          <div class="stat-value" id="wh2-other-qty">0 كجم</div>
+          <div class="stat-label">أخرى — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="wh2-other-price">—</strong></div>
         </div>
       </div>
       <div id="wh2-stats" class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:20px"></div>
@@ -2404,7 +2498,15 @@
       <input type="hidden" id="wh-modal-target">
       <input type="hidden" id="wh-item-id">
       <div class="form-grid">
-        <div class="form-group"><label>اسم الصنف *</label><input type="text" id="wh-name" placeholder="اسم المنتج"></div>
+        <div class="form-group"><label>نوع المنتج *</label>
+          <select id="wh-product-type" onchange="toggleWHOtherName()">
+            <option value="رومي">رومي</option>
+            <option value="قشطة">قشطة</option>
+            <option value="أخرى">أخرى</option>
+          </select>
+        </div>
+        <div class="form-group" id="wh-other-name-group" style="display:none"><label>اسم الصنف (أخرى) *</label><input type="text" id="wh-name" placeholder="اسم المنتج"></div>
+        <div class="form-group" id="wh-name-group"><label>اسم الصنف</label><input type="text" id="wh-name-std" placeholder="يتم تعبئته تلقائياً" readonly style="background:var(--bg-500)"></div>
         <div class="form-group"><label>وحدة القياس</label>
           <select id="wh-unit"><option>كجم</option><option>لتر</option><option>كيس</option><option>علبة</option><option>قطعة</option><option>طرد</option><option>كرتون</option></select>
         </div>
@@ -2434,8 +2536,15 @@
       <div class="modal-body">
         <div class="form-grid">
           <div class="form-group"><label>التاريخ *</label><input type="date" id="fo-date"></div>
-          <div class="form-group"><label>المنتج *</label>
-            <input type="text" id="fo-item-name" placeholder="مثال: جبنة بيضاء، زبدة، لبنة...">
+          <div class="form-group"><label>نوع المنتج *</label>
+            <select id="fo-product-type" onchange="toggleFOOtherName()">
+              <option value="رومي">رومي</option>
+              <option value="قشطة">قشطة</option>
+              <option value="أخرى">أخرى</option>
+            </select>
+          </div>
+          <div class="form-group" id="fo-other-name-group" style="display:none"><label>اسم المنتج (أخرى) *</label>
+            <input type="text" id="fo-item-name" placeholder="اكتب اسم المنتج...">
           </div>
           <div class="form-group">
             <label>الوزن (كجم) *</label>
@@ -3028,9 +3137,13 @@ function renderSuppliers(search='') {
     $('suppliers-tbody').innerHTML = `<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">👥</span><p>لا يوجد موردون</p></div></td></tr>`;
     return;
   }
+  let grandTotalMilkQty=0, grandTotalMilkAmt=0;
   $('suppliers-tbody').innerHTML = rows.map(([id, s], i) => {
     const bal = calcSupplierBalance(id);
     const balClass = bal > 0 ? 'balance-positive' : bal < 0 ? 'balance-negative' : 'balance-zero';
+    const milkQty = Object.values(state.milkRecords).filter(r => r.supplierId === id).reduce((sm,r) => sm + Number(r.qty||0), 0);
+    const milkAmt = Object.values(state.milkRecords).filter(r => r.supplierId === id).reduce((sm,r) => sm + Number(r.total||0), 0);
+    grandTotalMilkQty += milkQty; grandTotalMilkAmt += milkAmt;
     const waPhone = (s.phone||'').replace(/\D/g,'');
     const waMsg = encodeURIComponent(`السلام عليكم ${s.name}،\nكشف حسابك الأسبوعي:\nإجمالي المستحقات: ${fmt(bal,2)} جنيه\nشكراً لتعاملكم معنا 🥛`);
     const waLink = waPhone ? `https://wa.me/2${waPhone}?text=${waMsg}` : '#';
@@ -3046,6 +3159,7 @@ function renderSuppliers(search='') {
         </div>
       </td>
       <td>${sanitize(s.area||'—')}</td>
+      <td style="color:var(--success);font-weight:700">${fmt(milkQty,1)} كجم</td>
       <td>${fmt(s.price,2)} ج</td>
       <td class="${balClass}" style="font-weight:700">${fmt(bal,2)} ج</td>
       <td><span class="badge ${s.status==='active'?'badge-success':'badge-danger'}">${s.status==='active'?'نشط':'متوقف'}</span></td>
@@ -3057,7 +3171,14 @@ function renderSuppliers(search='') {
         </div>
       </td>
     </tr>`;
-  }).join('');
+  }).join('') + `
+    <tr style="background:var(--bg-300);border-top:2px solid var(--gold)">
+      <td colspan="4" style="font-weight:900;color:var(--gold);font-size:15px;text-align:center">الإجمالي الكلي للحليب</td>
+      <td style="font-weight:900;color:var(--success);font-size:15px">${fmt(grandTotalMilkQty,1)} كجم</td>
+      <td></td>
+      <td style="font-weight:900;color:var(--info);font-size:15px">${fmt(grandTotalMilkAmt,2)} ج</td>
+      <td colspan="2"></td>
+    </tr>`;
 }
 
 // ── Supplier Balance Calculation ───────────────────────────────────
@@ -3083,6 +3204,7 @@ window.showAccountDetail = function(supplierId) {
   const payments    = Object.entries(state.supplierPayments).filter(([,p]) => p.supplierId === supplierId).sort((a,b) => a[1].date > b[1].date ? -1 : 1);
   const advances    = Object.entries(state.supplierAdvances).filter(([,a]) => a.supplierId === supplierId);
   const balance     = calcSupplierBalance(supplierId);
+  const milkQtyKg   = milkRecords.reduce((s,[,r]) => s + Number(r.qty||0), 0);
   const milkSum     = milkRecords.reduce((s,[,r]) => s + Number(r.total||0), 0);
   const paySum      = payments.reduce((s,[,p]) => s + Number(p.amount||0), 0);
   const advSum      = advances.reduce((s,[,a]) => s + Number(a.amount||0), 0);
@@ -3100,6 +3222,7 @@ window.showAccountDetail = function(supplierId) {
 
   $('account-detail-body').innerHTML = `
     <div class="summary-bar" style="margin-bottom:20px">
+      <div class="summary-item"><div class="val" style="color:var(--success)">${fmt(milkQtyKg,1)} كجم</div><div class="lbl">إجمالي الحليب (كجم)</div></div>
       <div class="summary-item"><div class="val">${fmt(milkSum,2)}</div><div class="lbl">إجمالي الحليب (ج)</div></div>
       <div class="summary-item"><div class="val" style="color:var(--danger)">${fmt(paySum,2)}</div><div class="lbl">المدفوعات (ج)</div></div>
       <div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(advSum,2)}</div><div class="lbl">السلف (ج)</div></div>
@@ -3301,12 +3424,15 @@ function renderAccounts(search='') {
   const suppliers = Object.entries(state.suppliers)
     .filter(([,s]) => !search || fuzzyMatch(search, s.name || ''));
 
+  let acctGrandMilkQty=0, acctGrandMilkAmt=0, acctGrandPay=0, acctGrandAdv=0;
   $('accounts-tbody').innerHTML = suppliers.length ? suppliers.map(([id,s], i) => {
+    const milkQty = Object.values(state.milkRecords).filter(r => r.supplierId === id).reduce((s,r) => s + Number(r.qty||0), 0);
     const milkTotal = Object.values(state.milkRecords).filter(r => r.supplierId === id).reduce((s,r) => s + Number(r.total||0), 0);
     const payments  = Object.values(state.supplierPayments).filter(p => p.supplierId === id).reduce((s,p) => s + Number(p.amount||0), 0);
     const advances  = Object.values(state.supplierAdvances).filter(a => a.supplierId === id).reduce((s,a) => s + Number(a.amount||0), 0);
     const balance   = milkTotal - payments - advances;
     const balClass  = balance > 0 ? 'balance-positive' : balance < 0 ? 'balance-negative' : 'balance-zero';
+    acctGrandMilkQty += milkQty; acctGrandMilkAmt += milkTotal; acctGrandPay += payments; acctGrandAdv += advances;
     const waPhone = (s.phone||'').replace(/\D/g,'');
     const waMsg = encodeURIComponent(`السلام عليكم ${s.name}،\n📊 كشف حسابك الأسبوعي:\n💰 إجمالي الحليب: ${fmt(milkTotal,2)} ج\n✅ المدفوع: ${fmt(payments,2)} ج\n💵 السلف: ${fmt(advances,2)} ج\n📌 الرصيد المستحق: ${fmt(balance,2)} ج\nشكراً 🥛`);
     const waLink = waPhone ? `https://wa.me/2${waPhone}?text=${waMsg}` : '#';
@@ -3320,6 +3446,7 @@ function renderAccounts(search='') {
           </a>` : ''}
         </div>
       </td>
+      <td style="color:var(--success);font-weight:700">${fmt(milkQty,1)} كجم</td>
       <td style="color:var(--gold)">${fmt(milkTotal,2)} ج</td>
       <td style="color:var(--danger)">${fmt(payments,2)} ج</td>
       <td style="color:var(--warning)">${fmt(advances,2)} ج</td>
@@ -3331,7 +3458,16 @@ function renderAccounts(search='') {
         </div>
       </td>
     </tr>`;
-  }).join('') : `<tr><td colspan="7"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>`;
+  }).join('') + `
+    <tr style="background:var(--bg-300);border-top:2px solid var(--gold)">
+      <td colspan="2" style="font-weight:900;color:var(--gold);font-size:15px;text-align:center">الإجمالي الكلي</td>
+      <td style="font-weight:900;color:var(--success);font-size:15px">${fmt(acctGrandMilkQty,1)} كجم</td>
+      <td style="font-weight:900;color:var(--gold);font-size:15px">${fmt(acctGrandMilkAmt,2)} ج</td>
+      <td style="font-weight:900;color:var(--danger);font-size:15px">${fmt(acctGrandPay,2)} ج</td>
+      <td style="font-weight:900;color:var(--warning);font-size:15px">${fmt(acctGrandAdv,2)} ج</td>
+      <td style="font-weight:900;color:${(acctGrandMilkAmt-acctGrandPay-acctGrandAdv)>0?'var(--success)':'var(--danger)'};font-size:15px">${fmt(acctGrandMilkAmt-acctGrandPay-acctGrandAdv,2)} ج</td>
+      <td></td>
+    </tr>` : `<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>`;
 }
 
 window.filterAccounts = function() { renderAccounts($('accounts-search').value); };
@@ -3431,8 +3567,13 @@ window.deleteAdvance = async function(id) {
 // WAREHOUSE
 // ══════════════════════════════════════════════════════════════════
 function renderWarehouse(wh) {
-  const items = Object.entries(state[wh]);
+  const allItems = Object.entries(state[wh]);
   const isWH1 = wh === 'warehouse1';
+  const typeFilterEl = $(isWH1 ? 'wh1-type-filter' : 'wh2-type-filter');
+  const typeFilter = typeFilterEl ? typeFilterEl.value : '';
+
+  const items = typeFilter ? allItems.filter(([,i]) => (i.productType || 'أخرى') === typeFilter) : allItems;
+
   const totalValue = items.reduce((s,[,i]) => s + Number(i.qty||0)*Number(i.price||0), 0);
   const lowStock   = items.filter(([,i]) => Number(i.qty||0) <= Number(i.minQty||0)).length;
 
@@ -3441,6 +3582,36 @@ function renderWarehouse(wh) {
     <div class="stat-card" style="--accent:var(--gold)"><span class="stat-icon">📦</span><div class="stat-value">${items.length}</div><div class="stat-label">عدد الأصناف</div></div>
     <div class="stat-card" style="--accent:var(--success)"><span class="stat-icon">💰</span><div class="stat-value">${fmt(totalValue,0)}</div><div class="stat-label">القيمة الإجمالية (ج)</div></div>
     <div class="stat-card" style="--accent:var(--danger)"><span class="stat-icon">⚠️</span><div class="stat-value">${lowStock}</div><div class="stat-label">تحت الحد الأدنى</div></div>`;
+
+  // Type cards
+  const prefix = isWH1 ? 'wh1' : 'wh2';
+  const romiItems = allItems.filter(([,i]) => (i.productType || 'أخرى') === 'رومي');
+  const queshaItems = allItems.filter(([,i]) => (i.productType || 'أخرى') === 'قشطة');
+  const otherItems = allItems.filter(([,i]) => (i.productType || 'أخرى') === 'أخرى');
+  const romiQty = romiItems.reduce((s,[,i]) => s + Number(i.qty||0), 0);
+  const queshaQty = queshaItems.reduce((s,[,i]) => s + Number(i.qty||0), 0);
+  const otherQty = otherItems.reduce((s,[,i]) => s + Number(i.qty||0), 0);
+  const romiPrice = romiItems.length ? romiItems.reduce((s,[,i]) => s + Number(i.price||0), 0) / romiItems.length : 0;
+  const queshaPrice = queshaItems.length ? queshaItems.reduce((s,[,i]) => s + Number(i.price||0), 0) / queshaItems.length : 0;
+  const otherPrice = otherItems.length ? otherItems.reduce((s,[,i]) => s + Number(i.price||0), 0) / otherItems.length : 0;
+
+  const cardsEl = $(prefix + '-type-cards');
+  if (cardsEl) {
+    const hasAny = romiQty + queshaQty + otherQty > 0;
+    cardsEl.style.display = hasAny ? 'grid' : 'none';
+    $(prefix + '-romi-qty').textContent = fmt(romiQty,1) + ' كجم';
+    $(prefix + '-quesha-qty').textContent = fmt(queshaQty,1) + ' كجم';
+    $(prefix + '-other-qty').textContent = fmt(otherQty,1) + ' كجم';
+    $(prefix + '-romi-price').textContent = romiPrice ? fmt(romiPrice,2) + ' ج' : '—';
+    $(prefix + '-quesha-price').textContent = queshaPrice ? fmt(queshaPrice,2) + ' ج' : '—';
+    $(prefix + '-other-price').textContent = otherPrice ? fmt(otherPrice,2) + ' ج' : '—';
+  }
+
+  const typeBadge = (t) => {
+    if (t === 'رومي') return '<span class="badge badge-warning">🧀 رومي</span>';
+    if (t === 'قشطة') return '<span class="badge badge-success">🥛 قشطة</span>';
+    return '<span class="badge badge-info">📦 أخرى</span>';
+  };
 
   const tbody = $(isWH1 ? 'wh1-tbody' : 'wh2-tbody');
   tbody.innerHTML = items.length ? items.map(([id,i], idx) => {
@@ -3451,7 +3622,7 @@ function renderWarehouse(wh) {
                    '<span class="badge badge-success">متوفر</span>';
     return `<tr>
       <td>${idx+1}</td>
-      <td><strong>${sanitize(i.name)}</strong>${i.category?`<br><small style="color:var(--text-400)">${sanitize(i.category)}</small>`:''}</td>
+      <td>${typeBadge(i.productType)}<br><strong>${sanitize(i.name)}</strong>${i.category?`<br><small style="color:var(--text-400)">${sanitize(i.category)}</small>`:''}</td>
       <td>${sanitize(i.unit||'وحدة')}</td>
       <td style="color:${qty<=min?'var(--danger)':'var(--gold)'};font-weight:700">${fmt(qty,2)}</td>
       <td>${fmt(i.price,2)} ج</td>
@@ -3477,7 +3648,16 @@ function openWHModal(wh, id='') {
 
   if (id) {
     const item = state[wh][id];
-    $('wh-name').value     = item.name     || '';
+    $('wh-product-type').value = item.productType || 'رومي';
+    if (item.productType === 'أخرى') {
+      $('wh-other-name-group').style.display = '';
+      $('wh-name-group').style.display = 'none';
+      $('wh-name').value = item.name || '';
+    } else {
+      $('wh-other-name-group').style.display = 'none';
+      $('wh-name-group').style.display = '';
+      $('wh-name-std').value = item.productType || 'رومي';
+    }
     $('wh-unit').value     = item.unit     || 'كجم';
     $('wh-qty').value      = item.qty      || '';
     $('wh-price').value    = item.price    || '';
@@ -3485,11 +3665,22 @@ function openWHModal(wh, id='') {
     $('wh-category').value = item.category || '';
     $('wh-notes').value    = item.notes    || '';
   } else {
+    $('wh-product-type').value = 'رومي';
+    $('wh-other-name-group').style.display = 'none';
+    $('wh-name-group').style.display = '';
     ['wh-name','wh-qty','wh-price','wh-min','wh-category','wh-notes'].forEach(f => $(f).value = '');
+    $('wh-name-std').value = 'رومي';
     $('wh-unit').value = 'كجم';
   }
   openModal('modal-warehouse');
 }
+
+window.toggleWHOtherName = function() {
+  const v = $('wh-product-type').value;
+  $('wh-other-name-group').style.display = v === 'أخرى' ? '' : 'none';
+  $('wh-name-group').style.display = v === 'أخرى' ? 'none' : '';
+  if (v !== 'أخرى') $('wh-name-std').value = v;
+};
 window.openWH1Modal = () => openWHModal('warehouse1');
 window.openWH2Modal = () => openWHModal('warehouse2');
 window.openWHEditModal = (wh, id) => openWHModal(wh, id);
@@ -3497,13 +3688,19 @@ window.openWHEditModal = (wh, id) => openWHModal(wh, id);
 window.saveWarehouseItem = async function() {
   const wh   = $('wh-modal-target').value;
   const id   = $('wh-item-id').value;
-  const name = sanitize($('wh-name').value);
-  if (!name) { toast('اسم الصنف مطلوب', 'error'); return; }
+  const productType = $('wh-product-type').value;
+  let name = '';
+  if (productType === 'أخرى') {
+    name = sanitize($('wh-name').value);
+    if (!name) { toast('اسم الصنف مطلوب', 'error'); return; }
+  } else {
+    name = productType;
+  }
   const qty = parseFloat($('wh-qty').value) || 0;
   if (qty < 0) { toast('الكمية لا يمكن أن تكون سالبة', 'error'); return; }
 
   const data = {
-    name, unit: $('wh-unit').value, qty,
+    name, productType, unit: $('wh-unit').value, qty,
     price: parseFloat($('wh-price').value) || 0,
     minQty: parseFloat($('wh-min').value) || 0,
     category: sanitize($('wh-category').value),
@@ -7562,11 +7759,20 @@ if ('serviceWorker' in navigator) {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
+      document.getElementById('fo-product-type').value = 'رومي';
+      document.getElementById('fo-other-name-group').style.display = 'none';
       openModal('modal-factory-out');
     };
 
+    window.toggleFOOtherName = function() {
+      const v = document.getElementById('fo-product-type').value;
+      document.getElementById('fo-other-name-group').style.display = v === 'أخرى' ? '' : 'none';
+    };
+
     window.saveFactoryOut = async function() {
-      const itemName  = document.getElementById('fo-item-name').value.trim();
+      const productType = document.getElementById('fo-product-type').value;
+      const otherName  = document.getElementById('fo-item-name').value.trim();
+      const itemName  = productType === 'أخرى' ? otherName : productType;
       const qty       = parseFloat(document.getElementById('fo-qty').value);
       const count     = parseFloat(document.getElementById('fo-count').value) || 0;
       const countUnit = sanitize(document.getElementById('fo-count-unit').value || '');
@@ -7575,7 +7781,7 @@ if ('serviceWorker' in navigator) {
       const price     = parseFloat(document.getElementById('fo-price').value) || 0;
       const date      = document.getElementById('fo-date').value;
 
-      if (!itemName) { toast('أدخل اسم المنتج', 'error'); return; }
+      if (productType === 'أخرى' && !otherName) { toast('أدخل اسم المنتج', 'error'); return; }
       if (!qty || qty <= 0) { toast('الوزن يجب أن يكون أكبر من صفر', 'error'); return; }
       if (!date) { toast('اختر التاريخ', 'error'); return; }
 
@@ -7584,6 +7790,7 @@ if ('serviceWorker' in navigator) {
         await dbPush('exports', {
           date,
           warehouse: 'factory',
+          productType,
           itemId: itemName,
           itemName: sanitize(itemName),
           qty, count, countUnit, client, notes, price
@@ -7599,17 +7806,43 @@ if ('serviceWorker' in navigator) {
       const from   = document.getElementById('fo-from')?.value   || '';
       const to     = document.getElementById('fo-to')?.value     || '';
       const search = (document.getElementById('fo-search')?.value || '').trim().toLowerCase();
+      const typeFilter = document.getElementById('fo-type-filter')?.value || '';
 
       const rows = Object.entries(state.exports || {}).filter(([, e]) => {
         if (e.warehouse !== 'factory') return false;
         if (from && e.date < from) return false;
         if (to   && e.date > to)   return false;
         if (search && !(e.itemName || e.itemId || '').toLowerCase().includes(search)) return false;
+        if (typeFilter && (e.productType || 'أخرى') !== typeFilter) return false;
         return true;
       }).sort((a, b) => b[1].date > a[1].date ? 1 : -1);
 
       const totalQty   = rows.reduce((s, [, e]) => s + Number(e.qty   || 0), 0);
       const totalCount = rows.reduce((s, [, e]) => s + Number(e.count || 0), 0);
+
+      // Type-based cards
+      const allFactory = Object.values(state.exports || {}).filter(e => e.warehouse === 'factory');
+      const romiItems = allFactory.filter(e => (e.productType || 'أخرى') === 'رومي');
+      const queshaItems = allFactory.filter(e => (e.productType || 'أخرى') === 'قشطة');
+      const otherItems = allFactory.filter(e => (e.productType || 'أخرى') === 'أخرى');
+      const romiQty = romiItems.reduce((s,e) => s + Number(e.qty||0), 0);
+      const queshaQty = queshaItems.reduce((s,e) => s + Number(e.qty||0), 0);
+      const otherQty = otherItems.reduce((s,e) => s + Number(e.qty||0), 0);
+      const romiPrice = romiItems.length ? romiItems[romiItems.length-1].price || 0 : 0;
+      const queshaPrice = queshaItems.length ? queshaItems[queshaItems.length-1].price || 0 : 0;
+      const otherPrice = otherItems.length ? otherItems[otherItems.length-1].price || 0 : 0;
+
+      const cardsEl = document.getElementById('fo-type-cards');
+      if (cardsEl) {
+        const hasAny = romiQty + queshaQty + otherQty > 0;
+        cardsEl.style.display = hasAny ? 'grid' : 'none';
+        document.getElementById('fo-romi-qty').textContent = fmt(romiQty,1) + ' كجم';
+        document.getElementById('fo-quesha-qty').textContent = fmt(queshaQty,1) + ' كجم';
+        document.getElementById('fo-other-qty').textContent = fmt(otherQty,1) + ' كجم';
+        document.getElementById('fo-romi-price').textContent = romiPrice ? fmt(romiPrice,2) + ' ج' : '—';
+        document.getElementById('fo-quesha-price').textContent = queshaPrice ? fmt(queshaPrice,2) + ' ج' : '—';
+        document.getElementById('fo-other-price').textContent = otherPrice ? fmt(otherPrice,2) + ' ج' : '—';
+      }
 
       const sumEl = document.getElementById('fo-summary');
       if (sumEl) {
@@ -7622,10 +7855,17 @@ if ('serviceWorker' in navigator) {
       const tbody = document.getElementById('fo-tbody');
       if (!tbody) return;
 
+      const typeBadge = (t) => {
+        if (t === 'رومي') return '<span class="badge badge-warning">🧀 رومي</span>';
+        if (t === 'قشطة') return '<span class="badge badge-success">🥛 قشطة</span>';
+        return '<span class="badge badge-info">📦 أخرى</span>';
+      };
+
       tbody.innerHTML = rows.length ? rows.map(([id, e], i) => `
         <tr>
           <td>${i + 1}</td>
           <td>${e.date}</td>
+          <td>${typeBadge(e.productType)}</td>
           <td style="font-weight:600;color:var(--gold)">${sanitize(e.itemName || e.itemId || '—')}</td>
           <td style="color:var(--gold);font-weight:700">${fmt(e.qty, 2)} كجم</td>
           <td style="color:var(--info)">${e.count ? fmt(e.count, 0) : '—'}</td>
@@ -7638,7 +7878,7 @@ if ('serviceWorker' in navigator) {
               onclick="deleteFactoryOut('${id}')">🗑️</button>
           </td>
         </tr>`).join('')
-        : `<tr><td colspan="9"><div class="empty-state">
+        : `<tr><td colspan="10"><div class="empty-state">
             <span class="empty-icon">🏭</span>
             <p>لا توجد بيانات خارج من المعمل</p>
            </div></td></tr>`;
@@ -7655,6 +7895,31 @@ if ('serviceWorker' in navigator) {
       finally { loading(false); }
     };
 
+    // ══════════════════════════════════════════════════════════
+    // EXPORT WAREHOUSE TO CSV
+    // ══════════════════════════════════════════════════════════
+    window.exportWHToCSV = function(wh) {
+      const isWH1 = wh === 'warehouse1';
+      const label = isWH1 ? 'المخزن_الأول' : 'المخزن_الثاني';
+      const items = Object.entries(state[wh] || {});
+      if (!items.length) { toast('لا توجد بيانات للتصدير', 'error'); return; }
+      let csv = '\uFEFF';
+      csv += 'النوع,الصنف,الوحدة,الكمية,سعر الوحدة,القيمة الإجمالية\n';
+      items.forEach(([, i]) => {
+        const pType = i.productType || 'أخرى';
+        const name = sanitize(i.name || '');
+        const unit = sanitize(i.unit || 'كجم');
+        const qty = Number(i.qty || 0);
+        const price = Number(i.price || 0);
+        csv += '"' + pType + '","' + name + '","' + unit + '",' + qty + ',' + price + ',' + (qty * price) + '\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = label + '.csv'; a.click();
+      URL.revokeObjectURL(url);
+      toast('تم التصدير بنجاح', 'success');
+    };
 
     // ══════════════════════════════════════════════════════════
     // UNIVERSAL PRINT & PDF — كل الأقسام
