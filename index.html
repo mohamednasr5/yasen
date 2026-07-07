@@ -299,7 +299,7 @@
         <span style="font-size:9px;font-weight:800;color:#22c55e;letter-spacing:1.5px">LIVE</span>
       </div>
       <!-- scrolling content -->
-      <div id="easy-ticker-content" style="white-space:nowrap;display:inline-flex;align-items:center;animation:easyTickerScroll 40s linear infinite;will-change:transform;padding-right:100px">
+      <div id="easy-ticker-content" style="white-space:nowrap;display:inline-flex;align-items:center;animation:easyTickerScroll 500s linear infinite;will-change:transform">
         <span style="color:#445566;font-size:12px;padding:0 30px">⏳ جارٍ تحميل البيانات...</span>
       </div>
     </div>
@@ -591,8 +591,8 @@
 
   /* ── Ticker ── */
   @keyframes easyTickerScroll {
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+    0%   { transform: translateX(-33.33%); }
+    100% { transform: translateX(0%); }
   }
   @keyframes liveDot {
     0%,100% { opacity:1; transform:scale(1); }
@@ -1095,6 +1095,9 @@
         <div class="nav-item" onclick="navigate('expenses')">
           <span class="icon">💸</span> المصاريف
         </div>
+        <div class="nav-item" onclick="navigate('lab-purchases')">
+          <span class="icon">🧪</span> مشتريات المعمل
+        </div>
         <div class="nav-item" onclick="navigate('workers')">
           <span class="icon">👷</span> عمال المعمل
         </div>
@@ -1268,6 +1271,7 @@
                 <th>اسم المورد</th>
                 <th>رقم الهاتف</th>
                 <th>المنطقة</th>
+                <th>الكمية (كجم)</th>
                 <th>سعر الكيلو</th>
                 <th>الرصيد</th>
                 <th>الحالة</th>
@@ -1275,7 +1279,7 @@
               </tr>
             </thead>
             <tbody id="suppliers-tbody">
-              <tr><td colspan="8"><div class="empty-state"><span class="empty-icon">👥</span><p>لا يوجد موردون</p></div></td></tr>
+              <tr><td colspan="9"><div class="empty-state"><span class="empty-icon">👥</span><p>لا يوجد موردون</p></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -1386,7 +1390,8 @@
                 <tr>
                   <th>#</th>
                   <th>المورد</th>
-                  <th>إجمالي الحليب</th>
+                  <th>الكمية (كجم)</th>
+                  <th>الكمية (ج)</th>
                   <th>إجمالي المدفوعات</th>
                   <th>السلف</th>
                   <th>الرصيد المستحق</th>
@@ -1453,6 +1458,14 @@
             <div class="form-group" style="min-width:180px"><label>بحث بالمنتج</label>
               <input type="text" id="fo-search" placeholder="اسم المنتج..." oninput="loadFactoryOut()">
             </div>
+            <div class="form-group" style="min-width:150px"><label>نوع المنتج</label>
+              <select id="fo-type-filter" onchange="loadFactoryOut()">
+                <option value="">الكل</option>
+                <option value="رومي">رومي</option>
+                <option value="قشطة">قشطة</option>
+                <option value="أخرى">أخرى</option>
+              </select>
+            </div>
             <button class="btn btn-secondary" style="margin-top:22px"
               onclick="['fo-from','fo-to','fo-search'].forEach(id=>{document.getElementById(id).value='';});loadFactoryOut()">
               🔄 مسح
@@ -1461,6 +1474,26 @@
         </div>
       </div>
 
+      <div id="fo-type-cards" class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:16px;display:none">
+        <div class="stat-card" style="--accent:#f59e0b;background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(245,158,11,0.05))">
+          <span class="stat-icon">🧀</span>
+          <div class="stat-value" id="fo-romi-qty">0 كجم</div>
+          <div class="stat-label">رومي — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="fo-romi-price">—</strong></div>
+        </div>
+        <div class="stat-card" style="--accent:#10b981;background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(16,185,129,0.05))">
+          <span class="stat-icon">🥛</span>
+          <div class="stat-value" id="fo-quesha-qty">0 كجم</div>
+          <div class="stat-label">قشطة — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="fo-quesha-price">—</strong></div>
+        </div>
+        <div class="stat-card" style="--accent:#6366f1;background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(99,102,241,0.05))">
+          <span class="stat-icon">📦</span>
+          <div class="stat-value" id="fo-other-qty">0 كجم</div>
+          <div class="stat-label">أخرى — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="fo-other-price">—</strong></div>
+        </div>
+      </div>
       <div id="fo-summary" class="summary-bar" style="display:none;margin-bottom:20px">
         <div class="summary-item"><div class="val" id="fo-sum-qty" style="color:var(--gold)">0</div><div class="lbl">إجمالي الوزن (كجم)</div></div>
         <div class="summary-item"><div class="val" id="fo-sum-count" style="color:var(--info)">0</div><div class="lbl">إجمالي العدد</div></div>
@@ -1472,13 +1505,13 @@
           <table>
             <thead>
               <tr>
-                <th>#</th><th>التاريخ</th><th>المنتج</th>
-                <th>الوزن (كجم)</th><th>العدد</th><th>الوحدة</th>
+                <th>#</th><th>التاريخ</th><th>نوع المنتج</th><th>المنتج</th>
+                <th>الكمية (كجم)</th><th>العدد</th><th>الوحدة</th><th>سعر الكيلو</th><th>الإجمالي (ج)</th>
                 <th>العميل / الجهة</th><th>ملاحظات</th><th>حذف</th>
               </tr>
             </thead>
             <tbody id="fo-tbody">
-              <tr><td colspan="9"><div class="empty-state"><span class="empty-icon">🏭</span><p>لا توجد بيانات</p></div></td></tr>
+              <tr><td colspan="12"><div class="empty-state"><span class="empty-icon">🏭</span><p>لا توجد بيانات</p></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -1490,10 +1523,42 @@
         <span class="section-icon">🏭</span>
         <h2>المخزن الأول</h2>
         <button class="btn btn-primary" onclick="openWH1Modal()">➕ إضافة صنف</button>
-      
         <div style="display:flex;gap:6px">
           <button class="btn btn-secondary btn-sm" onclick="printTable('#wh1-tbody')" title="طباعة">🖨️</button>
           <button class="btn btn-secondary btn-sm" onclick="exportTableToPDF('#wh1-tbody', 'المخزن-الأول.pdf')" title="تصدير PDF">📄</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportWHToCSV('warehouse1')" title="تصدير Excel">📊</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px"><div class="card-body">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <div class="form-group" style="min-width:150px;margin:0"><label>فلتر حسب النوع</label>
+            <select id="wh1-type-filter" onchange="renderWarehouse('warehouse1')">
+              <option value="">الكل</option>
+              <option value="رومي">رومي</option>
+              <option value="قشطة">قشطة</option>
+              <option value="أخرى">أخرى</option>
+            </select>
+          </div>
+        </div>
+      </div></div>
+      <div id="wh1-type-cards" class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:16px;display:none">
+        <div class="stat-card" style="--accent:#f59e0b;background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(245,158,11,0.05))">
+          <span class="stat-icon">🧀</span>
+          <div class="stat-value" id="wh1-romi-qty">0 كجم</div>
+          <div class="stat-label">رومي — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="wh1-romi-price">—</strong></div>
+        </div>
+        <div class="stat-card" style="--accent:#10b981;background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(16,185,129,0.05))">
+          <span class="stat-icon">🥛</span>
+          <div class="stat-value" id="wh1-quesha-qty">0 كجم</div>
+          <div class="stat-label">قشطة — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="wh1-quesha-price">—</strong></div>
+        </div>
+        <div class="stat-card" style="--accent:#6366f1;background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(99,102,241,0.05))">
+          <span class="stat-icon">📦</span>
+          <div class="stat-value" id="wh1-other-qty">0 كجم</div>
+          <div class="stat-label">أخرى — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="wh1-other-price">—</strong></div>
         </div>
       </div>
       <div id="wh1-stats" class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:20px"></div>
@@ -1515,10 +1580,42 @@
         <span class="section-icon">🏪</span>
         <h2>المخزن الثاني</h2>
         <button class="btn btn-primary" onclick="openWH2Modal()">➕ إضافة صنف</button>
-      
         <div style="display:flex;gap:6px">
           <button class="btn btn-secondary btn-sm" onclick="printTable('#wh2-tbody')" title="طباعة">🖨️</button>
           <button class="btn btn-secondary btn-sm" onclick="exportTableToPDF('#wh2-tbody', 'المخزن-الثاني.pdf')" title="تصدير PDF">📄</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportWHToCSV('warehouse2')" title="تصدير Excel">📊</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px"><div class="card-body">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <div class="form-group" style="min-width:150px;margin:0"><label>فلتر حسب النوع</label>
+            <select id="wh2-type-filter" onchange="renderWarehouse('warehouse2')">
+              <option value="">الكل</option>
+              <option value="رومي">رومي</option>
+              <option value="قشطة">قشطة</option>
+              <option value="أخرى">أخرى</option>
+            </select>
+          </div>
+        </div>
+      </div></div>
+      <div id="wh2-type-cards" class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:16px;display:none">
+        <div class="stat-card" style="--accent:#f59e0b;background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(245,158,11,0.05))">
+          <span class="stat-icon">🧀</span>
+          <div class="stat-value" id="wh2-romi-qty">0 كجم</div>
+          <div class="stat-label">رومي — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="wh2-romi-price">—</strong></div>
+        </div>
+        <div class="stat-card" style="--accent:#10b981;background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(16,185,129,0.05))">
+          <span class="stat-icon">🥛</span>
+          <div class="stat-value" id="wh2-quesha-qty">0 كجم</div>
+          <div class="stat-label">قشطة — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="wh2-quesha-price">—</strong></div>
+        </div>
+        <div class="stat-card" style="--accent:#6366f1;background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(99,102,241,0.05))">
+          <span class="stat-icon">📦</span>
+          <div class="stat-value" id="wh2-other-qty">0 كجم</div>
+          <div class="stat-label">أخرى — إجمالي الكمية</div>
+          <div style="font-size:13px;color:var(--text-400);margin-top:4px">السعر: <strong id="wh2-other-price">—</strong></div>
         </div>
       </div>
       <div id="wh2-stats" class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:20px"></div>
@@ -1609,7 +1706,7 @@
         <div class="table-wrapper">
           <table>
             <thead>
-              <tr><th>#</th><th>التاريخ</th><th>العميل</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>طريقة الدفع</th><th>ملاحظات</th><th>حذف</th></tr>
+              <tr><th>#</th><th>التاريخ</th><th>العميل</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>طريقة الدفع</th><th>ملاحظات</th><th>تعديل</th><th>حذف</th></tr>
             </thead>
             <tbody id="sales-tbody"></tbody>
           </table>
@@ -1804,7 +1901,7 @@
         <div class="table-wrapper">
           <table>
             <thead>
-              <tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الفئة</th><th>المبلغ</th><th>طريقة الدفع</th><th>ملاحظات</th><th>حذف</th></tr>
+              <tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الفئة</th><th>المبلغ</th><th>طريقة الدفع</th><th>ملاحظات</th><th>تعديل</th><th>حذف</th></tr>
             </thead>
             <tbody id="expenses-tbody"></tbody>
           </table>
@@ -2044,7 +2141,55 @@
       </div>
     </div>
 
-    <!-- ════ PAGE: ADVANCES ════ -->
+    <!-- ════ PAGE: LAB PURCHASES ════ -->
+    <div class="page" id="page-lab-purchases">
+      <div class="section-header">
+        <span class="section-icon">🧪</span>
+        <h2>مشتريات المعمل</h2>
+        <button class="btn btn-primary" onclick="openLabPurchaseModal()">➕ إضافة مشتريات</button>
+
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" onclick="printTable('#lab-purchases-tbody')" title="طباعة">🖨️</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportTableToPDF('#lab-purchases-tbody', 'lab-purchases.pdf')" title="تصدير PDF">📄</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-body">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+            <div class="form-group" style="min-width:160px"><label>من تاريخ</label><input type="date" id="lp-from" onchange="loadLabPurchases()"></div>
+            <div class="form-group" style="min-width:160px"><label>إلى تاريخ</label><input type="date" id="lp-to" onchange="loadLabPurchases()"></div>
+            <div class="form-group" style="min-width:180px">
+              <div class="search-bar" style="max-width:100%">
+                <span>🔍</span>
+                <input type="text" placeholder="بحث بالمورد أو الصنف..." id="lp-search" oninput="loadLabPurchases()">
+              </div>
+            </div>
+            <button class="btn btn-secondary" style="margin-top:22px" onclick="document.getElementById('lp-from').value='';document.getElementById('lp-to').value='';document.getElementById('lp-search').value='';loadLabPurchases()">🗑️ مسح</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="lp-summary" class="summary-bar" style="display:none">
+        <div class="summary-item"><div class="val" id="lp-sum-total" style="color:var(--danger)">0</div><div class="lbl">الإجمالي (جنيه)</div></div>
+        <div class="summary-item"><div class="val" id="lp-sum-count" style="color:var(--info)">0</div><div class="lbl">عدد السجلات</div></div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>#</th><th>التاريخ</th><th>المورد</th><th>الصنف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th><th>ملاحظات</th><th>تعديل</th><th>حذف</th></tr>
+            </thead>
+            <tbody id="lab-purchases-tbody">
+              <tr><td colspan="10"><div class="empty-state"><span class="empty-icon">🧪</span><p>لا توجد مشتريات</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+<!-- ════ PAGE: ADVANCES ════ -->
     <div class="page" id="page-advances">
       <div class="section-header">
         <span class="section-icon">💵</span>
@@ -2192,6 +2337,10 @@
     <div class="bs-item" onclick="navigate('expenses');closeBottomMenu()">
       <span class="bs-icon">💸</span>
       <span>المصاريف</span>
+    </div>
+    <div class="bs-item" onclick="navigate('lab-purchases');closeBottomMenu()">
+      <span class="bs-icon">🧪</span>
+      <span>مشتريات المعمل</span>
     </div>
     <div class="bs-item" onclick="navigate('workers');closeBottomMenu()">
       <span class="bs-icon">👷</span>
@@ -2404,7 +2553,15 @@
       <input type="hidden" id="wh-modal-target">
       <input type="hidden" id="wh-item-id">
       <div class="form-grid">
-        <div class="form-group"><label>اسم الصنف *</label><input type="text" id="wh-name" placeholder="اسم المنتج"></div>
+        <div class="form-group"><label>نوع المنتج *</label>
+          <select id="wh-product-type" onchange="toggleWHOtherName()">
+            <option value="رومي">رومي</option>
+            <option value="قشطة">قشطة</option>
+            <option value="أخرى">أخرى</option>
+          </select>
+        </div>
+        <div class="form-group" id="wh-other-name-group" style="display:none"><label>اسم الصنف (أخرى) *</label><input type="text" id="wh-name" placeholder="اسم المنتج"></div>
+        <div class="form-group" id="wh-name-group"><label>اسم الصنف</label><input type="text" id="wh-name-std" placeholder="يتم تعبئته تلقائياً" readonly style="background:var(--bg-500)"></div>
         <div class="form-group"><label>وحدة القياس</label>
           <select id="wh-unit"><option>كجم</option><option>لتر</option><option>كيس</option><option>علبة</option><option>قطعة</option><option>طرد</option><option>كرتون</option></select>
         </div>
@@ -2434,8 +2591,15 @@
       <div class="modal-body">
         <div class="form-grid">
           <div class="form-group"><label>التاريخ *</label><input type="date" id="fo-date"></div>
-          <div class="form-group"><label>المنتج *</label>
-            <input type="text" id="fo-item-name" placeholder="مثال: جبنة بيضاء، زبدة، لبنة...">
+          <div class="form-group"><label>نوع المنتج *</label>
+            <select id="fo-product-type" onchange="toggleFOOtherName()">
+              <option value="رومي">رومي</option>
+              <option value="قشطة">قشطة</option>
+              <option value="أخرى">أخرى</option>
+            </select>
+          </div>
+          <div class="form-group" id="fo-other-name-group" style="display:none"><label>اسم المنتج (أخرى) *</label>
+            <input type="text" id="fo-item-name" placeholder="اكتب اسم المنتج...">
           </div>
           <div class="form-group">
             <label>الوزن (كجم) *</label>
@@ -2451,6 +2615,10 @@
           </div>
           <div class="form-group"><label>العميل / الجهة</label>
             <input type="text" id="fo-client" placeholder="اسم العميل أو الجهة">
+          </div>
+          <div class="form-group">
+            <label>السعر (جنيه) <span style="color:var(--text-400);font-size:11px">(اختياري)</span></label>
+            <input type="number" id="fo-price" placeholder="0.00" min="0" step="0.01">
           </div>
           <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label>
             <input type="text" id="fo-notes" placeholder="ملاحظات إضافية">
@@ -2502,7 +2670,8 @@
   <div class="modal" style="max-width:520px">
     <div class="modal-header">
       <span style="font-size:22px">🛒</span>
-      <h3>تسجيل بيع</h3>
+      <h3 id="sale-modal-title">تسجيل بيع</h3>
+      <input type="hidden" id="sale-record-id" value="">
       <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-sale')">✕</button>
     </div>
     <div class="modal-body">
@@ -2551,7 +2720,8 @@
   <div class="modal" style="max-width:480px">
     <div class="modal-header">
       <span style="font-size:22px">💸</span>
-      <h3>إضافة مصروف</h3>
+      <h3 id="expense-modal-title">إضافة مصروف</h3>
+      <input type="hidden" id="expense-record-id" value="">
       <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-expense')">✕</button>
     </div>
     <div class="modal-body">
@@ -2593,7 +2763,8 @@
         <button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="document.getElementById('stmt-from').value='';document.getElementById('stmt-to').value='';showAccountDetail(currentStmtSupplierId)">الكل</button>
       </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="printSupplierStatement()">🖨️ طباعة</button>
+      <button class="btn btn-primary" onclick="printSupplierStatementChoice('full')">📋 طباعة كامل الكشف</button>
+      <button class="btn btn-secondary" onclick="printSupplierStatementChoice('summary')">📊 طباعة الإجمالي فقط</button>
       <button class="btn btn-secondary" type="button" onclick="closeModal('modal-account-detail')">إغلاق</button>
       <button class="btn-whatsapp" type="button" id="wa-send-btn" style="display:none">
         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -2632,7 +2803,7 @@
 
 <!-- Worker Attendance Modal -->
 <div class="modal-backdrop" id="modal-worker-attendance">
-  <div class="modal" style="max-width:600px">
+  <div class="modal" style="max-width:420px">
     <div class="modal-header">
       <span style="font-size:22px">📅</span>
       <h3 id="worker-att-title">تسجيل حضور</h3>
@@ -2640,29 +2811,27 @@
     </div>
     <div class="modal-body">
       <input type="hidden" id="att-worker-id">
-      <div style="margin-bottom:16px;padding:12px;background:var(--bg-300);border-radius:8px;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
-        <div>
-          <div style="font-size:11px;color:var(--text-400)">الأسبوع</div>
-          <div id="att-week-label" style="color:var(--gold);font-weight:700">—</div>
-        </div>
+      <div style="text-align:center;padding:20px 16px;background:var(--bg-300);border-radius:12px;margin-bottom:20px">
+        <div style="font-size:11px;color:var(--text-400);margin-bottom:6px">تاريخ اليوم</div>
+        <div id="att-today-date" style="font-size:22px;font-weight:900;color:var(--gold);margin-bottom:4px"></div>
+        <div id="att-today-day" style="font-size:14px;color:var(--text-300)"></div>
+      </div>
+      <div style="margin-bottom:16px;padding:12px;background:var(--bg-300);border-radius:10px;display:flex;gap:16px;align-items:center">
         <div>
           <div style="font-size:11px;color:var(--text-400)">اليومية</div>
           <div id="att-daily-rate" style="color:var(--info);font-weight:700">—</div>
         </div>
         <div style="margin-right:auto">
-          <div style="font-size:11px;color:var(--text-400)">المستحق</div>
-          <div id="att-due" style="color:var(--success);font-weight:900;font-size:18px">—</div>
+          <div style="font-size:11px;color:var(--text-400)">حالة اليوم</div>
+          <div id="att-today-status" style="font-weight:900;font-size:16px">—</div>
         </div>
       </div>
-      <div id="att-days-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:20px"></div>
-      <div style="margin-bottom:12px">
-        <label style="font-size:13px;color:var(--text-300);margin-bottom:6px;display:block">أسبوع آخر</label>
-        <input type="week" id="att-week-picker" onchange="loadAttendanceWeek()">
-      </div>
+
     </div>
     <div class="modal-footer">
+      <button class="btn btn-secondary" type="button" id="att-absent-btn" onclick="markTodayAttendance(false)" style="background:#dc2626;color:#fff;border-color:#dc2626;min-width:90px;font-size:15px;padding:10px 20px">❌ غائب</button>
+      <button class="btn btn-primary" type="button" id="att-present-btn" onclick="markTodayAttendance(true)" style="background:#16a34a;border-color:#16a34a;min-width:90px;font-size:15px;padding:10px 20px">✅ حضر</button>
       <button class="btn btn-secondary" type="button" onclick="closeModal('modal-worker-attendance')">إغلاق</button>
-      <button class="btn btn-primary" type="button" onclick="saveAttendance()">💾 حفظ الحضور</button>
     </div>
   </div>
 </div>
@@ -2688,7 +2857,8 @@
         </div>
       </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="printWorkerStatement()">🖨️ طباعة</button>
+      <button class="btn btn-primary" onclick="printWorkerStatementChoice('full')">📋 طباعة كامل الكشف</button>
+      <button class="btn btn-secondary" onclick="printWorkerStatementChoice('summary')">📊 طباعة الإجمالي فقط</button>
       <button class="btn btn-secondary" type="button" onclick="closeModal('modal-worker-account')">إغلاق</button>
       <button class="btn-whatsapp" type="button" id="worker-wa-btn" style="display:none">
         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -2722,6 +2892,7 @@ const state = {
   settings: {},
   buyers: {},
   buyerPayments: {},
+  labPurchases: {},
   workers: {},
   workerAttendance: {},
   workerPayments: {}
@@ -2782,7 +2953,8 @@ const pageTitles = {
   exports: 'الصادرات', sales: 'المبيعات',
   buyers: 'إدارة المشترين', 'buyer-accounts': 'حسابات المشترين',
   expenses: 'المصاريف', reports: 'التقارير', settings: 'الإعدادات',
-  workers: 'عمال المعمل'
+  workers: 'عمال المعمل',
+  'lab-purchases': 'مشتريات المعمل'
 };
 
 // Bottom nav primary pages
@@ -2820,6 +2992,7 @@ window.navigate = function(page) {
   if (page === 'buyers') renderBuyers();
   if (page === 'buyer-accounts') { renderBuyerAccounts(); loadBuyerPayments(); }
   if (page === 'expenses') loadExpenses();
+  if (page === 'lab-purchases') loadLabPurchases();
   if (page === 'reports') initReports();
   if (page === 'settings') loadSettings();
   if (page === 'workers') renderWorkers();
@@ -2857,6 +3030,7 @@ dbListen('sales', v => { state.sales = v || {}; });
 dbListen('settings', v => { state.settings = v || {}; loadSettingsUI(); });
 dbListen('buyers', v => { state.buyers = v || {}; });
 dbListen('buyerPayments', v => { state.buyerPayments = v || {}; });
+dbListen('labPurchases', v => { state.labPurchases = v || {}; });
 dbListen('workers', v => { state.workers = v || {}; });
 dbListen('workerAttendance', v => { state.workerAttendance = v || {}; });
 dbListen('workerPayments', v => { state.workerPayments = v || {}; });
@@ -3024,9 +3198,13 @@ function renderSuppliers(search='') {
     $('suppliers-tbody').innerHTML = `<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">👥</span><p>لا يوجد موردون</p></div></td></tr>`;
     return;
   }
+  let grandTotalMilkQty=0, grandTotalMilkAmt=0;
   $('suppliers-tbody').innerHTML = rows.map(([id, s], i) => {
     const bal = calcSupplierBalance(id);
     const balClass = bal > 0 ? 'balance-positive' : bal < 0 ? 'balance-negative' : 'balance-zero';
+    const milkQty = Object.values(state.milkRecords).filter(r => r.supplierId === id).reduce((sm,r) => sm + Number(r.qty||0), 0);
+    const milkAmt = Object.values(state.milkRecords).filter(r => r.supplierId === id).reduce((sm,r) => sm + Number(r.total||0), 0);
+    grandTotalMilkQty += milkQty; grandTotalMilkAmt += milkAmt;
     const waPhone = (s.phone||'').replace(/\D/g,'');
     const waMsg = encodeURIComponent(`السلام عليكم ${s.name}،\nكشف حسابك الأسبوعي:\nإجمالي المستحقات: ${fmt(bal,2)} جنيه\nشكراً لتعاملكم معنا 🥛`);
     const waLink = waPhone ? `https://wa.me/2${waPhone}?text=${waMsg}` : '#';
@@ -3042,6 +3220,7 @@ function renderSuppliers(search='') {
         </div>
       </td>
       <td>${sanitize(s.area||'—')}</td>
+      <td style="color:var(--success);font-weight:700">${fmt(milkQty,1)} كجم</td>
       <td>${fmt(s.price,2)} ج</td>
       <td class="${balClass}" style="font-weight:700">${fmt(bal,2)} ج</td>
       <td><span class="badge ${s.status==='active'?'badge-success':'badge-danger'}">${s.status==='active'?'نشط':'متوقف'}</span></td>
@@ -3053,7 +3232,14 @@ function renderSuppliers(search='') {
         </div>
       </td>
     </tr>`;
-  }).join('');
+  }).join('') + `
+    <tr style="background:var(--bg-300);border-top:2px solid var(--gold)">
+      <td colspan="4" style="font-weight:900;color:var(--gold);font-size:15px;text-align:center">الإجمالي الكلي للحليب</td>
+      <td style="font-weight:900;color:var(--success);font-size:15px">${fmt(grandTotalMilkQty,1)} كجم</td>
+      <td></td>
+      <td style="font-weight:900;color:var(--info);font-size:15px">${fmt(grandTotalMilkAmt,2)} ج</td>
+      <td colspan="2"></td>
+    </tr>`;
 }
 
 // ── Supplier Balance Calculation ───────────────────────────────────
@@ -3079,6 +3265,7 @@ window.showAccountDetail = function(supplierId) {
   const payments    = Object.entries(state.supplierPayments).filter(([,p]) => p.supplierId === supplierId).sort((a,b) => a[1].date > b[1].date ? -1 : 1);
   const advances    = Object.entries(state.supplierAdvances).filter(([,a]) => a.supplierId === supplierId);
   const balance     = calcSupplierBalance(supplierId);
+  const milkQtyKg   = milkRecords.reduce((s,[,r]) => s + Number(r.qty||0), 0);
   const milkSum     = milkRecords.reduce((s,[,r]) => s + Number(r.total||0), 0);
   const paySum      = payments.reduce((s,[,p]) => s + Number(p.amount||0), 0);
   const advSum      = advances.reduce((s,[,a]) => s + Number(a.amount||0), 0);
@@ -3096,7 +3283,8 @@ window.showAccountDetail = function(supplierId) {
 
   $('account-detail-body').innerHTML = `
     <div class="summary-bar" style="margin-bottom:20px">
-      <div class="summary-item"><div class="val">${fmt(milkSum,2)}</div><div class="lbl">إجمالي الحليب (ج)</div></div>
+      <div class="summary-item"><div class="val" style="color:var(--success)">${fmt(milkQtyKg,1)} كجم</div><div class="lbl">الكمية (كجم)</div></div>
+      <div class="summary-item"><div class="val">${fmt(milkSum,2)}</div><div class="lbl">الكمية (ج)</div></div>
       <div class="summary-item"><div class="val" style="color:var(--danger)">${fmt(paySum,2)}</div><div class="lbl">المدفوعات (ج)</div></div>
       <div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(advSum,2)}</div><div class="lbl">السلف (ج)</div></div>
       <div class="summary-item"><div class="val" style="color:${balance>0?'var(--success)':'var(--danger)'}">${fmt(balance,2)}</div><div class="lbl">الرصيد المستحق (ج)</div></div>
@@ -3150,7 +3338,7 @@ ${dayLines || '  لا توجد سجلات هذا الأسبوع'}
   💰 إجمالي المبلغ: ${fmt(weeklyAmt,2)} ج
 
 💼 *الحساب الإجمالي:*
-  📥 إجمالي الحليب: ${fmt(milkSum,2)} ج
+  📥 الكمية: ${fmt(milkSum,2)} ج
   ✅ المدفوعات: ${fmt(paySum,2)} ج
   🟡 السلف: ${fmt(advSum,2)} ج
   📌 *الرصيد المستحق: ${fmt(balance,2)} ج*
@@ -3297,14 +3485,17 @@ function renderAccounts(search='') {
   const suppliers = Object.entries(state.suppliers)
     .filter(([,s]) => !search || fuzzyMatch(search, s.name || ''));
 
+  let acctGrandMilkQty=0, acctGrandMilkAmt=0, acctGrandPay=0, acctGrandAdv=0;
   $('accounts-tbody').innerHTML = suppliers.length ? suppliers.map(([id,s], i) => {
+    const milkQty = Object.values(state.milkRecords).filter(r => r.supplierId === id).reduce((s,r) => s + Number(r.qty||0), 0);
     const milkTotal = Object.values(state.milkRecords).filter(r => r.supplierId === id).reduce((s,r) => s + Number(r.total||0), 0);
     const payments  = Object.values(state.supplierPayments).filter(p => p.supplierId === id).reduce((s,p) => s + Number(p.amount||0), 0);
     const advances  = Object.values(state.supplierAdvances).filter(a => a.supplierId === id).reduce((s,a) => s + Number(a.amount||0), 0);
     const balance   = milkTotal - payments - advances;
     const balClass  = balance > 0 ? 'balance-positive' : balance < 0 ? 'balance-negative' : 'balance-zero';
+    acctGrandMilkQty += milkQty; acctGrandMilkAmt += milkTotal; acctGrandPay += payments; acctGrandAdv += advances;
     const waPhone = (s.phone||'').replace(/\D/g,'');
-    const waMsg = encodeURIComponent(`السلام عليكم ${s.name}،\n📊 كشف حسابك الأسبوعي:\n💰 إجمالي الحليب: ${fmt(milkTotal,2)} ج\n✅ المدفوع: ${fmt(payments,2)} ج\n💵 السلف: ${fmt(advances,2)} ج\n📌 الرصيد المستحق: ${fmt(balance,2)} ج\nشكراً 🥛`);
+    const waMsg = encodeURIComponent(`السلام عليكم ${s.name}،\n📊 كشف حسابك الأسبوعي:\n💰 الكمية: ${fmt(milkTotal,2)} ج\n✅ المدفوع: ${fmt(payments,2)} ج\n💵 السلف: ${fmt(advances,2)} ج\n📌 الرصيد المستحق: ${fmt(balance,2)} ج\nشكراً 🥛`);
     const waLink = waPhone ? `https://wa.me/2${waPhone}?text=${waMsg}` : '#';
     return `<tr style="animation: rowFadeIn 0.3s ease ${i*0.05}s both">
       <td>${i+1}</td>
@@ -3316,6 +3507,7 @@ function renderAccounts(search='') {
           </a>` : ''}
         </div>
       </td>
+      <td style="color:var(--success);font-weight:700">${fmt(milkQty,1)} كجم</td>
       <td style="color:var(--gold)">${fmt(milkTotal,2)} ج</td>
       <td style="color:var(--danger)">${fmt(payments,2)} ج</td>
       <td style="color:var(--warning)">${fmt(advances,2)} ج</td>
@@ -3327,7 +3519,16 @@ function renderAccounts(search='') {
         </div>
       </td>
     </tr>`;
-  }).join('') : `<tr><td colspan="7"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>`;
+  }).join('') + `
+    <tr style="background:var(--bg-300);border-top:2px solid var(--gold)">
+      <td colspan="2" style="font-weight:900;color:var(--gold);font-size:15px;text-align:center">الإجمالي الكلي</td>
+      <td style="font-weight:900;color:var(--success);font-size:15px">${fmt(acctGrandMilkQty,1)} كجم</td>
+      <td style="font-weight:900;color:var(--gold);font-size:15px">${fmt(acctGrandMilkAmt,2)} ج</td>
+      <td style="font-weight:900;color:var(--danger);font-size:15px">${fmt(acctGrandPay,2)} ج</td>
+      <td style="font-weight:900;color:var(--warning);font-size:15px">${fmt(acctGrandAdv,2)} ج</td>
+      <td style="font-weight:900;color:${(acctGrandMilkAmt-acctGrandPay-acctGrandAdv)>0?'var(--success)':'var(--danger)'};font-size:15px">${fmt(acctGrandMilkAmt-acctGrandPay-acctGrandAdv,2)} ج</td>
+      <td></td>
+    </tr>` : `<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>`;
 }
 
 window.filterAccounts = function() { renderAccounts($('accounts-search').value); };
@@ -3427,8 +3628,13 @@ window.deleteAdvance = async function(id) {
 // WAREHOUSE
 // ══════════════════════════════════════════════════════════════════
 function renderWarehouse(wh) {
-  const items = Object.entries(state[wh]);
+  const allItems = Object.entries(state[wh]);
   const isWH1 = wh === 'warehouse1';
+  const typeFilterEl = $(isWH1 ? 'wh1-type-filter' : 'wh2-type-filter');
+  const typeFilter = typeFilterEl ? typeFilterEl.value : '';
+
+  const items = typeFilter ? allItems.filter(([,i]) => (i.productType || 'أخرى') === typeFilter) : allItems;
+
   const totalValue = items.reduce((s,[,i]) => s + Number(i.qty||0)*Number(i.price||0), 0);
   const lowStock   = items.filter(([,i]) => Number(i.qty||0) <= Number(i.minQty||0)).length;
 
@@ -3437,6 +3643,36 @@ function renderWarehouse(wh) {
     <div class="stat-card" style="--accent:var(--gold)"><span class="stat-icon">📦</span><div class="stat-value">${items.length}</div><div class="stat-label">عدد الأصناف</div></div>
     <div class="stat-card" style="--accent:var(--success)"><span class="stat-icon">💰</span><div class="stat-value">${fmt(totalValue,0)}</div><div class="stat-label">القيمة الإجمالية (ج)</div></div>
     <div class="stat-card" style="--accent:var(--danger)"><span class="stat-icon">⚠️</span><div class="stat-value">${lowStock}</div><div class="stat-label">تحت الحد الأدنى</div></div>`;
+
+  // Type cards
+  const prefix = isWH1 ? 'wh1' : 'wh2';
+  const romiItems = allItems.filter(([,i]) => (i.productType || 'أخرى') === 'رومي');
+  const queshaItems = allItems.filter(([,i]) => (i.productType || 'أخرى') === 'قشطة');
+  const otherItems = allItems.filter(([,i]) => (i.productType || 'أخرى') === 'أخرى');
+  const romiQty = romiItems.reduce((s,[,i]) => s + Number(i.qty||0), 0);
+  const queshaQty = queshaItems.reduce((s,[,i]) => s + Number(i.qty||0), 0);
+  const otherQty = otherItems.reduce((s,[,i]) => s + Number(i.qty||0), 0);
+  const romiPrice = romiItems.length ? romiItems.reduce((s,[,i]) => s + Number(i.price||0), 0) / romiItems.length : 0;
+  const queshaPrice = queshaItems.length ? queshaItems.reduce((s,[,i]) => s + Number(i.price||0), 0) / queshaItems.length : 0;
+  const otherPrice = otherItems.length ? otherItems.reduce((s,[,i]) => s + Number(i.price||0), 0) / otherItems.length : 0;
+
+  const cardsEl = $(prefix + '-type-cards');
+  if (cardsEl) {
+    const hasAny = romiQty + queshaQty + otherQty > 0;
+    cardsEl.style.display = hasAny ? 'grid' : 'none';
+    $(prefix + '-romi-qty').textContent = fmt(romiQty,1) + ' كجم';
+    $(prefix + '-quesha-qty').textContent = fmt(queshaQty,1) + ' كجم';
+    $(prefix + '-other-qty').textContent = fmt(otherQty,1) + ' كجم';
+    $(prefix + '-romi-price').textContent = romiPrice ? fmt(romiPrice,2) + ' ج' : '—';
+    $(prefix + '-quesha-price').textContent = queshaPrice ? fmt(queshaPrice,2) + ' ج' : '—';
+    $(prefix + '-other-price').textContent = otherPrice ? fmt(otherPrice,2) + ' ج' : '—';
+  }
+
+  const typeBadge = (t) => {
+    if (t === 'رومي') return '<span class="badge badge-warning">🧀 رومي</span>';
+    if (t === 'قشطة') return '<span class="badge badge-success">🥛 قشطة</span>';
+    return '<span class="badge badge-info">📦 أخرى</span>';
+  };
 
   const tbody = $(isWH1 ? 'wh1-tbody' : 'wh2-tbody');
   tbody.innerHTML = items.length ? items.map(([id,i], idx) => {
@@ -3447,7 +3683,7 @@ function renderWarehouse(wh) {
                    '<span class="badge badge-success">متوفر</span>';
     return `<tr>
       <td>${idx+1}</td>
-      <td><strong>${sanitize(i.name)}</strong>${i.category?`<br><small style="color:var(--text-400)">${sanitize(i.category)}</small>`:''}</td>
+      <td>${typeBadge(i.productType)}<br><strong>${sanitize(i.name)}</strong>${i.category?`<br><small style="color:var(--text-400)">${sanitize(i.category)}</small>`:''}</td>
       <td>${sanitize(i.unit||'وحدة')}</td>
       <td style="color:${qty<=min?'var(--danger)':'var(--gold)'};font-weight:700">${fmt(qty,2)}</td>
       <td>${fmt(i.price,2)} ج</td>
@@ -3473,7 +3709,16 @@ function openWHModal(wh, id='') {
 
   if (id) {
     const item = state[wh][id];
-    $('wh-name').value     = item.name     || '';
+    $('wh-product-type').value = item.productType || 'رومي';
+    if (item.productType === 'أخرى') {
+      $('wh-other-name-group').style.display = '';
+      $('wh-name-group').style.display = 'none';
+      $('wh-name').value = item.name || '';
+    } else {
+      $('wh-other-name-group').style.display = 'none';
+      $('wh-name-group').style.display = '';
+      $('wh-name-std').value = item.productType || 'رومي';
+    }
     $('wh-unit').value     = item.unit     || 'كجم';
     $('wh-qty').value      = item.qty      || '';
     $('wh-price').value    = item.price    || '';
@@ -3481,11 +3726,22 @@ function openWHModal(wh, id='') {
     $('wh-category').value = item.category || '';
     $('wh-notes').value    = item.notes    || '';
   } else {
+    $('wh-product-type').value = 'رومي';
+    $('wh-other-name-group').style.display = 'none';
+    $('wh-name-group').style.display = '';
     ['wh-name','wh-qty','wh-price','wh-min','wh-category','wh-notes'].forEach(f => $(f).value = '');
+    $('wh-name-std').value = 'رومي';
     $('wh-unit').value = 'كجم';
   }
   openModal('modal-warehouse');
 }
+
+window.toggleWHOtherName = function() {
+  const v = $('wh-product-type').value;
+  $('wh-other-name-group').style.display = v === 'أخرى' ? '' : 'none';
+  $('wh-name-group').style.display = v === 'أخرى' ? 'none' : '';
+  if (v !== 'أخرى') $('wh-name-std').value = v;
+};
 window.openWH1Modal = () => openWHModal('warehouse1');
 window.openWH2Modal = () => openWHModal('warehouse2');
 window.openWHEditModal = (wh, id) => openWHModal(wh, id);
@@ -3493,13 +3749,19 @@ window.openWHEditModal = (wh, id) => openWHModal(wh, id);
 window.saveWarehouseItem = async function() {
   const wh   = $('wh-modal-target').value;
   const id   = $('wh-item-id').value;
-  const name = sanitize($('wh-name').value);
-  if (!name) { toast('اسم الصنف مطلوب', 'error'); return; }
+  const productType = $('wh-product-type').value;
+  let name = '';
+  if (productType === 'أخرى') {
+    name = sanitize($('wh-name').value);
+    if (!name) { toast('اسم الصنف مطلوب', 'error'); return; }
+  } else {
+    name = productType;
+  }
   const qty = parseFloat($('wh-qty').value) || 0;
   if (qty < 0) { toast('الكمية لا يمكن أن تكون سالبة', 'error'); return; }
 
   const data = {
-    name, unit: $('wh-unit').value, qty,
+    name, productType, unit: $('wh-unit').value, qty,
     price: parseFloat($('wh-price').value) || 0,
     minQty: parseFloat($('wh-min').value) || 0,
     category: sanitize($('wh-category').value),
@@ -3747,6 +4009,7 @@ window.loadSales = function() {
       <td style="color:${remAmt>0?'var(--danger)':'var(--success)'};font-weight:700">${fmt(remAmt,2)} ج</td>
       <td><span class="badge badge-info">${sanitize(s.method)}</span></td>
       <td>${sanitize(s.notes||'—')}</td>
+      <td><button class="btn btn-secondary btn-sm btn-icon" onclick="editSale('${id}')">✏️</button></td>
       <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteSale('${id}')">🗑️</button></td>
     </tr>`;
   }).join('') :
@@ -3820,6 +4083,7 @@ window.loadExpenses = function() {
       <td style="color:var(--danger);font-weight:700">${fmt(e.amount,2)} ج</td>
       <td>${sanitize(e.method)}</td>
       <td>${sanitize(e.notes||'—')}</td>
+      <td><button class="btn btn-secondary btn-sm btn-icon" onclick="editExpense('${id}')">✏️</button></td>
       <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteExpense('${id}')">🗑️</button></td>
     </tr>`).join('') :
     `<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💸</span><p>لا توجد مصاريف</p></div></td></tr>`;
@@ -4410,15 +4674,60 @@ window.openWorkerAttendance = function(workerId) {
   $('att-worker-id').value = workerId;
   $('worker-att-title').textContent = `حضور: ${w.name}`;
   const d = new Date();
-  const iso = d.toISOString().slice(0,10);
-  // Set week picker to current week
-  const wy = d.getFullYear();
-  const wn = getWeekNumber(d);
-  $('att-week-picker').value = `${wy}-W${String(wn).padStart(2,'0')}`;
-  currentAttWeek = getWeekBounds(iso);
-  renderAttendanceDays(workerId, currentAttWeek.start, currentAttWeek.end);
+  const todayStr = d.toISOString().slice(0,10);
+  const dayNames = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const dayName = dayNames[d.getDay()];
+  // Show today's date
+  const dateParts = todayStr.split('-');
+  const formattedDate = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
+  $('att-today-date').textContent = formattedDate;
+  $('att-today-day').textContent = dayName;
+  $('att-daily-rate').textContent = `${fmt(Number(w.daily||0),2)} ج/يوم`;
+  // Check if today already has attendance record
+  const existingAtt = Object.values(state.workerAttendance).find(a => a.workerId===workerId && a.date===todayStr);
+  const isPresent = existingAtt ? existingAtt.present : null;
+  updateTodayStatusUI(isPresent);
   openModal('modal-worker-attendance');
 };
+
+function updateTodayStatusUI(isPresent) {
+  const statusEl = $('att-today-status');
+  const presentBtn = $('att-present-btn');
+  const absentBtn = $('att-absent-btn');
+  if (isPresent === true) {
+    statusEl.innerHTML = '<span style="color:#16a34a">✅ حاضر</span>';
+    if (presentBtn) { presentBtn.style.opacity = '0.5'; presentBtn.style.transform = 'scale(0.95)'; }
+    if (absentBtn) { absentBtn.style.opacity = '1'; absentBtn.style.transform = 'scale(1)'; }
+  } else if (isPresent === false) {
+    statusEl.innerHTML = '<span style="color:#dc2626">❌ غائب</span>';
+    if (presentBtn) { presentBtn.style.opacity = '1'; presentBtn.style.transform = 'scale(1)'; }
+    if (absentBtn) { absentBtn.style.opacity = '0.5'; absentBtn.style.transform = 'scale(0.95)'; }
+  } else {
+    statusEl.innerHTML = '<span style="color:var(--text-400)">لم يُسجّل بعد</span>';
+    if (presentBtn) { presentBtn.style.opacity = '1'; presentBtn.style.transform = 'scale(1)'; }
+    if (absentBtn) { absentBtn.style.opacity = '1'; absentBtn.style.transform = 'scale(1)'; }
+  }
+}
+
+window.markTodayAttendance = function(present) {
+  const workerId = $('att-worker-id').value;
+  if (!workerId) return;
+  const todayStr = today();
+  const existingEntry = Object.entries(state.workerAttendance).find(([,a]) => a.workerId===workerId && a.date===todayStr);
+  const existingId = existingEntry ? existingEntry[0] : null;
+  updateTodayStatusUI(present);
+  // Immediately save this one day
+  if (existingId) {
+    dbUpdate(`workerAttendance/${existingId}`, { present });
+  } else {
+    dbPush('workerAttendance', { workerId, date: todayStr, present });
+  }
+  toast(present ? 'تم تسجيل الحضور ✅' : 'تم تسجيل الغياب ❌', present ? 'success' : 'info');
+  renderWorkers();
+};
+
+// Alias for compatibility
+window.openAttendanceModal = window.openWorkerAttendance;
 
 function getWeekNumber(d) {
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -4441,13 +4750,17 @@ window.loadAttendanceWeek = function() {
   currentAttWeek = getWeekBounds(sunStr);
   const workerId = $('att-worker-id').value;
   renderAttendanceDays(workerId, currentAttWeek.start, currentAttWeek.end);
+  // Refresh today status
+  const todayStr = today();
+  const existingAtt = Object.values(state.workerAttendance).find(a => a.workerId===workerId && a.date===todayStr);
+  updateTodayStatusUI(existingAtt ? existingAtt.present : null);
 };
 
 function renderAttendanceDays(workerId, weekStart, weekEnd) {
   const w = state.workers[workerId];
   if (!w) return;
   const dailyRate = Number(w.daily||0);
-  $('att-week-label').textContent = `${weekStart} ← ${weekEnd}`;
+  $('att-week-label') && ($('att-week-label').textContent = `${weekStart} ← ${weekEnd}`);
   $('att-daily-rate').textContent = `${fmt(dailyRate,2)} ج/يوم`;
 
   const grid = $('att-days-grid');
@@ -4483,7 +4796,7 @@ function renderAttendanceDays(workerId, weekStart, weekEnd) {
   });
 
   const attended = days.filter(d=>d.present).length;
-  $('att-due').textContent = `${fmt(attended * dailyRate, 2)} ج (${attended} يوم)`;
+  if ($('att-due')) $('att-due').textContent = `${fmt(attended * dailyRate, 2)} ج (${attended} يوم)`;
 
   // Store days reference for saving
   grid._days = days;
@@ -4987,7 +5300,7 @@ window.updateEasyTicker = function() {
 
     const el = document.getElementById('easy-ticker-content');
     if (el) {
-      el.innerHTML = `<span class="ticker-item" style="padding:0 28px">${line}</span><span class="ticker-item" style="padding:0 28px">${line}</span>`;
+      el.innerHTML = `<span class="ticker-item" style="padding:0 28px">${line}</span><span class="ticker-item" style="padding:0 28px">${line}</span><span class="ticker-item" style="padding:0 28px">${line}</span>`;
     }
   } catch(err) { /* silent */ }
 };
@@ -6289,6 +6602,289 @@ window.openMilkModal = function() {
 };
 
 // ══════════════════════════════════════════════════════════════════
+// WEEKLY MILK PRICE LOCK MECHANISM
+// ══════════════════════════════════════════════════════════════════
+function getWeekKey(dateStr) {
+  const d = new Date(dateStr);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d); monday.setDate(diff);
+  return monday.toISOString().slice(0, 10);
+}
+
+window.checkWeeklyPriceLock = function(dateStr) {
+  const weekKey = getWeekKey(dateStr || today());
+  return state.settings?.weeklyPriceLock?.[weekKey] || null;
+};
+
+window.lockWeeklyPrice = function(dateStr, price) {
+  const weekKey = getWeekKey(dateStr || today());
+  if (!state.settings.weeklyPriceLock) state.settings.weeklyPriceLock = {};
+  if (state.settings.weeklyPriceLock[weekKey]) return state.settings.weeklyPriceLock[weekKey];
+  state.settings.weeklyPriceLock[weekKey] = price;
+  dbSet('settings/weeklyPriceLock', state.settings.weeklyPriceLock);
+  return price;
+};
+
+// Enhance openMilkModal to check weekly lock
+const __origOpenMilkModal3 = window.openMilkModal;
+window.openMilkModal = function() {
+  __origOpenMilkModal3();
+  $('milk-modal-title').textContent = $('m-record-id').value ? 'تعديل سجل الحليب' : 'تسجيل استلام حليب';
+  const lockedPrice = window.checkWeeklyPriceLock($('m-date').value || today());
+  if (lockedPrice) {
+    $('m-price').value = lockedPrice;
+    $('m-price').readOnly = true;
+    $('m-price').style.background = 'var(--bg-600)';
+    $('m-price').title = 'السعر مقفل لهذا الأسبوع: ' + lockedPrice + ' ج/كجم';
+    calcMilkTotal();
+  } else {
+    $('m-price').readOnly = false;
+    $('m-price').style.background = '';
+    $('m-price').title = '';
+  }
+};
+
+// Override saveMilkRecord to enforce weekly price lock
+window.saveMilkRecord = async function() {
+  const supplierId = $('m-supplier').value;
+  const qty = parseFloat($('m-qty').value);
+  if (!supplierId) { toast('اختر المورد', 'error'); return; }
+  if (!qty || qty <= 0) { toast('الكمية يجب أن تكون أكبر من صفر', 'error'); return; }
+  const price = parseFloat($('m-price').value) || 0;
+  if (price < 0) { toast('السعر لا يمكن أن يكون سالباً', 'error'); return; }
+  const dateStr = $('m-date').value || today();
+  const lockedPrice = window.checkWeeklyPriceLock(dateStr);
+  const finalPrice = lockedPrice || price;
+  if (!lockedPrice && finalPrice > 0) { window.lockWeeklyPrice(dateStr, finalPrice); }
+  const data = { supplierId, date: dateStr, time: $('m-time').value, qty, price: finalPrice, total: qty * finalPrice, period: $('m-period').value, notes: sanitize($('m-notes').value) };
+  loading(true, 'جارٍ حفظ سجل الحليب...');
+  try {
+    const editId = $('m-record-id').value;
+    if (editId) { await dbUpdate('milkRecords/' + editId, data); toast('تم تحديث السجل', 'success'); }
+    else { await dbPush('milkRecords', data); toast('تم تسجيل استلام الحليب', 'success'); track('milk_receive', { supplierId, qty }); }
+    closeModal('modal-milk'); loadMilkRecords(); recalcAll();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// SALE EDIT + EXPENSE EDIT FUNCTIONS
+// ══════════════════════════════════════════════════════════════════
+window.editSale = function(id) {
+  const s = state.sales[id];
+  if (!s) return;
+  $('sale-modal-title').textContent = 'تعديل البيع';
+  $('sale-record-id').value = id;
+  $('sale-date').value = s.date || today();
+  $('sale-client').value = s.client || '';
+  $('sale-product').value = s.product || '';
+  $('sale-qty').value = s.qty || '';
+  $('sale-price').value = s.price || '';
+  $('sale-total').value = s.total || '';
+  $('sale-method').value = s.method || 'نقدي';
+  $('sale-paid-now').value = s.paidNow ?? '';
+  $('sale-remaining').value = s.remaining ?? '';
+  $('sale-notes').value = s.notes || '';
+  toggleSalePaymentFields();
+  calcSaleRemaining();
+  const dl = $('buyers-datalist');
+  if (dl) dl.innerHTML = Object.values(state.buyers).map(b => `<option value="${sanitize(b.name)}">`).join('');
+  openModal('modal-sale');
+};
+
+window.editExpense = function(id) {
+  const e = state.expenses[id];
+  if (!e) return;
+  $('expense-modal-title').textContent = 'تعديل المصروف';
+  $('expense-record-id').value = id;
+  $('e-date').value = e.date || today();
+  $('e-desc').value = e.desc || '';
+  $('e-category').value = e.category || 'أخرى';
+  $('e-amount').value = e.amount || '';
+  $('e-method').value = e.method || 'نقدي';
+  $('e-notes').value = e.notes || '';
+  openModal('modal-expense');
+};
+
+// Override saveSale to support edit
+window.saveSale = async function() {
+  const client  = sanitize($('sale-client').value);
+  const product = sanitize($('sale-product').value);
+  const qty   = parseFloat($('sale-qty').value)   || 0;
+  const price = parseFloat($('sale-price').value) || 0;
+  if (!client || !product) { toast('العميل والمنتج مطلوبان', 'error'); return; }
+  const method = $('sale-method').value;
+  const total = qty * price;
+  const paidNow = method === 'آجل' ? 0 : (method === 'جزئي' ? (parseFloat($('sale-paid-now')?.value) || 0) : total);
+  const remaining = total - paidNow;
+  const data = { date: $('sale-date').value, client, product, qty, price, total, paidNow, remaining, method, notes: sanitize($('sale-notes').value) };
+  loading(true);
+  try {
+    const editId = $('sale-record-id').value;
+    if (editId) {
+      await dbUpdate('sales/' + editId, data);
+      toast('تم تحديث البيع', 'success');
+    } else {
+      await dbPush('sales', data);
+      toast('تم تسجيل البيع', 'success');
+      track('sale_create', { product, qty, total });
+    }
+    closeModal('modal-sale');
+    loadSales();
+    recalcAll();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+// Override saveExpense to support edit
+window.saveExpense = async function() {
+  const desc   = sanitize($('e-desc').value);
+  const amount = parseFloat($('e-amount').value);
+  if (!desc) { toast('وصف المصروف مطلوب', 'error'); return; }
+  if (!amount || amount <= 0) { toast('المبلغ يجب أن يكون أكبر من صفر', 'error'); return; }
+  const data = { date: $('e-date').value, desc, category: $('e-category').value, amount, method: $('e-method').value, notes: sanitize($('e-notes').value) };
+  loading(true);
+  try {
+    const editId = $('expense-record-id').value;
+    if (editId) {
+      await dbUpdate('expenses/' + editId, data);
+      toast('تم تحديث المصروف', 'success');
+    } else {
+      await dbPush('expenses', data);
+      toast('تم تسجيل المصروف', 'success');
+      track('expense_create', { category: $('e-category').value, amount });
+    }
+    closeModal('modal-expense');
+    loadExpenses();
+    recalcAll();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+// Update openSaleModal to reset edit state
+window.openSaleModal = function() {
+  $('sale-modal-title').textContent = 'تسجيل بيع';
+  $('sale-record-id').value = '';
+  $('sale-date').value = today();
+  ['sale-client','sale-product','sale-qty','sale-price','sale-total','sale-notes','sale-paid-now','sale-remaining'].forEach(f => { const el=$(f); if(el) el.value=''; });
+  $('sale-qty').value = 1;
+  $('sale-method').value = 'نقدي';
+  toggleSalePaymentFields();
+  const dl = $('buyers-datalist');
+  if (dl) dl.innerHTML = Object.values(state.buyers).map(b => `<option value="${sanitize(b.name)}">`).join('');
+  openModal('modal-sale');
+};
+
+// Update openExpenseModal to reset edit state
+window.openExpenseModal = function() {
+  $('expense-modal-title').textContent = 'إضافة مصروف';
+  $('expense-record-id').value = '';
+  $('e-date').value = today();
+  ['e-desc','e-amount','e-notes'].forEach(f => $(f).value = '');
+  $('e-category').value = 'مرتبات';
+  $('e-method').value = 'نقدي';
+  openModal('modal-expense');
+};
+
+// ══════════════════════════════════════════════════════════════════
+// LABORATORY PURCHASES MODULE
+// ══════════════════════════════════════════════════════════════════
+window.calcLabPurchaseTotal = function() {
+  const qty = parseFloat($('lp-qty').value) || 0;
+  const price = parseFloat($('lp-price').value) || 0;
+  $('lp-total').value = (qty * price).toFixed(2);
+};
+
+window.openLabPurchaseModal = function(id) {
+  $('lp-modal-title').textContent = id ? 'تعديل مشتريات المعمل' : 'إضافة مشتريات المعمل';
+  $('lp-record-id').value = id || '';
+  if (id && state.labPurchases && state.labPurchases[id]) {
+    const r = state.labPurchases[id];
+    $('lp-date').value = r.date || today();
+    $('lp-supplier').value = r.supplier || '';
+    $('lp-item').value = r.item || '';
+    $('lp-qty').value = r.qty || '';
+    $('lp-price').value = r.unitPrice || '';
+    $('lp-total').value = r.totalPrice || '';
+    $('lp-notes').value = r.notes || '';
+  } else {
+    $('lp-date').value = today();
+    $('lp-supplier').value = '';
+    $('lp-item').value = '';
+    $('lp-qty').value = '';
+    $('lp-price').value = '';
+    $('lp-total').value = '';
+    $('lp-notes').value = '';
+  }
+  openModal('modal-lab-purchase');
+};
+
+window.saveLabPurchase = async function() {
+  const date = $('lp-date').value;
+  const supplier = sanitize($('lp-supplier').value);
+  const item = sanitize($('lp-item').value);
+  const qty = parseFloat($('lp-qty').value);
+  const unitPrice = parseFloat($('lp-price').value);
+  if (!date) { toast('التاريخ مطلوب', 'error'); return; }
+  if (!supplier) { toast('اسم المورد مطلوب', 'error'); return; }
+  if (!item) { toast('اسم الصنف مطلوب', 'error'); return; }
+  if (!qty || qty <= 0) { toast('الكمية يجب أن تكون أكبر من صفر', 'error'); return; }
+  if (!unitPrice || unitPrice < 0) { toast('سعر الوحدة غير صحيح', 'error'); return; }
+  const totalPrice = qty * unitPrice;
+  const data = { date, supplier, item, qty, unitPrice, totalPrice, notes: sanitize($('lp-notes').value) };
+  loading(true);
+  try {
+    const editId = $('lp-record-id').value;
+    if (editId) {
+      await dbUpdate('labPurchases/' + editId, data);
+      toast('تم تحديث المشتريات', 'success');
+    } else {
+      await dbPush('labPurchases', data);
+      toast('تم تسجيل المشتريات', 'success');
+      track('lab_purchase_create', { supplier, item, totalPrice });
+    }
+    closeModal('modal-lab-purchase');
+    loadLabPurchases();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.editLabPurchase = function(id) { openLabPurchaseModal(id); };
+
+window.deleteLabPurchase = async function(id) {
+  if (!confirm('حذف هذا السجل؟')) return;
+  await dbRemove('labPurchases/' + id);
+  toast('تم الحذف', 'success');
+  loadLabPurchases();
+};
+
+window.loadLabPurchases = function() {
+  const from = $('lp-from')?.value || '';
+  const to = $('lp-to')?.value || '';
+  const search = ($('lp-search')?.value || '').trim().toLowerCase();
+  const rows = Object.entries(state.labPurchases || {}).filter(([,r]) => {
+    if (from && r.date < from) return false;
+    if (to && r.date > to) return false;
+    if (search && !((r.supplier||'').toLowerCase().includes(search) || (r.item||'').toLowerCase().includes(search))) return false;
+    return true;
+  }).sort((a,b) => b[1].date > a[1].date ? 1 : -1);
+  const total = rows.reduce((s,[,r]) => s + Number(r.totalPrice||0), 0);
+  const sumEl = $('lp-summary');
+  if (sumEl) { sumEl.style.display = rows.length ? 'flex' : 'none'; $('lp-sum-total').textContent = fmt(total, 2); $('lp-sum-count').textContent = rows.length; }
+  $('lab-purchases-tbody').innerHTML = rows.length ? rows.map(([id,r], i) => `
+    <tr style="animation: rowFadeIn 0.3s ease ${i*0.04}s both">
+      <td>${i+1}</td><td>${r.date}</td><td>${sanitize(r.supplier)}</td><td>${sanitize(r.item)}</td>
+      <td>${fmt(r.qty,2)}</td><td>${fmt(r.unitPrice,2)} ج</td>
+      <td style="color:var(--danger);font-weight:700">${fmt(r.totalPrice,2)} ج</td>
+      <td>${sanitize(r.notes||'—')}</td>
+      <td><button class="btn btn-secondary btn-sm btn-icon" onclick="editLabPurchase('${id}')">✏️</button></td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteLabPurchase('${id}')">🗑️</button></td>
+    </tr>`).join('') :
+    '<tr><td colspan="10"><div class="empty-state"><span class="empty-icon">🧪</span><p>لا توجد مشتريات</p></div></td></tr>';
+};
+
+// ══════════════════════════════════════════════════════════════════
 // PURCHASES
 // ══════════════════════════════════════════════════════════════════
 window.openPurchaseModal = function(type, personId) {
@@ -6401,7 +6997,7 @@ window.updateTicker = function() {
   const cheeseCost = cheeseWeight > 0 ? (totalMilkCost + totalExpenses) / cheeseWeight : 0;
   const tickerEl = $('ticker-content');
   if (tickerEl) {
-    const items = `🥛 متوسط سعر الحليب (آخر 7 أيام): ${avgMilkPrice.toFixed(2)} ج/كجم  ◆  🧀 متوسط تكلفة الجبنة (آخر 7 أيام): ${cheeseCost.toFixed(2)} ج/كجم  ◆  📊 إجمالي الحليب (آخر 7 أيام): ${fmt(totalMilkQty,1)} كجم  ◆  `;
+    const items = `🥛 متوسط سعر الحليب (آخر 7 أيام): ${avgMilkPrice.toFixed(2)} ج/كجم  ◆  🧀 متوسط تكلفة الجبنة (آخر 7 أيام): ${cheeseCost.toFixed(2)} ج/كجم  ◆  📊 الكمية (آخر 7 أيام): ${fmt(totalMilkQty,1)} كجم  ◆  `;
     // تمييز الأرقام والأيقونات في الشريط
     const enhanceTicker = (t) => t
       .replace(/([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F02F}])/gu,
@@ -6458,8 +7054,18 @@ function printA4Header(title, infoRows) {
     <div class="info-grid">${infoRows.rows.map(r => `<div class="info-row"><span>${r[0]}:</span><span>${r[1]}</span></div>`).join('')}</div>`;
 }
 
-window.printSupplierStatement = function() {
-  const s = state.suppliers[currentStmtSupplierId]; if (!s) return;
+function getA4Style() {
+  return `@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff}h1{color:#b8860b;font-size:20px;margin-bottom:4px;text-align:center}h2,h3{color:#b8860b;font-size:14px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a}td{border:1px solid #ddd;padding:6px 8px;text-align:center}tr:nth-child(even) td{background:#fffbf0}.totals{margin-top:16px;padding:12px 16px;border:2px solid #D4A843;border-radius:8px;background:#fffdf5}.total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #f0e8cc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:10px;color:#333}.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.summary-card{border:2px solid #D4A843;border-radius:8px;padding:10px;text-align:center;background:#fffdf5}.summary-card .val{font-size:18px;font-weight:900;color:#b8860b}.summary-card .lbl{font-size:10px;color:#888;margin-top:3px}.summary-card.green .val{color:#16a34a}.summary-card.red .val{color:#dc2626}.summary-card.blue .val{color:#2563eb}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px}.info-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f0ead0}.info-row span:first-child{font-weight:bold;color:#666;min-width:90px}.footer{text-align:center;margin-top:24px;color:#aaa;font-size:11px;border-top:1px solid #eee;padding-top:8px}a{display:none!important}@media print{a{display:none!important}}`;
+}
+
+function openPrintWindow(htmlContent) {
+  const pw = window.open('','_blank');
+  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>${getA4Style()}</style></head><body>${htmlContent}<div class="footer">تم بحمد الله</div></body></html>`);
+  pw.document.close(); setTimeout(()=>pw.print(), 600);
+}
+
+function getSupplierStmtData() {
+  const s = state.suppliers[currentStmtSupplierId]; if (!s) return null;
   const df = getDateFilter('stmt');
   const allMilk = Object.entries(state.milkRecords).filter(([,r]) => r.supplierId === currentStmtSupplierId);
   const allPay = Object.entries(state.supplierPayments).filter(([,p]) => p.supplierId === currentStmtSupplierId);
@@ -6475,22 +7081,50 @@ window.printSupplierStatement = function() {
   const purSum = pur.reduce((s,[,p]) => s+Number(p.totalPrice||0), 0);
   const balance = milkSum - paySum - advSum - purSum;
   const nowStr = new Date().toLocaleString('ar-EG', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
-  const pw = window.open('','_blank');
-  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff}h1{color:#b8860b;font-size:20px;margin-bottom:4px;text-align:center}h2,h3{color:#b8860b;font-size:14px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a}td{border:1px solid #ddd;padding:6px 8px;text-align:center}tr:nth-child(even) td{background:#fffbf0}.totals{margin-top:16px;padding:12px 16px;border:2px solid #D4A843;border-radius:8px;background:#fffdf5}.total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #f0e8cc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:10px;color:#333}.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.summary-card{border:2px solid #D4A843;border-radius:8px;padding:10px;text-align:center;background:#fffdf5}.summary-card .val{font-size:18px;font-weight:900;color:#b8860b}.summary-card .lbl{font-size:10px;color:#888;margin-top:3px}.summary-card.green .val{color:#16a34a}.summary-card.red .val{color:#dc2626}.summary-card.blue .val{color:#2563eb}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px}.info-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f0ead0}.info-row span:first-child{font-weight:bold;color:#666;min-width:90px}.footer{text-align:center;margin-top:24px;color:#aaa;font-size:11px;border-top:1px solid #eee;padding-top:8px}a{display:none!important}@media print{a{display:none!important}}</style></head><body>
-      <h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
-      <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب مورد</div>
-      <div class="info-grid">
-        <div class="info-row"><span>المورد:</span><span>${s.name}</span></div>
-        <div class="info-row"><span>الهاتف:</span><span>${s.phone||'—'}</span></div>
-        <div class="info-row"><span>الفترة:</span><span>${(df.from||'الكل')+' ← '+(df.to||'الكل')}</span></div>
-        <div class="info-row"><span>تاريخ الطباعة:</span><span>${nowStr}</span></div>
-      </div>
-      <h3>سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي الحليب:</span><span>${fmt(milkSum,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${balance>0?'green':'red'}">${fmt(balance,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
-  pw.document.close(); setTimeout(()=>pw.print(), 600);
+  return {s, df, milk, pay, adv, pur, milkSum, paySum, advSum, purSum, balance, nowStr};
+}
+
+function buildSupplierFullHTML(d) {
+  return `<h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
+    <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب مورد</div>
+    <div class="info-grid">
+      <div class="info-row"><span>المورد:</span><span>${d.s.name}</span></div>
+      <div class="info-row"><span>الهاتف:</span><span>${d.s.phone||'—'}</span></div>
+      <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
+      <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
+    </div>
+    <h3>سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${d.milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${d.pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${d.adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${d.pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${d.pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>الكمية:</span><span>${fmt(d.milkSum,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(d.paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(d.advSum,2)} ج</span></div>${d.purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(d.purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${d.balance>0?'green':'red'}">${fmt(d.balance,2)} ج</span></div></div>`;
+}
+
+function buildSupplierSummaryHTML(d) {
+  return `<h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
+    <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب مورد - الإجمالي</div>
+    <div class="info-grid">
+      <div class="info-row"><span>المورد:</span><span>${d.s.name}</span></div>
+      <div class="info-row"><span>الهاتف:</span><span>${d.s.phone||'—'}</span></div>
+      <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
+      <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
+    </div>
+    <div class="summary-grid">
+      <div class="summary-card green"><div class="val">${fmt(d.milkSum,2)} ج</div><div class="lbl">الكمية</div></div>
+      <div class="summary-card red"><div class="val">${fmt(d.paySum,2)} ج</div><div class="lbl">المدفوعات</div></div>
+      <div class="summary-card"><div class="val" style="color:#d97706">${fmt(d.advSum,2)} ج</div><div class="lbl">السلف</div></div>
+      ${d.purSum>0?`<div class="summary-card blue"><div class="val">${fmt(d.purSum,2)} ج</div><div class="lbl">المشتريات</div></div>`:''}
+      <div class="summary-card ${d.balance>0?'green':'red'}"><div class="val" style="font-size:22px">${fmt(d.balance,2)} ج</div><div class="lbl">الرصيد المستحق</div></div>
+    </div>
+    <div class="totals"><div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${d.balance>0?'green':'red'}">${fmt(d.balance,2)} ج</span></div></div>`;
+}
+
+window.printSupplierStatementChoice = function(mode) {
+  const d = getSupplierStmtData(); if (!d) return;
+  openPrintWindow(mode === 'full' ? buildSupplierFullHTML(d) : buildSupplierSummaryHTML(d));
 };
 
-window.printWorkerStatement = function() {
-  const w = state.workers[currentWorkerStmtId]; if (!w) return;
+window.printSupplierStatement = function() { printSupplierStatementChoice('full'); };
+
+// ═══ Worker Statement Print Choices ═══
+function getWorkerStmtData() {
+  const w = state.workers[currentWorkerStmtId]; if (!w) return null;
   const df = getDateFilter('wstmt');
   const dailyRate = Number(w.daily||0);
   const allAtt = Object.entries(state.workerAttendance||{}).filter(([,a])=>a.workerId===currentWorkerStmtId&&a.present);
@@ -6507,21 +7141,50 @@ window.printWorkerStatement = function() {
   const purSum = pur.reduce((s,[,p])=>s+Number(p.totalPrice||0),0);
   const remaining = totalEarned - paySum - advSum - purSum;
   const nowStr = new Date().toLocaleString('ar-EG',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
-  const pw = window.open('','_blank');
-  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff}h1{color:#b8860b;font-size:20px;margin-bottom:4px;text-align:center}h2,h3{color:#b8860b;font-size:14px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a}td{border:1px solid #ddd;padding:6px 8px;text-align:center}tr:nth-child(even) td{background:#fffbf0}.totals{margin-top:16px;padding:12px 16px;border:2px solid #D4A843;border-radius:8px;background:#fffdf5}.total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #f0e8cc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:10px;color:#333}.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.summary-card{border:2px solid #D4A843;border-radius:8px;padding:10px;text-align:center;background:#fffdf5}.summary-card .val{font-size:18px;font-weight:900;color:#b8860b}.summary-card .lbl{font-size:10px;color:#888;margin-top:3px}.summary-card.green .val{color:#16a34a}.summary-card.red .val{color:#dc2626}.summary-card.blue .val{color:#2563eb}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px}.info-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f0ead0}.info-row span:first-child{font-weight:bold;color:#666;min-width:90px}.footer{text-align:center;margin-top:24px;color:#aaa;font-size:11px;border-top:1px solid #eee;padding-top:8px}a{display:none!important}@media print{a{display:none!important}}</style></head><body>
-      <h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
-      <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب عامل</div>
-      <div class="info-grid">
-        <div class="info-row"><span>العامل:</span><span>${w.name}</span></div>
-        <div class="info-row"><span>اليومية:</span><span>${fmt(dailyRate,2)} ج</span></div>
-        <div class="info-row"><span>الفترة:</span><span>${(df.from||'الكل')+' ← '+(df.to||'الكل')}</span></div>
-        <div class="info-row"><span>تاريخ الطباعة:</span><span>${nowStr}</span></div>
-      </div><h3 style="color:#D4A843">سجل الحضور (${totalDays} يوم)</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${att.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلفة</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>المستحق (${totalDays} يوم):</span><span>${fmt(totalEarned,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(paySum,2)} ج</span></div><div class="total-row"><span>السلفة:</span><span>${fmt(advSum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
-  pw.document.close(); setTimeout(()=>pw.print(), 600);
+  return {w, df, dailyRate, att, pay, adv, pur, totalDays, totalEarned, paySum, advSum, purSum, remaining, nowStr};
+}
+
+function buildWorkerFullHTML(d) {
+  return `<h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
+    <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب عامل</div>
+    <div class="info-grid">
+      <div class="info-row"><span>العامل:</span><span>${d.w.name}</span></div>
+      <div class="info-row"><span>اليومية:</span><span>${fmt(d.dailyRate,2)} ج</span></div>
+      <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
+      <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
+    </div><h3 style="color:#D4A843">سجل الحضور (${d.totalDays} يوم)</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${d.att.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(d.dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${d.pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلفة</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${d.adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${d.pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${d.pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>المستحق (${d.totalDays} يوم):</span><span>${fmt(d.totalEarned,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(d.paySum,2)} ج</span></div><div class="total-row"><span>السلفة:</span><span>${fmt(d.advSum,2)} ج</span></div>${d.purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(d.purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${d.remaining>0?'red':'green'}">${fmt(d.remaining,2)} ج</span></div></div>`;
+}
+
+function buildWorkerSummaryHTML(d) {
+  return `<h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
+    <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب عامل - الإجمالي</div>
+    <div class="info-grid">
+      <div class="info-row"><span>العامل:</span><span>${d.w.name}</span></div>
+      <div class="info-row"><span>اليومية:</span><span>${fmt(d.dailyRate,2)} ج</span></div>
+      <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
+      <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
+    </div>
+    <div class="summary-grid">
+      <div class="summary-card blue"><div class="val">${d.totalDays}</div><div class="lbl">أيام الحضور</div></div>
+      <div class="summary-card"><div class="val">${fmt(d.totalEarned,2)} ج</div><div class="lbl">المستحق</div></div>
+      <div class="summary-card green"><div class="val">${fmt(d.paySum,2)} ج</div><div class="lbl">المدفوعات</div></div>
+      <div class="summary-card"><div class="val" style="color:#d97706">${fmt(d.advSum,2)} ج</div><div class="lbl">السلفة</div></div>
+      ${d.purSum>0?`<div class="summary-card blue"><div class="val">${fmt(d.purSum,2)} ج</div><div class="lbl">المشتريات</div></div>`:''}
+      <div class="summary-card ${d.remaining>0?'red':'green'}"><div class="val" style="font-size:22px">${fmt(d.remaining,2)} ج</div><div class="lbl">المتبقي</div></div>
+    </div>
+    <div class="totals"><div class="total-row final"><span>المتبقي:</span><span style="color:${d.remaining>0?'red':'green'}">${fmt(d.remaining,2)} ج</span></div></div>`;
+}
+
+window.printWorkerStatementChoice = function(mode) {
+  const d = getWorkerStmtData(); if (!d) return;
+  openPrintWindow(mode === 'full' ? buildWorkerFullHTML(d) : buildWorkerSummaryHTML(d));
 };
 
-window.printBuyerStatement = function() {
-  const b = state.buyers[currentBuyerStmtId]; if (!b) return;
+window.printWorkerStatement = function() { printWorkerStatementChoice('full'); };
+
+// ═══ Buyer Statement Print Choices ═══
+function getBuyerStmtData() {
+  const b = state.buyers[currentBuyerStmtId]; if (!b) return null;
   const df = getDateFilter('bstmt');
   const buyerName = (b.name||'').trim().toLowerCase();
   const allSales = Object.entries(state.sales).filter(([,s])=>(s.client||'').trim().toLowerCase()===buyerName);
@@ -6536,18 +7199,44 @@ window.printBuyerStatement = function() {
   const purSum = pur.reduce((s,[,p])=>s+Number(p.totalPrice||0),0);
   const remaining = salesTotal - salesPaid - paySum - purSum;
   const nowStr = new Date().toLocaleString('ar-EG',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
-  const pw = window.open('','_blank');
-  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff}h1{color:#b8860b;font-size:20px;margin-bottom:4px;text-align:center}h2,h3{color:#b8860b;font-size:14px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a}td{border:1px solid #ddd;padding:6px 8px;text-align:center}tr:nth-child(even) td{background:#fffbf0}.totals{margin-top:16px;padding:12px 16px;border:2px solid #D4A843;border-radius:8px;background:#fffdf5}.total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #f0e8cc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:10px;color:#333}.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.summary-card{border:2px solid #D4A843;border-radius:8px;padding:10px;text-align:center;background:#fffdf5}.summary-card .val{font-size:18px;font-weight:900;color:#b8860b}.summary-card .lbl{font-size:10px;color:#888;margin-top:3px}.summary-card.green .val{color:#16a34a}.summary-card.red .val{color:#dc2626}.summary-card.blue .val{color:#2563eb}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px}.info-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f0ead0}.info-row span:first-child{font-weight:bold;color:#666;min-width:90px}.footer{text-align:center;margin-top:24px;color:#aaa;font-size:11px;border-top:1px solid #eee;padding-top:8px}a{display:none!important}@media print{a{display:none!important}}</style></head><body>
-      <h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
-      <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب مشترٍ</div>
-      <div class="info-grid">
-        <div class="info-row"><span>المشتري:</span><span>${b.name}</span></div>
-        <div class="info-row"><span>الهاتف:</span><span>${b.phone||'—'}</span></div>
-        <div class="info-row"><span>الفترة:</span><span>${(df.from||'الكل')+' ← '+(df.to||'الكل')}</span></div>
-        <div class="info-row"><span>تاريخ الطباعة:</span><span>${nowStr}</span></div>
-      </div><h3 style="color:#D4A843">المبيعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${sales.map(([,s],i)=>{const pd=Number(s.paidNow??s.total??0);return`<tr><td>${i+1}</td><td>${s.date}</td><td>${sanitize(s.product)}</td><td>${fmt(s.qty,2)}</td><td>${fmt(s.total,2)}</td><td>${fmt(pd,2)}</td><td>${fmt(Number(s.total||0)-pd,2)}</td></tr>`;}).join('')||'<tr><td colspan="7">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي المبيعات:</span><span>${fmt(salesTotal,2)} ج</span></div><div class="total-row"><span>المدفوع:</span><span>${fmt(salesPaid+paySum,2)} ج</span></div>${purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${remaining>0?'red':'green'}">${fmt(remaining,2)} ج</span></div></div><div class="footer">تم بحمد الله</div></body></html>`);
-  pw.document.close(); setTimeout(()=>pw.print(), 600);
+  return {b, df, sales, pay, pur, salesTotal, salesPaid, paySum, purSum, remaining, nowStr};
+}
+
+function buildBuyerFullHTML(d) {
+  return `<h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
+    <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب مشترٍ</div>
+    <div class="info-grid">
+      <div class="info-row"><span>المشتري:</span><span>${d.b.name}</span></div>
+      <div class="info-row"><span>الهاتف:</span><span>${d.b.phone||'—'}</span></div>
+      <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
+      <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
+    </div><h3 style="color:#D4A843">المبيعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${d.sales.map(([,s],i)=>{const pd=Number(s.paidNow??s.total??0);return`<tr><td>${i+1}</td><td>${s.date}</td><td>${sanitize(s.product)}</td><td>${fmt(s.qty,2)}</td><td>${fmt(s.total,2)}</td><td>${fmt(pd,2)}</td><td>${fmt(Number(s.total||0)-pd,2)}</td></tr>`;}).join('')||'<tr><td colspan="7">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${d.pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${d.pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${d.pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي المبيعات:</span><span>${fmt(d.salesTotal,2)} ج</span></div><div class="total-row"><span>المدفوع:</span><span>${fmt(d.salesPaid+d.paySum,2)} ج</span></div>${d.purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(d.purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${d.remaining>0?'red':'green'}">${fmt(d.remaining,2)} ج</span></div></div>`;
+}
+
+function buildBuyerSummaryHTML(d) {
+  return `<h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
+    <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب مشترٍ - الإجمالي</div>
+    <div class="info-grid">
+      <div class="info-row"><span>المشتري:</span><span>${d.b.name}</span></div>
+      <div class="info-row"><span>الهاتف:</span><span>${d.b.phone||'—'}</span></div>
+      <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
+      <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
+    </div>
+    <div class="summary-grid">
+      <div class="summary-card green"><div class="val">${fmt(d.salesTotal,2)} ج</div><div class="lbl">إجمالي المبيعات</div></div>
+      <div class="summary-card"><div class="val" style="color:#d97706">${fmt(d.salesPaid+d.paySum,2)} ج</div><div class="lbl">المدفوع</div></div>
+      ${d.purSum>0?`<div class="summary-card blue"><div class="val">${fmt(d.purSum,2)} ج</div><div class="lbl">المشتريات</div></div>`:''}
+      <div class="summary-card ${d.remaining>0?'red':'green'}"><div class="val" style="font-size:22px">${fmt(d.remaining,2)} ج</div><div class="lbl">المتبقي</div></div>
+    </div>
+    <div class="totals"><div class="total-row final"><span>المتبقي:</span><span style="color:${d.remaining>0?'red':'green'}">${fmt(d.remaining,2)} ج</span></div></div>`;
+}
+
+window.printBuyerStatementChoice = function(mode) {
+  const d = getBuyerStmtData(); if (!d) return;
+  openPrintWindow(mode === 'full' ? buildBuyerFullHTML(d) : buildBuyerSummaryHTML(d));
 };
+
+window.printBuyerStatement = function() { printBuyerStatementChoice('full'); };
 
 // ══════════════════════════════════════════════════════════════════
 // UPDATED STATEMENT VIEWS (with date filter, purchases, advances)
@@ -6754,6 +7443,33 @@ setTimeout(loadDashboard, 800);
 </div>
 
 <!-- Purchase Modal -->
+<!-- Lab Purchase Modal -->
+<div class="modal-backdrop" id="modal-lab-purchase">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <span style="font-size:22px">🧪</span>
+      <h3 id="lp-modal-title">إضافة مشتريات المعمل</h3>
+      <input type="hidden" id="lp-record-id" value="">
+      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-lab-purchase')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>التاريخ *</label><input type="date" id="lp-date"></div>
+        <div class="form-group"><label>المورد *</label><input type="text" id="lp-supplier" placeholder="اسم المورد"></div>
+        <div class="form-group"><label>اسم الصنف *</label><input type="text" id="lp-item" placeholder="اسم الصنف"></div>
+        <div class="form-group"><label>الكمية *</label><input type="number" id="lp-qty" placeholder="0" min="0" step="0.01" oninput="calcLabPurchaseTotal()"></div>
+        <div class="form-group"><label>سعر الوحدة (جنيه) *</label><input type="number" id="lp-price" placeholder="0" min="0" step="0.01" oninput="calcLabPurchaseTotal()"></div>
+        <div class="form-group"><label>الإجمالي (جنيه)</label><input type="number" id="lp-total" placeholder="0" readonly style="background:var(--bg-500);color:var(--danger);font-weight:700"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="lp-notes" placeholder="ملاحظات اختيارية"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-lab-purchase')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveLabPurchase()">💾 حفظ</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="modal-purchase">
   <div class="modal" style="max-width:520px">
     <div class="modal-header"><span style="font-size:22px">🛍️</span><h3 id="purchase-modal-title">تسجيل مشتريات</h3><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-purchase')">✕</button></div>
@@ -6780,7 +7496,8 @@ setTimeout(loadDashboard, 800);
     <div class="modal-body" id="buyer-account-body"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-buyer-account')">إغلاق</button>
-      <button class="btn btn-primary" id="buyer-print-btn" onclick="printBuyerStatement()">🖨️ طباعة</button>
+      <button class="btn btn-primary" id="buyer-print-btn" onclick="printBuyerStatementChoice('full')">📋 طباعة كامل الكشف</button>
+      <button class="btn btn-secondary" onclick="printBuyerStatementChoice('summary')">📊 طباعة الإجمالي فقط</button>
       <a class="btn btn-secondary" id="buyer-wa-btn" href="#" target="_blank" style="display:none;text-decoration:none">📱 واتساب</a>
     </div>
   </div>
@@ -7381,7 +8098,7 @@ if ('serviceWorker' in navigator) {
         <h2 style="color:#555;border:none;font-size:14px">ملخص إجماليات الفترة</h2>
         <div class="meta">📅 الفترة: ${d.periodLabel} | 🖨️ طُبع: ${new Date().toLocaleString('ar-EG')}</div>
         <div class="summary-grid">
-          <div class="summary-card blue"><div class="val">${fmt(d.milkQty,1)} كجم</div><div class="lbl">إجمالي الحليب</div></div>
+          <div class="summary-card blue"><div class="val">${fmt(d.milkQty,1)} كجم</div><div class="lbl">الكمية</div></div>
           <div class="summary-card blue"><div class="val">${fmt(d.milkAmt,2)}</div><div class="lbl">قيمة الحليب</div></div>
           <div class="summary-card"><div class="val" style="color:#d97706">${fmt(d.factoryTot,2)} كجم</div><div class="lbl">خارج من المعمل</div></div>
           <div class="summary-card"><div class="val">${fmt(d.exp1Tot,2)} كجم</div><div class="lbl">صادرات المخزن 1</div></div>
@@ -7411,23 +8128,33 @@ if ('serviceWorker' in navigator) {
 
     window.openFactoryOutModal = function() {
       document.getElementById('fo-date').value = typeof today === 'function' ? today() : new Date().toISOString().slice(0,10);
-      ['fo-item-name','fo-qty','fo-count','fo-count-unit','fo-client','fo-notes'].forEach(id => {
+      ['fo-item-name','fo-qty','fo-count','fo-count-unit','fo-client','fo-notes','fo-price'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
+      document.getElementById('fo-product-type').value = 'رومي';
+      document.getElementById('fo-other-name-group').style.display = 'none';
       openModal('modal-factory-out');
     };
 
+    window.toggleFOOtherName = function() {
+      const v = document.getElementById('fo-product-type').value;
+      document.getElementById('fo-other-name-group').style.display = v === 'أخرى' ? '' : 'none';
+    };
+
     window.saveFactoryOut = async function() {
-      const itemName  = document.getElementById('fo-item-name').value.trim();
+      const productType = document.getElementById('fo-product-type').value;
+      const otherName  = document.getElementById('fo-item-name').value.trim();
+      const itemName  = productType === 'أخرى' ? otherName : productType;
       const qty       = parseFloat(document.getElementById('fo-qty').value);
       const count     = parseFloat(document.getElementById('fo-count').value) || 0;
       const countUnit = sanitize(document.getElementById('fo-count-unit').value || '');
       const client    = sanitize(document.getElementById('fo-client').value || '');
       const notes     = sanitize(document.getElementById('fo-notes').value || '');
+      const price     = parseFloat(document.getElementById('fo-price').value) || 0;
       const date      = document.getElementById('fo-date').value;
 
-      if (!itemName) { toast('أدخل اسم المنتج', 'error'); return; }
+      if (productType === 'أخرى' && !otherName) { toast('أدخل اسم المنتج', 'error'); return; }
       if (!qty || qty <= 0) { toast('الوزن يجب أن يكون أكبر من صفر', 'error'); return; }
       if (!date) { toast('اختر التاريخ', 'error'); return; }
 
@@ -7436,9 +8163,10 @@ if ('serviceWorker' in navigator) {
         await dbPush('exports', {
           date,
           warehouse: 'factory',
+          productType,
           itemId: itemName,
           itemName: sanitize(itemName),
-          qty, count, countUnit, client, notes
+          qty, count, countUnit, client, notes, price
         });
         toast('تم تسجيل الصادر من المعمل ✅', 'success');
         closeModal('modal-factory-out');
@@ -7451,17 +8179,43 @@ if ('serviceWorker' in navigator) {
       const from   = document.getElementById('fo-from')?.value   || '';
       const to     = document.getElementById('fo-to')?.value     || '';
       const search = (document.getElementById('fo-search')?.value || '').trim().toLowerCase();
+      const typeFilter = document.getElementById('fo-type-filter')?.value || '';
 
       const rows = Object.entries(state.exports || {}).filter(([, e]) => {
         if (e.warehouse !== 'factory') return false;
         if (from && e.date < from) return false;
         if (to   && e.date > to)   return false;
         if (search && !(e.itemName || e.itemId || '').toLowerCase().includes(search)) return false;
+        if (typeFilter && (e.productType || 'أخرى') !== typeFilter) return false;
         return true;
       }).sort((a, b) => b[1].date > a[1].date ? 1 : -1);
 
       const totalQty   = rows.reduce((s, [, e]) => s + Number(e.qty   || 0), 0);
       const totalCount = rows.reduce((s, [, e]) => s + Number(e.count || 0), 0);
+
+      // Type-based cards
+      const allFactory = Object.values(state.exports || {}).filter(e => e.warehouse === 'factory');
+      const romiItems = allFactory.filter(e => (e.productType || 'أخرى') === 'رومي');
+      const queshaItems = allFactory.filter(e => (e.productType || 'أخرى') === 'قشطة');
+      const otherItems = allFactory.filter(e => (e.productType || 'أخرى') === 'أخرى');
+      const romiQty = romiItems.reduce((s,e) => s + Number(e.qty||0), 0);
+      const queshaQty = queshaItems.reduce((s,e) => s + Number(e.qty||0), 0);
+      const otherQty = otherItems.reduce((s,e) => s + Number(e.qty||0), 0);
+      const romiPrice = romiItems.length ? romiItems[romiItems.length-1].price || 0 : 0;
+      const queshaPrice = queshaItems.length ? queshaItems[queshaItems.length-1].price || 0 : 0;
+      const otherPrice = otherItems.length ? otherItems[otherItems.length-1].price || 0 : 0;
+
+      const cardsEl = document.getElementById('fo-type-cards');
+      if (cardsEl) {
+        const hasAny = romiQty + queshaQty + otherQty > 0;
+        cardsEl.style.display = hasAny ? 'grid' : 'none';
+        document.getElementById('fo-romi-qty').textContent = fmt(romiQty,1) + ' كجم';
+        document.getElementById('fo-quesha-qty').textContent = fmt(queshaQty,1) + ' كجم';
+        document.getElementById('fo-other-qty').textContent = fmt(otherQty,1) + ' كجم';
+        document.getElementById('fo-romi-price').textContent = romiPrice ? fmt(romiPrice,2) + ' ج' : '—';
+        document.getElementById('fo-quesha-price').textContent = queshaPrice ? fmt(queshaPrice,2) + ' ج' : '—';
+        document.getElementById('fo-other-price').textContent = otherPrice ? fmt(otherPrice,2) + ' ج' : '—';
+      }
 
       const sumEl = document.getElementById('fo-summary');
       if (sumEl) {
@@ -7474,14 +8228,23 @@ if ('serviceWorker' in navigator) {
       const tbody = document.getElementById('fo-tbody');
       if (!tbody) return;
 
+      const typeBadge = (t) => {
+        if (t === 'رومي') return '<span class="badge badge-warning">🧀 رومي</span>';
+        if (t === 'قشطة') return '<span class="badge badge-success">🥛 قشطة</span>';
+        return '<span class="badge badge-info">📦 أخرى</span>';
+      };
+
       tbody.innerHTML = rows.length ? rows.map(([id, e], i) => `
         <tr>
           <td>${i + 1}</td>
           <td>${e.date}</td>
+          <td>${typeBadge(e.productType)}</td>
           <td style="font-weight:600;color:var(--gold)">${sanitize(e.itemName || e.itemId || '—')}</td>
           <td style="color:var(--gold);font-weight:700">${fmt(e.qty, 2)} كجم</td>
           <td style="color:var(--info)">${e.count ? fmt(e.count, 0) : '—'}</td>
           <td style="color:var(--text-300)">${sanitize(e.countUnit || '—')}</td>
+          <td>${e.price ? fmt(e.price, 2) + ' ج/كجم' : '—'}</td>
+          <td style="color:var(--success);font-weight:900">${e.price && e.qty ? fmt(e.qty * e.price, 2) + ' ج' : '—'}</td>
           <td>${sanitize(e.client || '—')}</td>
           <td style="color:var(--text-400)">${sanitize(e.notes || '—')}</td>
           <td>
@@ -7489,7 +8252,7 @@ if ('serviceWorker' in navigator) {
               onclick="deleteFactoryOut('${id}')">🗑️</button>
           </td>
         </tr>`).join('')
-        : `<tr><td colspan="9"><div class="empty-state">
+        : `<tr><td colspan="12"><div class="empty-state">
             <span class="empty-icon">🏭</span>
             <p>لا توجد بيانات خارج من المعمل</p>
            </div></td></tr>`;
@@ -7506,6 +8269,31 @@ if ('serviceWorker' in navigator) {
       finally { loading(false); }
     };
 
+    // ══════════════════════════════════════════════════════════
+    // EXPORT WAREHOUSE TO CSV
+    // ══════════════════════════════════════════════════════════
+    window.exportWHToCSV = function(wh) {
+      const isWH1 = wh === 'warehouse1';
+      const label = isWH1 ? 'المخزن_الأول' : 'المخزن_الثاني';
+      const items = Object.entries(state[wh] || {});
+      if (!items.length) { toast('لا توجد بيانات للتصدير', 'error'); return; }
+      let csv = '\uFEFF';
+      csv += 'النوع,الصنف,الوحدة,الكمية,سعر الوحدة,القيمة الإجمالية\n';
+      items.forEach(([, i]) => {
+        const pType = i.productType || 'أخرى';
+        const name = sanitize(i.name || '');
+        const unit = sanitize(i.unit || 'كجم');
+        const qty = Number(i.qty || 0);
+        const price = Number(i.price || 0);
+        csv += '"' + pType + '","' + name + '","' + unit + '",' + qty + ',' + price + ',' + (qty * price) + '\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = label + '.csv'; a.click();
+      URL.revokeObjectURL(url);
+      toast('تم التصدير بنجاح', 'success');
+    };
 
     // ══════════════════════════════════════════════════════════
     // UNIVERSAL PRINT & PDF — كل الأقسام
