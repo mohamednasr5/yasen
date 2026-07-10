@@ -2430,6 +2430,51 @@
   </div>
 </div>
 
+<!-- Milk Price Update Modal -->
+<div class="modal-backdrop" id="modal-milk-price-update">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <span style="font-size:22px">💰</span>
+      <h3>تطبيق سعر جديد على الحليب</h3>
+      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-milk-price-update')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--bg-300);border-radius:10px;padding:14px;margin-bottom:16px;text-align:center">
+        <div style="font-size:12px;color:var(--text-400)">المورد</div>
+        <div id="mpu-supplier-name" style="font-weight:700;color:var(--gold);font-size:16px;margin-bottom:8px">—</div>
+        <div style="display:flex;gap:20px;justify-content:center">
+          <div><div style="font-size:11px;color:var(--text-400)">السعر القديم</div><div id="mpu-old-price" style="color:var(--danger);font-weight:700;font-size:18px">—</div></div>
+          <div style="display:flex;align-items:center;font-size:20px;color:var(--text-400)">←</div>
+          <div><div style="font-size:11px;color:var(--text-400)">السعر الجديد</div><div id="mpu-new-price" style="color:var(--success);font-weight:700;font-size:18px">—</div></div>
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-weight:700;margin-bottom:8px;display:block">اختر نطاق التعديل:</label>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg-300);border-radius:8px;cursor:pointer;border:2px solid transparent" id="mpu-option-this">
+            <input type="radio" name="mpu-scope" value="this" style="width:18px;height:18px" checked>
+            <div><div style="font-weight:700">هذا السجل فقط</div><div style="font-size:11px;color:var(--text-400)">تعديل سعر هذا السجل الحالي فقط</div></div>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg-300);border-radius:8px;cursor:pointer;border:2px solid transparent" id="mpu-option-week">
+            <input type="radio" name="mpu-scope" value="week" style="width:18px;height:18px">
+            <div><div style="font-weight:700">كامل الأسبوع</div><div style="font-size:11px;color:var(--text-400)" id="mpu-week-range">—</div></div>
+          </label>
+          <label style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg-300);border-radius:8px;cursor:pointer;border:2px solid transparent" id="mpu-option-dates">
+            <input type="radio" name="mpu-scope" value="dates" style="width:18px;height:18px">
+            <div style="flex:1"><div style="font-weight:700">أيام محددة</div><div style="font-size:11px;color:var(--text-400)">اختر التواريخ المراد تعديلها</div>
+              <div id="mpu-dates-container" style="display:none;margin-top:8px;max-height:150px;overflow-y:auto;padding:8px;background:var(--bg-400);border-radius:6px"></div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-milk-price-update')">إلغاء</button>
+      <button class="btn btn-primary" onclick="applyMilkPriceUpdate()">✅ تطبيق</button>
+    </div>
+  </div>
+</div>
+
 <!-- Buyer Modal -->
 <div class="modal-backdrop" id="modal-buyer">
   <div class="modal" style="max-width:500px">
@@ -2996,6 +3041,7 @@ window.navigate = function(page) {
   if (page === 'reports') initReports();
   if (page === 'settings') loadSettings();
   if (page === 'workers') renderWorkers();
+  if (page === 'advances') { loadWorkerAdvancesTable(); loadSupplierAdvancesTable(); }
 };
 
 window.toggleSidebar = () => {
@@ -3165,12 +3211,44 @@ window.saveSupplier = async function() {
   loading(true, 'جارٍ حفظ بيانات المورد...');
   try {
     const id = $('supplier-id').value;
-    if (id) await dbUpdate(`suppliers/${id}`, data);
-    else    await dbPush('suppliers', data);
-    toast(id ? 'تم تحديث المورد' : 'تم إضافة المورد', 'success');
+    if (id) {
+      const oldSupplier = state.suppliers[id];
+      const oldPrice = oldSupplier ? Number(oldSupplier.price || 0) : 0;
+      await dbUpdate(`suppliers/${id}`, data);
+      // Check if price changed and ask to update all milk records
+      if (oldPrice > 0 && price > 0 && oldPrice !== price) {
+        loading(false);
+        const applyAll = confirm('تم تغيير سعر الكيلو من ' + oldPrice + ' إلى ' + price + ' ج\n\nهل تريد تطبيق السعر الجديد على جميع سجلات الحليب السابقة لهذا المورد؟');
+        if (applyAll) {
+          loading(true, 'جارٍ تحديث أسعار الحليب...');
+          const updates = {};
+          Object.entries(state.milkRecords).forEach(([recId, r]) => {
+            if (r.supplierId === id && Number(r.price || 0) !== price) {
+              updates['milkRecords/' + recId] = { ...r, price: price, total: Number(r.qty || 0) * price };
+            }
+          });
+          const updateCount = Object.keys(updates).length;
+          if (updateCount > 0) {
+            // Update in batches to avoid Firebase limits
+            const entries = Object.entries(updates);
+            for (let i = 0; i < entries.length; i++) {
+              await dbUpdate(entries[i][0], entries[i][1]);
+            }
+            toast('تم تحديث ' + updateCount + ' سجل حليب بالسعر الجديد', 'success');
+          } else {
+            toast('لا توجد سجلات تحتاج تحديث', 'success');
+          }
+        }
+      }
+      toast('تم تحديث المورد', 'success');
+    } else {
+      await dbPush('suppliers', data);
+      toast('تم إضافة المورد', 'success');
+    }
     track(id ? 'supplier_update' : 'supplier_create', { name });
     closeModal('modal-supplier');
     renderSuppliers();
+    recalcAll();
   } catch(e) { toast('خطأ في الحفظ: ' + e.message, 'error'); }
   finally { loading(false); }
 };
@@ -3495,7 +3573,7 @@ function renderAccounts(search='') {
     const balClass  = balance > 0 ? 'balance-positive' : balance < 0 ? 'balance-negative' : 'balance-zero';
     acctGrandMilkQty += milkQty; acctGrandMilkAmt += milkTotal; acctGrandPay += payments; acctGrandAdv += advances;
     const waPhone = (s.phone||'').replace(/\D/g,'');
-    const waMsg = encodeURIComponent(`السلام عليكم ${s.name}،\n📊 كشف حسابك الأسبوعي:\n💰 الكمية: ${fmt(milkTotal,2)} ج\n✅ المدفوع: ${fmt(payments,2)} ج\n💵 السلف: ${fmt(advances,2)} ج\n📌 الرصيد المستحق: ${fmt(balance,2)} ج\nشكراً 🥛`);
+    const waMsg = encodeURIComponent(`السلام عليكم ${s.name}،\n📊 كشف حسابك الأسبوعي:\n🥛 كمية الحليب: ${fmt(milkQty,1)} كجم\n💰 إجمالي الحليب: ${fmt(milkTotal,2)} ج\n✅ المدفوع: ${fmt(payments,2)} ج\n💵 السلف: ${fmt(advances,2)} ج\n📌 الرصيد المستحق: ${fmt(balance,2)} ج\nشكراً 🥛`);
     const waLink = waPhone ? `https://wa.me/2${waPhone}?text=${waMsg}` : '#';
     return `<tr style="animation: rowFadeIn 0.3s ease ${i*0.05}s both">
       <td>${i+1}</td>
@@ -6602,7 +6680,7 @@ window.openMilkModal = function() {
 };
 
 // ══════════════════════════════════════════════════════════════════
-// WEEKLY MILK PRICE LOCK MECHANISM
+// FLEXIBLE MILK PRICE UPDATE MECHANISM
 // ══════════════════════════════════════════════════════════════════
 function getWeekKey(dateStr) {
   const d = new Date(dateStr);
@@ -6612,40 +6690,27 @@ function getWeekKey(dateStr) {
   return monday.toISOString().slice(0, 10);
 }
 
-window.checkWeeklyPriceLock = function(dateStr) {
-  const weekKey = getWeekKey(dateStr || today());
-  return state.settings?.weeklyPriceLock?.[weekKey] || null;
-};
+function getWeekBounds(dateStr) {
+  const wk = getWeekKey(dateStr);
+  const end = new Date(wk); end.setDate(end.getDate() + 6);
+  return { start: wk, end: end.toISOString().slice(0, 10) };
+}
 
-window.lockWeeklyPrice = function(dateStr, price) {
-  const weekKey = getWeekKey(dateStr || today());
-  if (!state.settings.weeklyPriceLock) state.settings.weeklyPriceLock = {};
-  if (state.settings.weeklyPriceLock[weekKey]) return state.settings.weeklyPriceLock[weekKey];
-  state.settings.weeklyPriceLock[weekKey] = price;
-  dbSet('settings/weeklyPriceLock', state.settings.weeklyPriceLock);
-  return price;
-};
+// Temp storage for price update context
+let _pendingPriceUpdate = null;
 
-// Enhance openMilkModal to check weekly lock
+// Enhance openMilkModal - price is always editable now, no read-only lock
 const __origOpenMilkModal3 = window.openMilkModal;
 window.openMilkModal = function() {
   __origOpenMilkModal3();
   $('milk-modal-title').textContent = $('m-record-id').value ? 'تعديل سجل الحليب' : 'تسجيل استلام حليب';
-  const lockedPrice = window.checkWeeklyPriceLock($('m-date').value || today());
-  if (lockedPrice) {
-    $('m-price').value = lockedPrice;
-    $('m-price').readOnly = true;
-    $('m-price').style.background = 'var(--bg-600)';
-    $('m-price').title = 'السعر مقفل لهذا الأسبوع: ' + lockedPrice + ' ج/كجم';
-    calcMilkTotal();
-  } else {
-    $('m-price').readOnly = false;
-    $('m-price').style.background = '';
-    $('m-price').title = '';
-  }
+  // Price is always editable - no lock restriction
+  $('m-price').readOnly = false;
+  $('m-price').style.background = '';
+  $('m-price').title = '';
 };
 
-// Override saveMilkRecord to enforce weekly price lock
+// Updated saveMilkRecord with flexible price update
 window.saveMilkRecord = async function() {
   const supplierId = $('m-supplier').value;
   const qty = parseFloat($('m-qty').value);
@@ -6654,16 +6719,129 @@ window.saveMilkRecord = async function() {
   const price = parseFloat($('m-price').value) || 0;
   if (price < 0) { toast('السعر لا يمكن أن يكون سالباً', 'error'); return; }
   const dateStr = $('m-date').value || today();
-  const lockedPrice = window.checkWeeklyPriceLock(dateStr);
-  const finalPrice = lockedPrice || price;
-  if (!lockedPrice && finalPrice > 0) { window.lockWeeklyPrice(dateStr, finalPrice); }
-  const data = { supplierId, date: dateStr, time: $('m-time').value, qty, price: finalPrice, total: qty * finalPrice, period: $('m-period').value, notes: sanitize($('m-notes').value) };
+  const editId = $('m-record-id').value;
+
+  // Check if price changed for an existing record
+  if (editId && state.milkRecords[editId]) {
+    const oldRec = state.milkRecords[editId];
+    const oldPrice = Number(oldRec.price || 0);
+    if (oldPrice > 0 && price > 0 && oldPrice !== price) {
+      // Price changed - store context and open the price update modal
+      const wb = getWeekBounds(dateStr);
+      const supplierName = state.suppliers[supplierId]?.name || '—';
+      _pendingPriceUpdate = { editId, supplierId, dateStr, oldPrice, newPrice: price, qty };
+
+      // Populate the modal
+      $('mpu-supplier-name').textContent = supplierName;
+      $('mpu-old-price').textContent = oldPrice + ' ج';
+      $('mpu-new-price').textContent = price + ' ج';
+      $('mpu-week-range').textContent = wb.start + ' → ' + wb.end;
+
+      // Build dates list for the same supplier in this week
+      const weekDates = {};
+      Object.entries(state.milkRecords).forEach(([rid, r]) => {
+        if (r.supplierId === supplierId && r.date >= wb.start && r.date <= wb.end) {
+          if (!weekDates[r.date]) weekDates[r.date] = [];
+          weekDates[r.date].push({ id: rid, price: Number(r.price || 0), qty: Number(r.qty || 0) });
+        }
+      });
+
+      const datesContainer = $('mpu-dates-container');
+      const sortedDates = Object.keys(weekDates).sort();
+      datesContainer.innerHTML = sortedDates.length ? sortedDates.map(d => {
+        const recs = weekDates[d];
+        const hasOldPrice = recs.some(r => r.price === oldPrice);
+        return `<label style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;font-size:13px">
+          <input type="checkbox" class="mpu-date-check" value="${d}" ${hasOldPrice && d !== dateStr ? 'checked' : ''} style="width:16px;height:16px">
+          <span>${d}</span>
+          <span style="color:var(--text-400);font-size:11px">(${recs.length} سجل)</span>
+        </label>`;
+      }).join('') : '<div style="color:var(--text-400);font-size:12px">لا توجد سجلات أخرى في هذا الأسبوع</div>';
+
+      // Reset radio to "this" and show modal
+      document.querySelector('input[name="mpu-scope"][value="this"]').checked = true;
+      $('mpu-dates-container').style.display = 'none';
+      closeModal('modal-milk');
+      openModal('modal-milk-price-update');
+      setupMPURadioListeners();
+      return;
+    }
+  }
+
+  // Normal save (no price change or new record)
+  const data = { supplierId, date: dateStr, time: $('m-time').value, qty, price, total: qty * price, period: $('m-period').value, notes: sanitize($('m-notes').value) };
   loading(true, 'جارٍ حفظ سجل الحليب...');
   try {
-    const editId = $('m-record-id').value;
     if (editId) { await dbUpdate('milkRecords/' + editId, data); toast('تم تحديث السجل', 'success'); }
     else { await dbPush('milkRecords', data); toast('تم تسجيل استلام الحليب', 'success'); track('milk_receive', { supplierId, qty }); }
     closeModal('modal-milk'); loadMilkRecords(); recalcAll();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+function setupMPURadioListeners() {
+  document.querySelectorAll('input[name="mpu-scope"]').forEach(radio => {
+    radio.onchange = function() {
+      $('mpu-dates-container').style.display = this.value === 'dates' ? 'block' : 'none';
+      ['mpu-option-this','mpu-option-week','mpu-option-dates'].forEach(id => $(id).style.borderColor = 'transparent');
+      const activeId = this.value === 'this' ? 'mpu-option-this' : this.value === 'week' ? 'mpu-option-week' : 'mpu-option-dates';
+      $(activeId).style.borderColor = 'var(--gold)';
+    };
+  });
+  // Highlight default
+  $('mpu-option-this').style.borderColor = 'var(--gold)';
+}
+
+window.applyMilkPriceUpdate = async function() {
+  if (!_pendingPriceUpdate) return;
+  const { editId, supplierId, dateStr, oldPrice, newPrice, qty } = _pendingPriceUpdate;
+  const scope = document.querySelector('input[name="mpu-scope"]:checked').value;
+
+  loading(true, 'جارٍ تطبيق السعر الجديد...');
+  try {
+    // Always update the current record
+    await dbUpdate('milkRecords/' + editId, {
+      ...state.milkRecords[editId],
+      price: newPrice,
+      total: Number(state.milkRecords[editId].qty || 0) * newPrice
+    });
+
+    let updatedCount = 1;
+
+    if (scope === 'week') {
+      const wb = getWeekBounds(dateStr);
+      const updates = Object.entries(state.milkRecords).filter(([rid, r]) => {
+        return r.supplierId === supplierId && r.date >= wb.start && r.date <= wb.end && rid !== editId;
+      });
+      for (const [rid, r] of updates) {
+        await dbUpdate('milkRecords/' + rid, { ...r, price: newPrice, total: Number(r.qty || 0) * newPrice });
+        updatedCount++;
+      }
+      // Update weekly price lock
+      if (!state.settings.weeklyPriceLock) state.settings.weeklyPriceLock = {};
+      state.settings.weeklyPriceLock[getWeekKey(dateStr)] = newPrice;
+      await dbSet('settings/weeklyPriceLock', state.settings.weeklyPriceLock);
+      toast('تم تحديث ' + updatedCount + ' سجل بكامل الأسبوع', 'success');
+    } else if (scope === 'dates') {
+      const selectedDates = [...document.querySelectorAll('.mpu-date-check:checked')].map(cb => cb.value);
+      for (const d of selectedDates) {
+        const recs = Object.entries(state.milkRecords).filter(([rid, r]) =>
+          r.supplierId === supplierId && r.date === d && rid !== editId
+        );
+        for (const [rid, r] of recs) {
+          await dbUpdate('milkRecords/' + rid, { ...r, price: newPrice, total: Number(r.qty || 0) * newPrice });
+          updatedCount++;
+        }
+      }
+      toast('تم تحديث ' + updatedCount + ' سجل في الأيام المحددة', 'success');
+    } else {
+      toast('تم تحديث السجل', 'success');
+    }
+
+    _pendingPriceUpdate = null;
+    closeModal('modal-milk-price-update');
+    loadMilkRecords();
+    recalcAll();
   } catch(e) { toast('خطأ: ' + e.message, 'error'); }
   finally { loading(false); }
 };
@@ -7075,13 +7253,14 @@ function getSupplierStmtData() {
   const pay = filterByDate(allPay, 'date', df.from, df.to);
   const adv = filterByDate(allAdv, 'date', df.from, df.to);
   const pur = filterByDate(allPur, 'date', df.from, df.to);
+  const milkQtyKg = milk.reduce((s,[,r]) => s+Number(r.qty||0), 0);
   const milkSum = milk.reduce((s,[,r]) => s+Number(r.total||0), 0);
   const paySum = pay.reduce((s,[,p]) => s+Number(p.amount||0), 0);
   const advSum = adv.reduce((s,[,a]) => s+Number(a.amount||0), 0);
   const purSum = pur.reduce((s,[,p]) => s+Number(p.totalPrice||0), 0);
   const balance = milkSum - paySum - advSum - purSum;
   const nowStr = new Date().toLocaleString('ar-EG', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
-  return {s, df, milk, pay, adv, pur, milkSum, paySum, advSum, purSum, balance, nowStr};
+  return {s, df, milk, pay, adv, pur, milkQtyKg, milkSum, paySum, advSum, purSum, balance, nowStr};
 }
 
 function buildSupplierFullHTML(d) {
@@ -7093,7 +7272,7 @@ function buildSupplierFullHTML(d) {
       <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
       <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
     </div>
-    <h3>سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${d.milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${d.pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${d.adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${d.pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${d.pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>الكمية:</span><span>${fmt(d.milkSum,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(d.paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(d.advSum,2)} ج</span></div>${d.purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(d.purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${d.balance>0?'green':'red'}">${fmt(d.balance,2)} ج</span></div></div>`;
+    <h3>سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${d.milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${d.pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${d.adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${d.pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${d.pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي كمية الحليب:</span><span>${fmt(d.milkQtyKg,1)} كجم</span></div><div class="total-row"><span>إجمالي قيمة الحليب:</span><span>${fmt(d.milkSum,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(d.paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(d.advSum,2)} ج</span></div>${d.purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(d.purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${d.balance>0?'green':'red'}">${fmt(d.balance,2)} ج</span></div></div>`;
 }
 
 function buildSupplierSummaryHTML(d) {
@@ -7106,7 +7285,8 @@ function buildSupplierSummaryHTML(d) {
       <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
     </div>
     <div class="summary-grid">
-      <div class="summary-card green"><div class="val">${fmt(d.milkSum,2)} ج</div><div class="lbl">الكمية</div></div>
+      <div class="summary-card green"><div class="val">${fmt(d.milkQtyKg,1)} كجم</div><div class="lbl">كمية الحليب</div></div>
+      <div class="summary-card"><div class="val" style="color:#b8860b">${fmt(d.milkSum,2)} ج</div><div class="lbl">قيمة الحليب</div></div>
       <div class="summary-card red"><div class="val">${fmt(d.paySum,2)} ج</div><div class="lbl">المدفوعات</div></div>
       <div class="summary-card"><div class="val" style="color:#d97706">${fmt(d.advSum,2)} ج</div><div class="lbl">السلف</div></div>
       ${d.purSum>0?`<div class="summary-card blue"><div class="val">${fmt(d.purSum,2)} ج</div><div class="lbl">المشتريات</div></div>`:''}
@@ -7250,17 +7430,18 @@ window.showAccountDetail = function(supplierId) {
   const payments = filterByDate(Object.entries(state.supplierPayments).filter(([,p])=>p.supplierId===supplierId), 'date', df.from, df.to);
   const advances = filterByDate(Object.entries(state.supplierAdvances).filter(([,a])=>a.supplierId===supplierId), 'date', df.from, df.to);
   const purchases = filterByDate(Object.entries(state.supplierPurchases||{}).filter(([,p])=>p.supplierId===supplierId), 'date', df.from, df.to);
+  const milkQtyKg = milkRecords.reduce((s,[,r])=>s+Number(r.qty||0),0);
   const milkSum = milkRecords.reduce((s,[,r])=>s+Number(r.total||0),0);
   const paySum = payments.reduce((s,[,p])=>s+Number(p.amount||0),0);
   const advSum = advances.reduce((s,[,a])=>s+Number(a.amount||0),0);
   const purSum = purchases.reduce((s,[,p])=>s+Number(p.totalPrice||0),0);
   const balance = milkSum - paySum - advSum - purSum;
-  $('account-detail-body').innerHTML = `<div class="summary-bar" style="margin-bottom:20px"><div class="summary-item"><div class="val">${fmt(milkSum,2)}</div><div class="lbl">الحليب (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--danger)">${fmt(paySum,2)}</div><div class="lbl">المدفوعات (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(advSum,2)}</div><div class="lbl">السلف (ج)</div></div>${purSum>0?`<div class="summary-item"><div class="val" style="color:var(--info)">${fmt(purSum,2)}</div><div class="lbl">المشتريات (ج)</div></div>`:''}<div class="summary-item"><div class="val" style="color:${balance>0?'var(--success)':'var(--danger)'}">${fmt(balance,2)}</div><div class="lbl">الرصيد (ج)</div></div></div><h4 style="color:var(--gold);margin-bottom:10px">سجل الحليب (${milkRecords.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${milkRecords.slice(0,30).map(([,r])=>`<tr><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td style="color:var(--gold)">${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text-400)">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">المدفوعات</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${payments.map(([,p])=>`<tr><td>${p.date}</td><td style="color:var(--danger)">${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">السلف</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${advances.map(([,a])=>`<tr><td>${a.date}</td><td style="color:var(--warning)">${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div>${purchases.length?`<h4 style="color:var(--gold);margin-bottom:10px">المشتريات</h4><div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>الوصف</th><th>الكمية</th><th>الإجمالي</th></tr></thead><tbody>${purchases.map(([,p])=>`<tr><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.qty,2)} ${sanitize(p.unit)}</td><td style="color:var(--danger)">${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table></div>`:''}`;
+  $('account-detail-body').innerHTML = `<div class="summary-bar" style="margin-bottom:20px"><div class="summary-item"><div class="val" style="color:var(--success)">${fmt(milkQtyKg,1)}</div><div class="lbl">الحليب (كجم)</div></div><div class="summary-item"><div class="val">${fmt(milkSum,2)}</div><div class="lbl">إجمالي الحليب (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--danger)">${fmt(paySum,2)}</div><div class="lbl">المدفوعات (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(advSum,2)}</div><div class="lbl">السلف (ج)</div></div>${purSum>0?`<div class="summary-item"><div class="val" style="color:var(--info)">${fmt(purSum,2)}</div><div class="lbl">المشتريات (ج)</div></div>`:''}<div class="summary-item"><div class="val" style="color:${balance>0?'var(--success)':'var(--danger)'}">${fmt(balance,2)}</div><div class="lbl">الرصيد (ج)</div></div></div><h4 style="color:var(--gold);margin-bottom:10px">سجل الحليب (${milkRecords.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${milkRecords.slice(0,30).map(([,r])=>`<tr><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td style="color:var(--gold)">${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text-400)">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">المدفوعات</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${payments.map(([,p])=>`<tr><td>${p.date}</td><td style="color:var(--danger)">${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">السلف</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${advances.map(([,a])=>`<tr><td>${a.date}</td><td style="color:var(--warning)">${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div>${purchases.length?`<h4 style="color:var(--gold);margin-bottom:10px">المشتريات</h4><div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>الوصف</th><th>الكمية</th><th>الإجمالي</th></tr></thead><tbody>${purchases.map(([,p])=>`<tr><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.qty,2)} ${sanitize(p.unit)}</td><td style="color:var(--danger)">${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table></div>`:''}`;
   const waPhone = (s.phone||'').replace(/\D/g,'');
   const waBtnEl = $('wa-send-btn');
   if (waPhone && waBtnEl) {
     waBtnEl.style.display = '';
-    const waMsg = encodeURIComponent('السلام عليكم '+s.name+' 🥛\n\n📋 كشف حسابك\n━━━━━━━━\n💰 الحليب: '+fmt(milkSum,2)+' ج\n✅ المدفوعات: '+fmt(paySum,2)+' ج\n💵 السلف: '+fmt(advSum,2)+' ج\n📌 الرصيد: '+fmt(balance,2)+' ج\nشكراً 🙏');
+    const waMsg = encodeURIComponent('السلام عليكم '+s.name+' 🥛\n\n📋 كشف حسابك\n━━━━━━━━\n🥛 كمية الحليب: '+fmt(milkQtyKg,1)+' كجم\n💰 إجمالي الحليب: '+fmt(milkSum,2)+' ج\n✅ المدفوعات: '+fmt(paySum,2)+' ج\n💵 السلف: '+fmt(advSum,2)+' ج\n📌 الرصيد: '+fmt(balance,2)+' ج\nشكراً 🙏');
     waBtnEl.onclick = () => window.open('https://wa.me/2'+waPhone+'?text='+waMsg, '_blank');
   } else if (waBtnEl) waBtnEl.style.display = 'none';
   openModal('modal-account-detail');
@@ -7353,14 +7534,15 @@ window._renderAccountsV2 = function(search) {
   search = search || '';
   const suppliers = Object.entries(state.suppliers).filter(([,s]) => !search || fuzzyMatch(search, s.name || ''));
   $('accounts-tbody').innerHTML = suppliers.length ? suppliers.map(([id,s], i) => {
+    const milkQty = Object.values(state.milkRecords).filter(r=>r.supplierId===id).reduce((s,r)=>s+Number(r.qty||0),0);
     const milkTotal = Object.values(state.milkRecords).filter(r=>r.supplierId===id).reduce((s,r)=>s+Number(r.total||0),0);
     const payments = Object.values(state.supplierPayments).filter(p=>p.supplierId===id).reduce((s,p)=>s+Number(p.amount||0),0);
     const advances = Object.values(state.supplierAdvances).filter(a=>a.supplierId===id).reduce((s,a)=>s+Number(a.amount||0),0);
     const purchases = Object.values(state.supplierPurchases||{}).filter(p=>p.supplierId===id).reduce((s,p)=>s+Number(p.totalPrice||0),0);
     const balance = milkTotal - payments - advances - purchases;
     const balClass = balance>0?'balance-positive':balance<0?'balance-negative':'balance-zero';
-    return `<tr style="animation:rowFadeIn 0.3s ease ${i*0.05}s both"><td>${i+1}</td><td><strong>${sanitize(s.name)}</strong></td><td style="color:var(--gold)">${fmt(milkTotal,2)} ج</td><td style="color:var(--danger)">${fmt(payments,2)} ج</td><td style="color:var(--warning)">${fmt(advances,2)} ج</td><td class="${balClass}" style="font-weight:900;font-size:15px">${fmt(balance,2)} ج</td><td><div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="openPaymentModal('${id}')">💳 دفعة</button><button class="btn btn-secondary btn-sm" onclick="openPurchaseModal('supplier','${id}')">🛍️</button><button class="btn btn-secondary btn-sm" onclick="showAccountDetail('${id}')">📋 كشف</button></div></td></tr>`;
-  }).join('') : '<tr><td colspan="7"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>';
+    return `<tr style="animation:rowFadeIn 0.3s ease ${i*0.05}s both"><td>${i+1}</td><td><strong>${sanitize(s.name)}</strong></td><td style="color:var(--success);font-weight:700">${fmt(milkQty,1)} كجم</td><td style="color:var(--gold)">${fmt(milkTotal,2)} ج</td><td style="color:var(--danger)">${fmt(payments,2)} ج</td><td style="color:var(--warning)">${fmt(advances,2)} ج</td><td class="${balClass}" style="font-weight:900;font-size:15px">${fmt(balance,2)} ج</td><td><div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="openPaymentModal('${id}')">💳 دفعة</button><button class="btn btn-secondary btn-sm" onclick="openPurchaseModal('supplier','${id}')">🛍️</button><button class="btn btn-secondary btn-sm" onclick="showAccountDetail('${id}')">📋 كشف</button></div></td></tr>`;
+  }).join('') : '<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>';
 };
 
 // Patch: since renderAccounts is a local function, we need to also update
