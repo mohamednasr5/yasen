@@ -6690,12 +6690,6 @@ function getWeekKey(dateStr) {
   return monday.toISOString().slice(0, 10);
 }
 
-function getWeekBounds(dateStr) {
-  const wk = getWeekKey(dateStr);
-  const end = new Date(wk); end.setDate(end.getDate() + 6);
-  return { start: wk, end: end.toISOString().slice(0, 10) };
-}
-
 // Temp storage for price update context
 let _pendingPriceUpdate = null;
 
