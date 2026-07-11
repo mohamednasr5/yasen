@@ -1426,7 +1426,7 @@
           <div class="table-wrapper">
             <table>
               <thead>
-                <tr><th>#</th><th>التاريخ</th><th>المورد</th><th>المبلغ</th><th>السبب</th><th>الحالة</th><th>حذف</th></tr>
+                <tr><th>#</th><th>التاريخ</th><th>المورد</th><th>المبلغ</th><th>السبب</th><th>الحالة</th><th>إجراءات</th></tr>
               </thead>
               <tbody id="advances-tbody"></tbody>
             </table>
@@ -2206,14 +2206,14 @@
       <div id="adv-tab-workers">
         <div class="card">
           <div class="card-header"><h3>سلف العمال</h3><span style="color:var(--text-400);font-size:13px" id="worker-advances-count"></span></div>
-          <div class="table-wrapper"><table><thead><tr><th>#</th><th>التاريخ</th><th>العامل</th><th>المبلغ</th><th>الوصف</th><th>ملاحظات</th><th>الحالة</th><th>حذف</th></tr></thead>
+          <div class="table-wrapper"><table><thead><tr><th>#</th><th>التاريخ</th><th>العامل</th><th>المبلغ</th><th>الوصف</th><th>ملاحظات</th><th>الحالة</th><th>إجراءات</th></tr></thead>
           <tbody id="worker-advances-tbody"><tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💵</span><p>لا توجد سلف</p></div></td></tr></tbody></table></div>
         </div>
       </div>
       <div id="adv-tab-suppliers" style="display:none">
         <div class="card">
           <div class="card-header"><h3>سلف الموردين</h3><span style="color:var(--text-400);font-size:13px" id="supplier-advances-new-count"></span></div>
-          <div class="table-wrapper"><table><thead><tr><th>#</th><th>التاريخ</th><th>المورد</th><th>المبلغ</th><th>الوصف</th><th>ملاحظات</th><th>الحالة</th><th>حذف</th></tr></thead>
+          <div class="table-wrapper"><table><thead><tr><th>#</th><th>التاريخ</th><th>المورد</th><th>المبلغ</th><th>الوصف</th><th>ملاحظات</th><th>الحالة</th><th>إجراءات</th></tr></thead>
           <tbody id="supplier-advances-new-tbody"><tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💵</span><p>لا توجد سلف</p></div></td></tr></tbody></table></div>
         </div>
       </div>
@@ -2573,7 +2573,8 @@
         <div class="form-group"><label>المورد *</label><select id="adv-supplier"><option value="">اختر مورداً...</option></select></div>
         <div class="form-group"><label>التاريخ *</label><input type="date" id="adv-date"></div>
         <div class="form-group"><label>المبلغ (جنيه) *</label><input type="number" id="adv-amount" placeholder="0" min="0" step="0.01"></div>
-        <div class="form-group"><label>السبب</label><input type="text" id="adv-reason" placeholder="سبب السلفة"></div>
+        <input type="hidden" id="adv-edit-id" value="">
+      <div class="form-group"><label>السبب</label><input type="text" id="adv-reason" placeholder="سبب السلفة"></div>
         <div class="form-group"><label>الحالة</label>
           <select id="adv-status"><option value="pending">معلقة</option><option value="deducted">تم الخصم</option></select>
         </div>
@@ -3633,7 +3634,7 @@ function loadAdvances() {
       <td style="color:var(--warning);font-weight:700">${fmt(a.amount,2)} ج</td>
       <td>${sanitize(a.reason||'—')}</td>
       <td><span class="badge ${a.status==='deducted'?'badge-success':'badge-warning'}">${a.status==='deducted'?'تم الخصم':'معلقة'}</span></td>
-      <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteAdvance('${id}')">🗑️</button></td>
+      <td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm btn-icon" onclick="editAdvance('${id}')">✏️</button><button class="btn btn-danger btn-sm btn-icon" onclick="deleteAdvance('${id}')">🗑️</button></div></td>
     </tr>`).join('') : `<tr><td colspan="7" style="text-align:center;color:var(--text-400);padding:20px">لا توجد سلف</td></tr>`;
 }
 
@@ -3677,6 +3678,9 @@ window.openAdvanceModal = function() {
   $('adv-date').value   = today();
   $('adv-amount').value = '';
   $('adv-reason').value = '';
+  $('adv-edit-id').value = '';
+  $('adv-status').value = 'pending';
+  document.querySelector('#modal-advance .modal-header h3').textContent = 'تسجيل سلفة';
   openModal('modal-advance');
 };
 
@@ -3688,10 +3692,18 @@ window.saveAdvance = async function() {
 
   loading(true);
   try {
-    await dbPush('supplierAdvances', { supplierId, date: $('adv-date').value, amount, reason: sanitize($('adv-reason').value), status: $('adv-status').value });
-    toast('تم تسجيل السلفة', 'success');
-    closeModal('modal-advance');
-    renderAccounts(); loadAdvances();
+    const editId = $('adv-edit-id').value;
+    const data = { supplierId, date: $('adv-date').value, amount, reason: sanitize($('adv-reason').value), status: $('adv-status').value };
+    if (editId) {
+      await dbUpdate('supplierAdvances/' + editId, data);
+      toast('تم تحديث السلفة', 'success');
+    } else {
+      await dbPush('supplierAdvances', data);
+      toast('تم تسجيل السلفة', 'success');
+    }
+    $('adv-edit-id').value = '';
+    document.querySelector('#modal-advance .modal-header h3').textContent = 'تسجيل سلفة';
+    closeModal('modal-advance'); renderAccounts(); loadAdvances(); loadSupplierAdvancesTable();
   } catch(e) { toast('خطأ: ' + e.message, 'error'); }
   finally { loading(false); }
 };
@@ -6562,6 +6574,8 @@ window.openWorkerAdvanceModal = function(workerId) {
   $('wa-amount').value = '';
   $('wa-desc').value = '';
   $('wa-notes').value = '';
+  $('wa-edit-id').value = '';
+  $('worker-advance-modal-title').textContent = 'تسجيل سلفة عامل';
   openModal('modal-worker-advance');
 };
 
@@ -6572,8 +6586,17 @@ window.saveWorkerAdvance = async function() {
   if (!amount || amount <= 0) { toast('المبلغ يجب أن يكون أكبر من صفر', 'error'); return; }
   loading(true);
   try {
-    await dbPush('workerAdvances', { workerId, date: $('wa-date').value, amount, description: sanitize($('wa-desc').value), notes: sanitize($('wa-notes').value), status: 'pending' });
-    toast('تم تسجيل سلفة العامل', 'success');
+    const editId = $('wa-edit-id').value;
+    const data = { workerId, date: $('wa-date').value, amount, description: sanitize($('wa-desc').value), notes: sanitize($('wa-notes').value), status: 'pending' };
+    if (editId) {
+      await dbUpdate('workerAdvances/' + editId, data);
+      toast('تم تحديث سلفة العامل', 'success');
+    } else {
+      await dbPush('workerAdvances', data);
+      toast('تم تسجيل سلفة العامل', 'success');
+    }
+    $('wa-edit-id').value = '';
+    $('worker-advance-modal-title').textContent = 'تسجيل سلفة عامل';
     closeModal('modal-worker-advance');
     loadWorkerAdvancesTable();
     recalcAll();
@@ -6589,6 +6612,8 @@ window.openSupplierAdvanceModalNew = function(supplierId) {
   $('sadv-amount').value = '';
   $('sadv-desc').value = '';
   $('sadv-notes').value = '';
+  $('sadv-edit-id').value = '';
+  $('supplier-advance-modal-title').textContent = 'تسجيل سلفة مورد';
   openModal('modal-supplier-advance-new');
 };
 
@@ -6599,8 +6624,17 @@ window.saveSupplierAdvanceNew = async function() {
   if (!amount || amount <= 0) { toast('المبلغ يجب أن يكون أكبر من صفر', 'error'); return; }
   loading(true);
   try {
-    await dbPush('supplierAdvances', { supplierId, date: $('sadv-date').value, amount, description: sanitize($('sadv-desc').value), notes: sanitize($('sadv-notes').value), status: 'pending' });
-    toast('تم تسجيل سلفة المورد', 'success');
+    const editId = $('sadv-edit-id').value;
+    const data = { supplierId, date: $('sadv-date').value, amount, description: sanitize($('sadv-desc').value), notes: sanitize($('sadv-notes').value), status: 'pending' };
+    if (editId) {
+      await dbUpdate('supplierAdvances/' + editId, data);
+      toast('تم تحديث سلفة المورد', 'success');
+    } else {
+      await dbPush('supplierAdvances', data);
+      toast('تم تسجيل سلفة المورد', 'success');
+    }
+    $('sadv-edit-id').value = '';
+    $('supplier-advance-modal-title').textContent = 'تسجيل سلفة مورد';
     closeModal('modal-supplier-advance-new');
     loadSupplierAdvancesTable();
     renderAccounts(); loadAdvances();
@@ -6612,13 +6646,13 @@ window.saveSupplierAdvanceNew = async function() {
 function loadWorkerAdvancesTable() {
   const rows = Object.entries(state.workerAdvances || {}).sort((a,b) => (b[1].date||'') > (a[1].date||'') ? 1 : -1);
   $('worker-advances-count').textContent = `(${rows.length} سلفة)`;
-  $('worker-advances-tbody').innerHTML = rows.length ? rows.map(([id,a], i) => `<tr><td>${i+1}</td><td>${a.date}</td><td>${sanitize(state.workers[a.workerId]?.name||'—')}</td><td style="color:var(--warning);font-weight:700">${fmt(a.amount,2)} ج</td><td>${sanitize(a.description||'—')}</td><td>${sanitize(a.notes||'—')}</td><td><span class="badge ${a.status==='deducted'?'badge-success':'badge-warning'}">${a.status==='deducted'?'تم الخصم':'معلقة'}</span></td><td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteWorkerAdvance('${id}')">🗑️</button></td></tr>`).join('') : '<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💵</span><p>لا توجد سلف</p></div></td></tr>';
+  $('worker-advances-tbody').innerHTML = rows.length ? rows.map(([id,a], i) => `<tr><td>${i+1}</td><td>${a.date}</td><td>${sanitize(state.workers[a.workerId]?.name||'—')}</td><td style="color:var(--warning);font-weight:700">${fmt(a.amount,2)} ج</td><td>${sanitize(a.description||'—')}</td><td>${sanitize(a.notes||'—')}</td><td><span class="badge ${a.status==='deducted'?'badge-success':'badge-warning'}">${a.status==='deducted'?'تم الخصم':'معلقة'}</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm btn-icon" onclick="editWorkerAdvance('${id}')">✏️</button><button class="btn btn-danger btn-sm btn-icon" onclick="deleteWorkerAdvance('${id}')">🗑️</button></div></td></tr>`).join('') : '<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💵</span><p>لا توجد سلف</p></div></td></tr>';
 }
 
 function loadSupplierAdvancesTable() {
   const rows = Object.entries(state.supplierAdvances || {}).sort((a,b) => (b[1].date||'') > (a[1].date||'') ? 1 : -1);
   $('supplier-advances-new-count').textContent = `(${rows.length} سلفة)`;
-  $('supplier-advances-new-tbody').innerHTML = rows.length ? rows.map(([id,a], i) => `<tr><td>${i+1}</td><td>${a.date}</td><td>${sanitize(state.suppliers[a.supplierId]?.name||'—')}</td><td style="color:var(--warning);font-weight:700">${fmt(a.amount,2)} ج</td><td>${sanitize(a.description||a.reason||'—')}</td><td>${sanitize(a.notes||'—')}</td><td><span class="badge ${a.status==='deducted'?'badge-success':'badge-warning'}">${a.status==='deducted'?'تم الخصم':'معلقة'}</span></td><td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteAdvance('${id}')">🗑️</button></td></tr>`).join('') : '<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💵</span><p>لا توجد سلف</p></div></td></tr>';
+  $('supplier-advances-new-tbody').innerHTML = rows.length ? rows.map(([id,a], i) => `<tr><td>${i+1}</td><td>${a.date}</td><td>${sanitize(state.suppliers[a.supplierId]?.name||'—')}</td><td style="color:var(--warning);font-weight:700">${fmt(a.amount,2)} ج</td><td>${sanitize(a.description||a.reason||'—')}</td><td>${sanitize(a.notes||'—')}</td><td><span class="badge ${a.status==='deducted'?'badge-success':'badge-warning'}">${a.status==='deducted'?'تم الخصم':'معلقة'}</span></td><td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm btn-icon" onclick="editSupplierAdvanceNew('${id}')">✏️</button><button class="btn btn-danger btn-sm btn-icon" onclick="deleteAdvance('${id}')">🗑️</button></div></td></tr>`).join('') : '<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💵</span><p>لا توجد سلف</p></div></td></tr>';
 }
 
 window.deleteWorkerAdvance = async function(id) {
@@ -6629,6 +6663,51 @@ window.deleteWorkerAdvance = async function(id) {
 };
 
 window.openWorkerAdvanceModalFor = function(workerId) { openWorkerAdvanceModal(workerId); };
+
+// ══════════════════════════════════════════════════════════════════
+// EDIT ADVANCE FUNCTIONS
+// ══════════════════════════════════════════════════════════════════
+window.editAdvance = function(id) {
+  const a = state.supplierAdvances[id]; if (!a) return;
+  const sel = $('adv-supplier');
+  sel.innerHTML = '<option value="">اختر مورداً...</option>' +
+    Object.entries(state.suppliers).map(([sid,s]) => `<option value="${sid}" ${sid===a.supplierId?'selected':''}>${sanitize(s.name)}</option>`).join('');
+  $('adv-date').value = a.date || today();
+  $('adv-amount').value = a.amount || '';
+  $('adv-reason').value = a.reason || '';
+  $('adv-status').value = a.status || 'pending';
+  $('adv-edit-id').value = id;
+  document.querySelector('#modal-advance .modal-header h3').textContent = 'تعديل سلفة مورد';
+  openModal('modal-advance');
+};
+
+window.editWorkerAdvance = function(id) {
+  const a = state.workerAdvances[id]; if (!a) return;
+  const sel = $('wa-worker');
+  sel.innerHTML = '<option value="">اختر عاملاً...</option>' +
+    Object.entries(state.workers).map(([wid,w]) => `<option value="${wid}" ${wid===a.workerId?'selected':''}>${sanitize(w.name)}</option>`).join('');
+  $('wa-date').value = a.date || today();
+  $('wa-amount').value = a.amount || '';
+  $('wa-desc').value = a.description || '';
+  $('wa-notes').value = a.notes || '';
+  $('wa-edit-id').value = id;
+  $('worker-advance-modal-title').textContent = 'تعديل سلفة عامل';
+  openModal('modal-worker-advance');
+};
+
+window.editSupplierAdvanceNew = function(id) {
+  const a = state.supplierAdvances[id]; if (!a) return;
+  const sel = $('sadv-supplier');
+  sel.innerHTML = '<option value="">اختر مورداً...</option>' +
+    Object.entries(state.suppliers).map(([sid,s]) => `<option value="${sid}" ${sid===a.supplierId?'selected':''}>${sanitize(s.name)}</option>`).join('');
+  $('sadv-date').value = a.date || today();
+  $('sadv-amount').value = a.amount || '';
+  $('sadv-desc').value = a.description || a.reason || '';
+  $('sadv-notes').value = a.notes || '';
+  $('sadv-edit-id').value = id;
+  $('supplier-advance-modal-title').textContent = 'تعديل سلفة مورد';
+  openModal('modal-supplier-advance-new');
+};
 
 // ══════════════════════════════════════════════════════════════════
 // EDIT MILK RECORD
@@ -7230,9 +7309,13 @@ function getA4Style() {
   return `@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff}h1{color:#b8860b;font-size:20px;margin-bottom:4px;text-align:center}h2,h3{color:#b8860b;font-size:14px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a}td{border:1px solid #ddd;padding:6px 8px;text-align:center}tr:nth-child(even) td{background:#fffbf0}.totals{margin-top:16px;padding:12px 16px;border:2px solid #D4A843;border-radius:8px;background:#fffdf5}.total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #f0e8cc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:10px;color:#333}.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.summary-card{border:2px solid #D4A843;border-radius:8px;padding:10px;text-align:center;background:#fffdf5}.summary-card .val{font-size:18px;font-weight:900;color:#b8860b}.summary-card .lbl{font-size:10px;color:#888;margin-top:3px}.summary-card.green .val{color:#16a34a}.summary-card.red .val{color:#dc2626}.summary-card.blue .val{color:#2563eb}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px}.info-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f0ead0}.info-row span:first-child{font-weight:bold;color:#666;min-width:90px}.footer{text-align:center;margin-top:24px;color:#aaa;font-size:11px;border-top:1px solid #eee;padding-top:8px}a{display:none!important}@media print{a{display:none!important}}`;
 }
 
-function openPrintWindow(htmlContent) {
+function getA5Style() {
+  return `@page{size:A5;margin:8mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:8px 10px;background:#fff;font-size:14px}h1{color:#b8860b;font-size:18px;margin-bottom:2px;text-align:center}h2,h3{color:#b8860b;font-size:13px;margin:8px 0 4px;border-bottom:2px solid #D4A843;padding-bottom:2px}table{width:100%;border-collapse:collapse;margin:4px 0;font-size:11px}th{background:#D4A843;color:#fff;padding:4px 5px;text-align:center;border:1px solid #c8981a;font-size:11px}td{border:1px solid #ddd;padding:3px 5px;text-align:center;font-size:11px}tr:nth-child(even) td{background:#fffbf0}.totals{margin-top:8px;padding:8px 10px;border:2px solid #D4A843;border-radius:6px;background:#fffdf5}.total-row{display:flex;justify-content:space-between;padding:3px 0;font-size:13px;font-weight:700;border-bottom:1px solid #f0e8cc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:900;font-size:16px;border-top:2px solid #D4A843;margin-top:6px;padding-top:6px;color:#333}.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.summary-card{border:2px solid #D4A843;border-radius:6px;padding:6px;text-align:center;background:#fffdf5}.summary-card .val{font-size:16px;font-weight:900;color:#b8860b}.summary-card .lbl{font-size:10px;color:#888;margin-top:2px}.summary-card.green .val{color:#16a34a}.summary-card.red .val{color:#dc2626}.summary-card.blue .val{color:#2563eb}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px;font-size:12px}.info-row{display:flex;gap:6px;padding:2px 0;border-bottom:1px solid #f0ead0}.info-row span:first-child{font-weight:bold;color:#666;min-width:80px}.info-row span:last-child{font-weight:700;color:#222;font-size:13px}.footer{text-align:center;margin-top:12px;color:#aaa;font-size:10px;border-top:1px solid #eee;padding-top:6px}a{display:none!important}@media print{a{display:none!important}}`;
+}
+
+function openPrintWindow(htmlContent, style) {
   const pw = window.open('','_blank');
-  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>${getA4Style()}</style></head><body>${htmlContent}<div class="footer">تم بحمد الله</div></body></html>`);
+  pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><style>${style || getA4Style()}</style></head><body>${htmlContent}<div class="footer">تم بحمد الله</div></body></html>`);
   pw.document.close(); setTimeout(()=>pw.print(), 600);
 }
 
@@ -7291,7 +7374,7 @@ function buildSupplierSummaryHTML(d) {
 
 window.printSupplierStatementChoice = function(mode) {
   const d = getSupplierStmtData(); if (!d) return;
-  openPrintWindow(mode === 'full' ? buildSupplierFullHTML(d) : buildSupplierSummaryHTML(d));
+  openPrintWindow(mode === 'full' ? buildSupplierFullHTML(d) : buildSupplierSummaryHTML(d), getA5Style());
 };
 
 window.printSupplierStatement = function() { printSupplierStatementChoice('full'); };
@@ -7591,8 +7674,9 @@ setTimeout(loadDashboard, 800);
 <!-- Worker Advance Modal -->
 <div class="modal-backdrop" id="modal-worker-advance">
   <div class="modal" style="max-width:480px">
-    <div class="modal-header"><span style="font-size:22px">💵</span><h3>تسجيل سلفة عامل</h3><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-worker-advance')">✕</button></div>
+    <div class="modal-header"><span style="font-size:22px">💵</span><h3 id="worker-advance-modal-title">تسجيل سلفة عامل</h3><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-worker-advance')">✕</button></div>
     <div class="modal-body"><div class="form-grid">
+      <input type="hidden" id="wa-edit-id" value="">
       <div class="form-group"><label>العامل *</label><select id="wa-worker"><option value="">اختر عاملاً...</option></select></div>
       <div class="form-group"><label>التاريخ *</label><input type="date" id="wa-date"></div>
       <div class="form-group"><label>المبلغ (جنيه) *</label><input type="number" id="wa-amount" placeholder="0" min="0" step="0.01"></div>
@@ -7606,8 +7690,9 @@ setTimeout(loadDashboard, 800);
 <!-- Supplier Advance Modal (New) -->
 <div class="modal-backdrop" id="modal-supplier-advance-new">
   <div class="modal" style="max-width:480px">
-    <div class="modal-header"><span style="font-size:22px">💵</span><h3>تسجيل سلفة مورد</h3><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-supplier-advance-new')">✕</button></div>
+    <div class="modal-header"><span style="font-size:22px">💵</span><h3 id="supplier-advance-modal-title">تسجيل سلفة مورد</h3><button class="btn btn-secondary btn-icon" onclick="closeModal('modal-supplier-advance-new')">✕</button></div>
     <div class="modal-body"><div class="form-grid">
+      <input type="hidden" id="sadv-edit-id" value="">
       <div class="form-group"><label>المورد *</label><select id="sadv-supplier"><option value="">اختر مورداً...</option></select></div>
       <div class="form-group"><label>التاريخ *</label><input type="date" id="sadv-date"></div>
       <div class="form-group"><label>المبلغ (جنيه) *</label><input type="number" id="sadv-amount" placeholder="0" min="0" step="0.01"></div>
