@@ -1369,6 +1369,15 @@
       </div>
       </div>
 
+      <!-- Date Filter -->
+      <div class="card" style="margin-bottom:16px"><div class="card-body">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <div class="form-group" style="min-width:160px;margin:0"><label>من تاريخ</label><input type="date" id="acct-from" onchange="renderAccounts()"></div>
+          <div class="form-group" style="min-width:160px;margin:0"><label>إلى تاريخ</label><input type="date" id="acct-to" onchange="renderAccounts()"></div>
+          <button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="document.getElementById('acct-from').value='';document.getElementById('acct-to').value='';renderAccounts()">الكل</button>
+        </div>
+      </div></div>
+
       <div class="tabs">
         <div class="tab active" onclick="switchAccountTab('balances')">أرصدة الموردين</div>
         <div class="tab" onclick="switchAccountTab('payments')">سجل المدفوعات</div>
@@ -1391,15 +1400,16 @@
                   <th>#</th>
                   <th>المورد</th>
                   <th>الكمية (كجم)</th>
-                  <th>الكمية (ج)</th>
-                  <th>إجمالي المدفوعات</th>
-                  <th>السلف</th>
-                  <th>الرصيد المستحق</th>
+                  <th>إجمالي الحليب (ج)</th>
+                  <th>المدفوعات (ج)</th>
+                  <th>السلف (ج)</th>
+                  <th>المشتريات (ج)</th>
+                  <th>الرصيد المستحق (ج)</th>
                   <th>الإجراءات</th>
                 </tr>
               </thead>
               <tbody id="accounts-tbody">
-                <tr><td colspan="7"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>
+                <tr><td colspan="9"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>
               </tbody>
             </table>
           </div>
@@ -1784,18 +1794,22 @@
           </svg>
         </span>
         <h2>حسابات المشترين</h2>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="openBuyerPaymentModal()">💳 تسجيل دفعة مشترٍ</button>
           <button class="btn btn-secondary" onclick="openPurchaseModal('buyer')">🛍️ مشتريات</button>
-          <button class="btn btn-secondary" onclick="printTable('#buyer-accounts-tbody')">🖨️ طباعة</button>
+          <button class="btn btn-secondary" onclick="printBuyerAccountsTable()">🖨️ طباعة</button>
           <button class="btn btn-secondary" onclick="exportTableToPDF('#buyer-accounts-tbody', 'حسابات_المشترين.pdf')">📥 PDF</button>
-      
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-secondary btn-sm" onclick="printTable('#buyer-accounts-tbody')" title="طباعة">🖨️</button>
-          <button class="btn btn-secondary btn-sm" onclick="exportTableToPDF('#buyer-accounts-tbody', 'حسابات-المشترين.pdf')" title="تصدير PDF">📄</button>
         </div>
       </div>
-      </div>
+
+      <!-- Date Filter -->
+      <div class="card" style="margin-bottom:16px"><div class="card-body">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <div class="form-group" style="min-width:160px;margin:0"><label>من تاريخ</label><input type="date" id="ba-from" onchange="renderBuyerAccountsV3()"></div>
+          <div class="form-group" style="min-width:160px;margin:0"><label>إلى تاريخ</label><input type="date" id="ba-to" onchange="renderBuyerAccountsV3()"></div>
+          <button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="document.getElementById('ba-from').value='';document.getElementById('ba-to').value='';renderBuyerAccountsV3()">الكل</button>
+        </div>
+      </div></div>
 
       <!-- Summary Cards -->
       <div id="buyer-accounts-summary" class="summary-bar" style="margin-bottom:20px">
@@ -1816,6 +1830,7 @@
       <div class="tabs">
         <div class="tab active" onclick="switchBuyerTab('balances')">أرصدة المشترين</div>
         <div class="tab" onclick="switchBuyerTab('payments')">سجل المدفوعات</div>
+        <div class="tab" onclick="switchBuyerTab('purchases')">المشتريات</div>
       </div>
 
       <!-- Balances Tab -->
@@ -1854,9 +1869,23 @@
           <div class="table-wrapper">
             <table>
               <thead>
-                <tr><th>#</th><th>التاريخ</th><th>المشتري</th><th>المبلغ المدفوع</th><th>طريقة الدفع</th><th>ملاحظات</th><th>حذف</th></tr>
+                <tr><th>#</th><th>التاريخ</th><th>المشتري</th><th>المبلغ المدفوع</th><th>طريقة الدفع</th><th>ملاحظات</th><th>تعديل</th><th>حذف</th></tr>
               </thead>
               <tbody id="buyer-payments-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Purchases Tab -->
+      <div id="buyer-tab-purchases" style="display:none">
+        <div class="card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr><th>#</th><th>التاريخ</th><th>المشتري</th><th>الوصف</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th><th>تعديل</th><th>حذف</th></tr>
+              </thead>
+              <tbody id="buyer-purchases-tbody"></tbody>
             </table>
           </div>
         </div>
@@ -2507,7 +2536,8 @@
   <div class="modal" style="max-width:480px">
     <div class="modal-header">
       <span style="font-size:22px">💳</span>
-      <h3>تسجيل دفعة مشترٍ</h3>
+      <h3 id="bp-modal-title">تسجيل دفعة مشترٍ</h3>
+      <input type="hidden" id="bp-edit-id" value="">
       <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-buyer-payment')">✕</button>
     </div>
     <div class="modal-body">
@@ -2726,9 +2756,10 @@
         <div class="form-group">
           <label>العميل *</label>
           <div style="display:flex;gap:6px">
-            <input type="text" id="sale-client" placeholder="اسم العميل" list="buyers-datalist" style="flex:1">
+            <input type="text" id="sale-client" placeholder="اسم العميل" list="buyers-datalist" style="flex:1" oninput="onSaleClientChange()">
             <datalist id="buyers-datalist"></datalist>
           </div>
+          <input type="hidden" id="sale-buyer-id" value="">
         </div>
         <div class="form-group"><label>المنتج *</label><input type="text" id="sale-product" placeholder="اسم المنتج"></div>
         <div class="form-group"><label>الكمية</label><input type="number" id="sale-qty" placeholder="1" min="0" step="0.01" oninput="calcSaleTotal()"></div>
@@ -3561,28 +3592,33 @@ window.switchAccountTab = function(tab) {
 };
 
 function renderAccounts(search='') {
+  search = search || '';
+  const acctFrom = document.getElementById('acct-from')?.value || '';
+  const acctTo = document.getElementById('acct-to')?.value || '';
   const suppliers = Object.entries(state.suppliers)
     .filter(([,s]) => !search || fuzzyMatch(search, s.name || ''));
 
-  let acctGrandMilkQty=0, acctGrandMilkAmt=0, acctGrandPay=0, acctGrandAdv=0;
+  let acctGrandMilkQty=0, acctGrandMilkAmt=0, acctGrandPay=0, acctGrandAdv=0, acctGrandPur=0;
   $('accounts-tbody').innerHTML = suppliers.length ? suppliers.map(([id,s], i) => {
-    const milkQty = Object.values(state.milkRecords).filter(r => r.supplierId === id).reduce((s,r) => s + Number(r.qty||0), 0);
-    const milkTotal = Object.values(state.milkRecords).filter(r => r.supplierId === id).reduce((s,r) => s + Number(r.total||0), 0);
-    const payments  = Object.values(state.supplierPayments).filter(p => p.supplierId === id).reduce((s,p) => s + Number(p.amount||0), 0);
-    const advances  = Object.values(state.supplierAdvances).filter(a => a.supplierId === id).reduce((s,a) => s + Number(a.amount||0), 0);
-    const balance   = milkTotal - payments - advances;
+    const milkRecs = Object.values(state.milkRecords).filter(r => r.supplierId === id && (!acctFrom || r.date >= acctFrom) && (!acctTo || r.date <= acctTo));
+    const milkQty = milkRecs.reduce((s,r) => s + Number(r.qty||0), 0);
+    const milkTotal = milkRecs.reduce((s,r) => s + Number(r.total||0), 0);
+    const payments  = Object.values(state.supplierPayments).filter(p => p.supplierId === id && (!acctFrom || p.date >= acctFrom) && (!acctTo || p.date <= acctTo)).reduce((s,p) => s + Number(p.amount||0), 0);
+    const advances  = Object.values(state.supplierAdvances).filter(a => a.supplierId === id && (!acctFrom || a.date >= acctFrom) && (!acctTo || a.date <= acctTo)).reduce((s,a) => s + Number(a.amount||0), 0);
+    const purchases = Object.values(state.supplierPurchases||{}).filter(p => p.supplierId === id && (!acctFrom || p.date >= acctFrom) && (!acctTo || p.date <= acctTo)).reduce((s,p) => s + Number(p.totalPrice||0), 0);
+    const balance   = milkTotal - payments - advances - purchases;
     const balClass  = balance > 0 ? 'balance-positive' : balance < 0 ? 'balance-negative' : 'balance-zero';
-    acctGrandMilkQty += milkQty; acctGrandMilkAmt += milkTotal; acctGrandPay += payments; acctGrandAdv += advances;
+    acctGrandMilkQty += milkQty; acctGrandMilkAmt += milkTotal; acctGrandPay += payments; acctGrandAdv += advances; acctGrandPur += purchases;
     const waPhone = (s.phone||'').replace(/\D/g,'');
-    const waMsg = encodeURIComponent(`السلام عليكم ${s.name}،\n📊 كشف حسابك الأسبوعي:\n🥛 كمية الحليب: ${fmt(milkQty,1)} كجم\n💰 إجمالي الحليب: ${fmt(milkTotal,2)} ج\n✅ المدفوع: ${fmt(payments,2)} ج\n💵 السلف: ${fmt(advances,2)} ج\n📌 الرصيد المستحق: ${fmt(balance,2)} ج\nشكراً 🥛`);
+    const waMsg = encodeURIComponent(`السلام عليكم ${s.name}،\n📊 كشف حسابك:\n🥛 كمية الحليب: ${fmt(milkQty,1)} كجم\n💰 إجمالي الحليب: ${fmt(milkTotal,2)} ج\n✅ المدفوع: ${fmt(payments,2)} ج\n💵 السلف: ${fmt(advances,2)} ج\n🛍️ المشتريات: ${fmt(purchases,2)} ج\n📌 الرصيد المستحق: ${fmt(balance,2)} ج\nشكراً 🥛`);
     const waLink = waPhone ? `https://wa.me/2${waPhone}?text=${waMsg}` : '#';
     return `<tr style="animation: rowFadeIn 0.3s ease ${i*0.05}s both">
       <td>${i+1}</td>
       <td>
         <div style="display:flex;align-items:center;gap:8px">
           <strong>${sanitize(s.name)}</strong>
-          ${waPhone ? `<a href="${waLink}" target="_blank" class="wa-btn" title="إرسال الحساب الأسبوعي">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          ${waPhone ? `<a href="${waLink}" target="_blank" class="wa-btn" title="إرسال الحساب">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.888 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           </a>` : ''}
         </div>
       </td>
@@ -3590,10 +3626,12 @@ function renderAccounts(search='') {
       <td style="color:var(--gold)">${fmt(milkTotal,2)} ج</td>
       <td style="color:var(--danger)">${fmt(payments,2)} ج</td>
       <td style="color:var(--warning)">${fmt(advances,2)} ج</td>
+      <td style="color:var(--info)">${fmt(purchases,2)} ج</td>
       <td class="${balClass}" style="font-weight:900;font-size:15px">${fmt(balance,2)} ج</td>
       <td>
         <div style="display:flex;gap:6px">
           <button class="btn btn-primary btn-sm" onclick="openPaymentModal('${id}')">💳 دفعة</button>
+          <button class="btn btn-secondary btn-sm" onclick="openPurchaseModal('supplier','${id}')">🛍️</button>
           <button class="btn btn-secondary btn-sm" onclick="showAccountDetail('${id}')">📋 كشف</button>
         </div>
       </td>
@@ -3605,12 +3643,13 @@ function renderAccounts(search='') {
       <td style="font-weight:900;color:var(--gold);font-size:15px">${fmt(acctGrandMilkAmt,2)} ج</td>
       <td style="font-weight:900;color:var(--danger);font-size:15px">${fmt(acctGrandPay,2)} ج</td>
       <td style="font-weight:900;color:var(--warning);font-size:15px">${fmt(acctGrandAdv,2)} ج</td>
-      <td style="font-weight:900;color:${(acctGrandMilkAmt-acctGrandPay-acctGrandAdv)>0?'var(--success)':'var(--danger)'};font-size:15px">${fmt(acctGrandMilkAmt-acctGrandPay-acctGrandAdv,2)} ج</td>
+      <td style="font-weight:900;color:var(--info);font-size:15px">${fmt(acctGrandPur,2)} ج</td>
+      <td style="font-weight:900;color:${(acctGrandMilkAmt-acctGrandPay-acctGrandAdv-acctGrandPur)>0?'var(--success)':'var(--danger)'};font-size:15px">${fmt(acctGrandMilkAmt-acctGrandPay-acctGrandAdv-acctGrandPur,2)} ج</td>
       <td></td>
-    </tr>` : `<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>`;
+    </tr>` : `<tr><td colspan="9"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>`;
 }
 
-window.filterAccounts = function() { renderAccounts($('accounts-search').value); };
+window.filterAccounts = function() { renderAccounts($('accounts-search')?.value || ''); };
 
 function loadPayments() {
   const rows = Object.entries(state.supplierPayments).sort((a,b) => b[1].date > a[1].date ? 1 : -1);
@@ -4019,11 +4058,18 @@ window.deleteExport = async function(id, wh, itemId, qty) {
 // ══════════════════════════════════════════════════════════════════
 // SALES
 // ══════════════════════════════════════════════════════════════════
+window.onSaleClientChange = function() {
+  const clientName = ($('sale-client')?.value || '').trim().toLowerCase();
+  const match = Object.entries(state.buyers).find(([,b]) => b.name.trim().toLowerCase() === clientName);
+  if ($('sale-buyer-id')) $('sale-buyer-id').value = match ? match[0] : '';
+};
+
 window.openSaleModal = function() {
   $('sale-date').value = today();
   ['sale-client','sale-product','sale-qty','sale-price','sale-total','sale-notes','sale-paid-now','sale-remaining'].forEach(f => { const el=$(f); if(el) el.value=''; });
   $('sale-qty').value = 1;
   $('sale-method').value = 'نقدي';
+  if ($('sale-buyer-id')) $('sale-buyer-id').value = '';
   toggleSalePaymentFields();
   // Populate buyers datalist
   const dl = $('buyers-datalist');
@@ -4118,16 +4164,13 @@ window.saveSale = async function() {
   const paidNow = method === 'آجل' ? 0 : (method === 'جزئي' ? (parseFloat($('sale-paid-now')?.value) || 0) : total);
   const remaining = total - paidNow;
 
+  const matchedBuyer = Object.entries(state.buyers).find(([,b]) => b.name.trim().toLowerCase() === client.toLowerCase());
+  const buyerId = matchedBuyer ? matchedBuyer[0] : ($('sale-buyer-id')?.value || '');
   loading(true);
   try {
-    await dbPush('sales', { date: $('sale-date').value, client, product, qty, price, total, paidNow, remaining, method, notes: sanitize($('sale-notes').value) });
-    // If partial or deferred, try to link buyer and record their debt
-    if (remaining > 0) {
-      const matchedBuyer = Object.entries(state.buyers).find(([,b]) => b.name.trim().toLowerCase() === client.toLowerCase());
-      if (matchedBuyer) {
-        // buyer debt is tracked via sales remaining
-      }
-    }
+    const saleData = { date: $('sale-date').value, client, product, qty, price, total, paidNow, remaining, method, notes: sanitize($('sale-notes').value) };
+    if (buyerId) saleData.buyerId = buyerId;
+    await dbPush('sales', saleData);
     toast('تم تسجيل البيع', 'success');
     track('sale_create', { product, qty, total });
     closeModal('modal-sale');
@@ -4483,18 +4526,10 @@ function calcBuyerBalance(buyerId) {
   const b = state.buyers[buyerId];
   if (!b) return { salesTotal: 0, paid: 0, remaining: 0 };
   const name = b.name.trim().toLowerCase();
-  // Sum all sales for this buyer (by name match)
-  const salesTotal = Object.values(state.sales)
-    .filter(s => (s.client||'').trim().toLowerCase() === name)
-    .reduce((sum, s) => sum + Number(s.total||0), 0);
-  // Sum buyer payments
-  const bPayments = Object.values(state.buyerPayments)
-    .filter(p => p.buyerId === buyerId)
-    .reduce((sum, p) => sum + Number(p.amount||0), 0);
-  // Sum already-paid from sales themselves (paidNow field)
-  const salesPaid = Object.values(state.sales)
-    .filter(s => (s.client||'').trim().toLowerCase() === name)
-    .reduce((sum, s) => sum + Number(s.paidNow ?? s.total ?? 0), 0);
+  const buyerSales = Object.values(state.sales).filter(s => s.buyerId === buyerId || (s.client||'').trim().toLowerCase() === name);
+  const salesTotal = buyerSales.reduce((sum, s) => sum + Number(s.total||0), 0);
+  const bPayments = Object.values(state.buyerPayments).filter(p => p.buyerId === buyerId).reduce((sum, p) => sum + Number(p.amount||0), 0);
+  const salesPaid = buyerSales.reduce((sum, s) => sum + Number(s.paidNow ?? s.total ?? 0), 0);
   const totalPaid = bPayments + salesPaid;
   const remaining = Math.max(0, salesTotal - totalPaid);
   return { salesTotal, paid: totalPaid, remaining };
@@ -4541,36 +4576,56 @@ function renderBuyers(search='') {
 }
 
 function renderBuyerAccounts(search='') {
+  search = search || '';
+  const baFrom = document.getElementById('ba-from')?.value || '';
+  const baTo = document.getElementById('ba-to')?.value || '';
   const buyers = Object.entries(state.buyers)
     .filter(([,b]) => !search || fuzzyMatch(search, b.name || ''));
 
   let totalSales = 0, totalPaid = 0, totalRemaining = 0;
 
   $('buyer-accounts-tbody').innerHTML = buyers.length ? buyers.map(([id,b], i) => {
-    const { salesTotal, paid, remaining } = calcBuyerBalance(id);
-    totalSales    += salesTotal;
-    totalPaid     += paid;
-    totalRemaining+= remaining;
+    const buyerName = (b.name||'').trim().toLowerCase();
+    const buyerSales = Object.values(state.sales).filter(s => {
+      if (s.buyerId === id) return true;
+      if ((s.client||'').trim().toLowerCase() === buyerName) return true;
+      return false;
+    }).filter(s => (!baFrom || s.date >= baFrom) && (!baTo || s.date <= baTo));
+    const salesTotal = buyerSales.reduce((s,r) => s + Number(r.total||0), 0);
+    const salesPaid = buyerSales.reduce((s,r) => s + Number(r.paidNow ?? r.total ?? 0), 0);
+    const bPayments = Object.values(state.buyerPayments)
+      .filter(p => p.buyerId === id && (!baFrom || p.date >= baFrom) && (!baTo || p.date <= baTo))
+      .reduce((s,p) => s + Number(p.amount||0), 0);
+    const bPurchases = Object.values(state.buyerPurchases||{})
+      .filter(p => p.buyerId === id && (!baFrom || p.date >= baFrom) && (!baTo || p.date <= baTo))
+      .reduce((s,p) => s + Number(p.totalPrice||0), 0);
+    const totalPaidAmt = salesPaid + bPayments;
+    const remaining = Math.max(0, salesTotal - totalPaidAmt - bPurchases);
+    totalSales += salesTotal;
+    totalPaid += totalPaidAmt;
+    totalRemaining += remaining;
     const balClass = remaining > 0 ? 'balance-negative' : 'balance-zero';
     const waPhone = (b.phone||'').replace(/\D/g,'');
-    const waMsg = encodeURIComponent(`السلام عليكم ${b.name}،\n📊 كشف حسابك الأسبوعي:\n💰 إجمالي المشتريات: ${fmt(salesTotal,2)} ج\n✅ المدفوع: ${fmt(paid,2)} ج\n📌 المتبقي عليك: ${fmt(remaining,2)} ج\nيرجى السداد. شكراً 🥛`);
+    const waMsg = encodeURIComponent(`السلام عليكم ${b.name}،\n📊 كشف حسابك:\n💰 إجمالي المشتريات: ${fmt(salesTotal,2)} ج\n✅ المدفوع: ${fmt(totalPaidAmt,2)} ج\n📌 المتبقي عليك: ${fmt(remaining,2)} ج\nيرجى السداد. شكراً 🥛`);
     return `<tr style="animation: rowFadeIn 0.3s ease ${i*0.05}s both">
       <td>${i+1}</td>
       <td>
         <div style="display:flex;align-items:center;gap:8px">
           <strong>${sanitize(b.name)}</strong>
           ${waPhone ? `<a href="https://wa.me/2${waPhone}?text=${waMsg}" target="_blank" class="wa-btn" title="إرسال الفاتورة">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.888 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           </a>` : ''}
         </div>
       </td>
       <td style="color:var(--success)">${fmt(salesTotal,2)} ج</td>
-      <td style="color:var(--gold)">${fmt(paid,2)} ج</td>
+      <td style="color:var(--gold)">${fmt(totalPaidAmt,2)} ج</td>
       <td class="${balClass}" style="font-weight:900;font-size:15px">${fmt(remaining,2)} ج</td>
       <td>${remaining > 0 ? `<span class="badge badge-danger">متبقي دين</span>` : `<span class="badge badge-success">مسدد</span>`}</td>
       <td>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-primary btn-sm" onclick="openBuyerPaymentModal('${id}')">💳 دفعة</button>
+          <button class="btn btn-secondary btn-sm" onclick="openPurchaseModal('buyer','${id}')">🛍️</button>
+          <button class="btn btn-secondary btn-sm" onclick="showBuyerAccount('${id}')">📋 كشف</button>
         </div>
       </td>
     </tr>`;
@@ -4581,18 +4636,129 @@ function renderBuyerAccounts(search='') {
   if ($('buyer-sum-remaining')) $('buyer-sum-remaining').textContent = fmt(totalRemaining,2);
 }
 
-window.filterBuyerAccounts = function() { renderBuyerAccounts($('buyer-accounts-search').value); };
+window.filterBuyerAccounts = function() { renderBuyerAccounts($('buyer-accounts-search')?.value || ''); };
+window.renderBuyerAccountsV3 = function() { renderBuyerAccounts($('buyer-accounts-search')?.value || ''); };
 
 window.switchBuyerTab = function(tab) {
-  ['balances','payments'].forEach((t,i) => {
-    $(`buyer-tab-${t}`).style.display = t===tab ? '' : 'none';
+  ['balances','payments','purchases'].forEach((t,i) => {
+    const el = $(`buyer-tab-${t}`);
+    if (el) el.style.display = t===tab ? '' : 'none';
     document.querySelectorAll('#page-buyer-accounts .tabs .tab')[i]?.classList.toggle('active', t===tab);
   });
   if (tab==='payments') loadBuyerPayments();
+  if (tab==='purchases') loadBuyerPurchases();
 };
 
+window.loadBuyerPurchases = function() {
+  const baFrom = document.getElementById('ba-from')?.value || '';
+  const baTo = document.getElementById('ba-to')?.value || '';
+  let rows = Object.entries(state.buyerPurchases||{}).sort((a,b) => b[1].date > a[1].date ? 1 : -1);
+  if (baFrom || baTo) rows = rows.filter(([,p]) => (!baFrom || p.date >= baFrom) && (!baTo || p.date <= baTo));
+  const tbody = $('buyer-purchases-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = rows.length ? rows.map(([id,p], i) => `
+    <tr>
+      <td>${i+1}</td><td>${p.date}</td>
+      <td>${sanitize(state.buyers[p.buyerId]?.name||'—')}</td>
+      <td>${sanitize(p.desc||'—')}</td>
+      <td>${fmt(p.qty,2)} ${sanitize(p.unit||'')}</td>
+      <td>${fmt(p.unitPrice,2)} ج</td>
+      <td style="color:var(--danger);font-weight:700">${fmt(p.totalPrice,2)} ج</td>
+      <td><button class="btn btn-secondary btn-sm btn-icon" onclick="editBuyerPurchase('${id}')">✏️</button></td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteBuyerPurchase('${id}')">🗑️</button></td>
+    </tr>`).join('') :
+    `<tr><td colspan="9"><div class="empty-state"><span class="empty-icon">🛍️</span><p>لا توجد مشتريات</p></div></td></tr>`;
+};
+
+window.editBuyerPurchase = function(id) {
+  const p = state.buyerPurchases?.[id]; if (!p) return;
+  openPurchaseModal('buyer', p.buyerId);
+  setTimeout(() => {
+    if ($('pur-desc')) $('pur-desc').value = p.desc || '';
+    if ($('pur-qty')) $('pur-qty').value = p.qty || '';
+    if ($('pur-unit-price')) $('pur-unit-price').value = p.unitPrice || '';
+    if ($('pur-total')) $('pur-total').value = p.totalPrice || '';
+    if ($('pur-date')) $('pur-date').value = p.date || '';
+    if ($('pur-notes')) $('pur-notes').value = p.notes || '';
+    if ($('pur-unit')) $('pur-unit').value = p.unit || '';
+    let hidden = $('pur-edit-id');
+    if (!hidden) { hidden = document.createElement('input'); hidden.type='hidden'; hidden.id='pur-edit-id'; $('pur-desc').parentNode.appendChild(hidden); }
+    hidden.value = id;
+    const saveBtn = document.querySelector('#modal-purchase .modal-footer .btn-primary');
+    if (saveBtn) { saveBtn.textContent = '💾 تعديل'; saveBtn.setAttribute('onclick', 'updateBuyerPurchase()'); }
+  }, 100);
+};
+
+window.updateBuyerPurchase = async function() {
+  const editId = $('pur-edit-id')?.value;
+  if (!editId) { toast('خطأ', 'error'); return; }
+  const desc = sanitize($('pur-desc').value);
+  const qty = parseFloat($('pur-qty').value);
+  const unitPrice = parseFloat($('pur-unit-price').value);
+  if (!desc) { toast('وصف المشتريات مطلوب', 'error'); return; }
+  if (!qty || qty <= 0) { toast('الكمية يجب أن تكون أكبر من صفر', 'error'); return; }
+  loading(true);
+  try {
+    await dbUpdate('buyerPurchases/' + editId, { desc, qty, unit: $('pur-unit').value, unitPrice, totalPrice: qty * unitPrice, notes: sanitize($('pur-notes').value), date: $('pur-date').value });
+    toast('تم تعديل المشتريات', 'success');
+    closeModal('modal-purchase');
+    const saveBtn = document.querySelector('#modal-purchase .modal-footer .btn-primary');
+    if (saveBtn) { saveBtn.textContent = '💾 حفظ'; saveBtn.setAttribute('onclick', 'savePurchase()'); }
+    renderBuyerAccounts(); loadBuyerPurchases(); recalcAll();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.deleteBuyerPurchase = async function(id) {
+  if (!confirm('حذف هذه المشتريات؟')) return;
+  await dbRemove('buyerPurchases/' + id);
+  toast('تم الحذف', 'success');
+  renderBuyerAccounts(); loadBuyerPurchases(); recalcAll();
+};
+
+window.editBuyerPayment = function(id) {
+  const p = state.buyerPayments?.[id]; if (!p) return;
+  openBuyerPaymentModal(p.buyerId);
+  setTimeout(() => {
+    $('bp-edit-id').value = id;
+    $('bp-date').value = p.date || '';
+    $('bp-amount').value = p.amount || '';
+    $('bp-method').value = p.method || 'نقدي';
+    $('bp-notes').value = p.notes || '';
+    $('bp-modal-title').textContent = 'تعديل دفعة مشترٍ';
+    const saveBtn = document.querySelector('#modal-buyer-payment .modal-footer .btn-primary');
+    if (saveBtn) { saveBtn.textContent = '💾 تعديل'; saveBtn.setAttribute('onclick', 'updateBuyerPayment()'); }
+  }, 100);
+};
+
+window.updateBuyerPayment = async function() {
+  const editId = $('bp-edit-id')?.value;
+  if (!editId) { toast('خطأ', 'error'); return; }
+  const buyerId = $('bp-buyer-id').value;
+  const amount = parseFloat($('bp-amount').value) || 0;
+  if (!buyerId) { toast('يرجى اختيار المشتري', 'error'); return; }
+  if (!amount || amount <= 0) { toast('المبلغ يجب أن يكون أكبر من صفر', 'error'); return; }
+  loading(true);
+  try {
+    await dbUpdate('buyerPayments/' + editId, { date: $('bp-date').value, buyerId, amount, method: $('bp-method').value, notes: sanitize($('bp-notes').value) });
+    toast('تم تعديل الدفعة', 'success');
+    $('bp-edit-id').value = '';
+    $('bp-modal-title').textContent = 'تسجيل دفعة مشترٍ';
+    const saveBtn = document.querySelector('#modal-buyer-payment .modal-footer .btn-primary');
+    if (saveBtn) { saveBtn.textContent = '💾 حفظ'; saveBtn.setAttribute('onclick', 'saveBuyerPayment()'); }
+    closeModal('modal-buyer-payment');
+    renderBuyerAccounts(); loadBuyerPayments(); recalcAll();
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+window.printBuyerAccountsTable = function() { printTable('#buyer-accounts-tbody'); };
+
 function loadBuyerPayments() {
-  const rows = Object.entries(state.buyerPayments||{}).sort((a,b) => b[1].date > a[1].date ? 1 : -1);
+  const baFrom = document.getElementById('ba-from')?.value || '';
+  const baTo = document.getElementById('ba-to')?.value || '';
+  let rows = Object.entries(state.buyerPayments||{}).sort((a,b) => b[1].date > a[1].date ? 1 : -1);
+  if (baFrom || baTo) rows = rows.filter(([,p]) => (!baFrom || p.date >= baFrom) && (!baTo || p.date <= baTo));
   const tbody = $('buyer-payments-tbody');
   if (!tbody) return;
   tbody.innerHTML = rows.length ? rows.map(([id,p], i) => `
@@ -4602,17 +4768,21 @@ function loadBuyerPayments() {
       <td style="color:var(--gold);font-weight:700">${fmt(p.amount,2)} ج</td>
       <td>${sanitize(p.method||'—')}</td>
       <td>${sanitize(p.notes||'—')}</td>
+      <td><button class="btn btn-secondary btn-sm btn-icon" onclick="editBuyerPayment('${id}')">✏️</button></td>
       <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteBuyerPayment('${id}')">🗑️</button></td>
     </tr>`).join('') :
-    `<tr><td colspan="7"><div class="empty-state"><span class="empty-icon">💳</span><p>لا توجد مدفوعات</p></div></td></tr>`;
+    `<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💳</span><p>لا توجد مدفوعات</p></div></td></tr>`;
 }
 
 window.openBuyerPaymentModal = function(buyerId) {
   $('bp-date').value = today();
   ['bp-amount','bp-notes'].forEach(f => $(f).value = '');
-  // Populate buyers dropdown
+  $('bp-edit-id').value = '';
+  $('bp-modal-title').textContent = 'تسجيل دفعة مشترٍ';
   $('bp-buyer-id').innerHTML = `<option value="">اختر مشترياً...</option>` +
     Object.entries(state.buyers).map(([id,b]) => `<option value="${id}" ${id===buyerId?'selected':''}>${sanitize(b.name)}</option>`).join('');
+  const saveBtn = document.querySelector('#modal-buyer-payment .modal-footer .btn-primary');
+  if (saveBtn) { saveBtn.textContent = '💾 حفظ'; saveBtn.setAttribute('onclick', 'saveBuyerPayment()'); }
   openModal('modal-buyer-payment');
 };
 
@@ -4625,6 +4795,8 @@ window.saveBuyerPayment = async function() {
   try {
     await dbPush('buyerPayments', { date: $('bp-date').value, buyerId, amount, method: $('bp-method').value, notes: sanitize($('bp-notes').value) });
     toast('تم تسجيل الدفعة', 'success');
+    $('bp-edit-id').value = '';
+    $('bp-modal-title').textContent = 'تسجيل دفعة مشترٍ';
     closeModal('modal-buyer-payment');
     renderBuyerAccounts(); loadBuyerPayments();
   } catch(e) { toast('خطأ: ' + e.message, 'error'); }
@@ -7200,7 +7372,7 @@ window.calcBuyerBalance = function(buyerId) {
   const buyer = state.buyers[buyerId];
   if (!buyer) return 0;
   const buyerName = (buyer.name || '').trim().toLowerCase();
-  const sales = Object.values(state.sales).filter(s => (s.client||'').trim().toLowerCase() === buyerName);
+  const sales = Object.values(state.sales).filter(s => s.buyerId === buyerId || (s.client||'').trim().toLowerCase() === buyerName);
   const salesTotal = sales.reduce((s,r) => s + Number(r.total||0), 0);
   const salesPaid = sales.reduce((s,r) => s + Number(r.paidNow ?? r.total ?? 0), 0);
   const payments = Object.values(state.buyerPayments || {}).filter(p => p.buyerId === buyerId).reduce((s,p) => s + Number(p.amount||0), 0);
@@ -7444,7 +7616,7 @@ function getBuyerStmtData() {
   const b = state.buyers[currentBuyerStmtId]; if (!b) return null;
   const df = getDateFilter('bstmt');
   const buyerName = (b.name||'').trim().toLowerCase();
-  const allSales = Object.entries(state.sales).filter(([,s])=>(s.client||'').trim().toLowerCase()===buyerName);
+  const allSales = Object.entries(state.sales).filter(([,s])=>s.buyerId===currentBuyerStmtId||(s.client||'').trim().toLowerCase()===buyerName);
   const allPay = Object.entries(state.buyerPayments||{}).filter(([,p])=>p.buyerId===currentBuyerStmtId);
   const allPur = Object.entries(state.buyerPurchases||{}).filter(([,p])=>p.buyerId===currentBuyerStmtId);
   const sales = filterByDate(allSales,'date',df.from,df.to);
@@ -7584,7 +7756,7 @@ window.showBuyerAccount = function(buyerId) {
   $('buyer-account-title').textContent = 'كشف حساب: ' + b.name;
   const df = getDateFilter('bstmt');
   const buyerName = (b.name||'').trim().toLowerCase();
-  const allSales = Object.entries(state.sales).filter(([,s])=>(s.client||'').trim().toLowerCase()===buyerName);
+  const allSales = Object.entries(state.sales).filter(([,s])=>s.buyerId===buyerId||(s.client||'').trim().toLowerCase()===buyerName);
   const allPay = Object.entries(state.buyerPayments||{}).filter(([,p])=>p.buyerId===buyerId);
   const allPur = Object.entries(state.buyerPurchases||{}).filter(([,p])=>p.buyerId===buyerId);
   const sales = filterByDate(allSales,'date',df.from,df.to).sort((a,b)=>a[1].date>b[1].date?-1:1);
@@ -7595,48 +7767,24 @@ window.showBuyerAccount = function(buyerId) {
   const paySum = pay.reduce((s,[,p])=>s+Number(p.amount||0),0);
   const purSum = pur.reduce((s,[,p])=>s+Number(p.totalPrice||0),0);
   const remaining = salesTotal - salesPaid - paySum - purSum;
-  $('buyer-account-body').innerHTML = `<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px;padding:0 4px"><div class="form-group" style="min-width:150px;margin:0"><label>من تاريخ</label><input type="date" id="bstmt-from" onchange="showBuyerAccount(currentBuyerStmtId)"></div><div class="form-group" style="min-width:150px;margin:0"><label>إلى تاريخ</label><input type="date" id="bstmt-to" onchange="showBuyerAccount(currentBuyerStmtId)"></div><button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="document.getElementById('bstmt-from').value='';document.getElementById('bstmt-to').value='';showBuyerAccount(currentBuyerStmtId)">الكل</button></div><div class="summary-bar" style="margin-bottom:20px"><div class="summary-item"><div class="val" style="color:var(--success)">${fmt(salesTotal,2)}</div><div class="lbl">المبيعات (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--gold)">${fmt(salesPaid+paySum,2)}</div><div class="lbl">المدفوع (ج)</div></div>${purSum>0?`<div class="summary-item"><div class="val" style="color:var(--info)">${fmt(purSum,2)}</div><div class="lbl">المشتريات (ج)</div></div>`:''}<div class="summary-item"><div class="val" style="color:${remaining>0?'var(--danger)':'var(--success)'}">${fmt(remaining,2)}</div><div class="lbl">المتبقي (ج)</div></div></div><h4 style="color:var(--gold);margin-bottom:10px">المبيعات (${sales.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${sales.slice(0,30).map(([,s])=>{const pd=Number(s.paidNow??s.total??0);return`<tr><td>${s.date}</td><td>${sanitize(s.product)}</td><td>${fmt(s.qty,2)}</td><td style="color:var(--success)">${fmt(s.total,2)}</td><td style="color:var(--gold)">${fmt(pd,2)}</td><td style="color:${Number(s.total||0)-pd>0?'var(--danger)':'var(--success)'}">${fmt(Number(s.total||0)-pd,2)}</td></tr>`;}).join('')||'<tr><td colspan="6">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">المدفوعات</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${pay.map(([,p])=>`<tr><td>${p.date}</td><td style="color:var(--danger)">${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="2">لا توجد</td></tr>'}</tbody></table></div>${pur.length?`<h4 style="color:var(--gold);margin-bottom:10px">المشتريات</h4><div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p])=>`<tr><td>${p.date}</td><td>${sanitize(p.desc)}</td><td style="color:var(--danger)">${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table></div>`:''}`;
+  $('buyer-account-body').innerHTML = `<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px;padding:0 4px"><div class="form-group" style="min-width:150px;margin:0"><label>من تاريخ</label><input type="date" id="bstmt-from" onchange="showBuyerAccount(currentBuyerStmtId)"></div><div class="form-group" style="min-width:150px;margin:0"><label>إلى تاريخ</label><input type="date" id="bstmt-to" onchange="showBuyerAccount(currentBuyerStmtId)"></div><button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="document.getElementById('bstmt-from').value='';document.getElementById('bstmt-to').value='';showBuyerAccount(currentBuyerStmtId)">الكل</button></div><div class="summary-bar" style="margin-bottom:20px"><div class="summary-item"><div class="val" style="color:var(--success)">${fmt(salesTotal,2)}</div><div class="lbl">المبيعات (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--gold)">${fmt(salesPaid+paySum,2)}</div><div class="lbl">المدفوع (ج)</div></div>${purSum>0?`<div class="summary-item"><div class="val" style="color:var(--info)">${fmt(purSum,2)}</div><div class="lbl">المشتريات (ج)</div></div>`:''}<div class="summary-item"><div class="val" style="color:${remaining>0?'var(--danger)':'var(--success)'}">${fmt(remaining,2)}</div><div class="lbl">المتبقي (ج)</div></div></div><h4 style="color:var(--gold);margin-bottom:10px">المبيعات (${sales.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المنتج</th><th>الكمية</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${sales.slice(0,50).map(([,s])=>{const pd=Number(s.paidNow??s.total??0);return`<tr><td>${s.date}</td><td>${sanitize(s.product)}</td><td>${fmt(s.qty,2)}</td><td style="color:var(--success)">${fmt(s.total,2)}</td><td style="color:var(--gold)">${fmt(pd,2)}</td><td style="color:${Number(s.total||0)-pd>0?'var(--danger)':'var(--success)'}">${fmt(Number(s.total||0)-pd,2)}</td></tr>`;}).join('')||'<tr><td colspan="6">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">المدفوعات (${pay.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${pay.map(([,p])=>`<tr><td>${p.date}</td><td style="color:var(--danger)">${fmt(p.amount,2)} ج</td><td>${sanitize(p.method||'—')}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div>${pur.length?`<h4 style="color:var(--gold);margin-bottom:10px">المشتريات (${pur.length})</h4><div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>الوصف</th><th>الكمية</th><th>الإجمالي</th></tr></thead><tbody>${pur.map(([,p])=>`<tr><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.qty,2)} ${sanitize(p.unit||'')}</td><td style="color:var(--danger)">${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table></div>`:''}`;
+  const waPhone = (b.phone||'').replace(/\D/g,'');
+  const waBtnEl = $('buyer-wa-btn');
+  if (waPhone && waBtnEl) {
+    waBtnEl.style.display = '';
+    const waMsg = encodeURIComponent('السلام عليكم '+b.name+' 🥛\n\n📋 كشف حسابك\n━━━━━━━━\n💰 إجمالي المبيعات: '+fmt(salesTotal,2)+' ج\n✅ المدفوع: '+fmt(salesPaid+paySum,2)+' ج\n📌 المتبقي: '+fmt(remaining,2)+' ج\nشكراً 🙏');
+    waBtnEl.onclick = () => window.open('https://wa.me/2'+waPhone+'?text='+waMsg, '_blank');
+  } else if (waBtnEl) waBtnEl.style.display = 'none';
   openModal('modal-buyer-account');
 };
 
 window.openBuyerPaymentModalFor = function(buyerId) { openBuyerPaymentModal(); const sel = $('bp-buyer'); if (sel) sel.value = buyerId; };
 
 // ══════════════════════════════════════════════════════════════════
-// UPDATED renderAccounts (with purchases column)
+// NOTE: renderAccounts and renderBuyerAccounts are now updated in-place.
+// Old V2 overrides removed - functions above handle date filtering, 
+// buyerId matching, purchases column, and edit/delete.
 // ══════════════════════════════════════════════════════════════════
-// Override by redefining (the original is a plain function, not window.*)
-// We redefine it in the script block scope - this works because the original
-// function is referenced by name in the HTML
-window._renderAccountsV2 = function(search) {
-  search = search || '';
-  const suppliers = Object.entries(state.suppliers).filter(([,s]) => !search || fuzzyMatch(search, s.name || ''));
-  $('accounts-tbody').innerHTML = suppliers.length ? suppliers.map(([id,s], i) => {
-    const milkQty = Object.values(state.milkRecords).filter(r=>r.supplierId===id).reduce((s,r)=>s+Number(r.qty||0),0);
-    const milkTotal = Object.values(state.milkRecords).filter(r=>r.supplierId===id).reduce((s,r)=>s+Number(r.total||0),0);
-    const payments = Object.values(state.supplierPayments).filter(p=>p.supplierId===id).reduce((s,p)=>s+Number(p.amount||0),0);
-    const advances = Object.values(state.supplierAdvances).filter(a=>a.supplierId===id).reduce((s,a)=>s+Number(a.amount||0),0);
-    const purchases = Object.values(state.supplierPurchases||{}).filter(p=>p.supplierId===id).reduce((s,p)=>s+Number(p.totalPrice||0),0);
-    const balance = milkTotal - payments - advances - purchases;
-    const balClass = balance>0?'balance-positive':balance<0?'balance-negative':'balance-zero';
-    return `<tr style="animation:rowFadeIn 0.3s ease ${i*0.05}s both"><td>${i+1}</td><td><strong>${sanitize(s.name)}</strong></td><td style="color:var(--success);font-weight:700">${fmt(milkQty,1)} كجم</td><td style="color:var(--gold)">${fmt(milkTotal,2)} ج</td><td style="color:var(--danger)">${fmt(payments,2)} ج</td><td style="color:var(--warning)">${fmt(advances,2)} ج</td><td class="${balClass}" style="font-weight:900;font-size:15px">${fmt(balance,2)} ج</td><td><div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="openPaymentModal('${id}')">💳 دفعة</button><button class="btn btn-secondary btn-sm" onclick="openPurchaseModal('supplier','${id}')">🛍️</button><button class="btn btn-secondary btn-sm" onclick="showAccountDetail('${id}')">📋 كشف</button></div></td></tr>`;
-  }).join('') : '<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>';
-};
-
-// Patch: since renderAccounts is a local function, we need to also update
-// the global reference used by navigate(). We do this by wrapping filterAccounts too.
-window.filterAccounts = function() { window._renderAccountsV2($('accounts-search')?.value || ''); };
-
-// ══════════════════════════════════════════════════════════════════
-// UPDATED renderBuyerAccounts
-// ══════════════════════════════════════════════════════════════════
-window.renderBuyerAccounts = function(search) {
-  search = search || '';
-  const buyers = Object.entries(state.buyers).filter(([,b]) => !search || fuzzyMatch(search, b.name || ''));
-  $('buyer-accounts-tbody').innerHTML = buyers.length ? buyers.map(([id,b], i) => {
-    const balance = calcBuyerBalance(id);
-    return `<tr style="animation:rowFadeIn 0.3s ease ${i*0.05}s both"><td>${i+1}</td><td><strong>${sanitize(b.name)}</strong></td><td class="${balance>0?'balance-positive':'balance-zero'}" style="font-weight:900;font-size:15px">${fmt(balance,2)} ج</td><td><span class="badge ${balance>0?'badge-warning':'badge-success'}">${balance>0?'عليه':'لا يوجد'}</span></td><td><div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="openBuyerPaymentModalFor('${id}')">💳 دفعة</button><button class="btn btn-secondary btn-sm" onclick="openPurchaseModal('buyer','${id}')">🛍️</button><button class="btn btn-secondary btn-sm" onclick="showBuyerAccount('${id}')">📋 كشف</button></div></td></tr>`;
-  }).join('') : '<tr><td colspan="5"><div class="empty-state"><span class="empty-icon">💳</span><p>لا توجد بيانات</p></div></td></tr>';
-};
 
 // ══════════════════════════════════════════════════════════════════
 // UPDATED renderWorkers (with balance + action buttons)
