@@ -1675,7 +1675,7 @@
         <div class="table-wrapper">
           <table>
             <thead>
-              <tr><th>#</th><th>التاريخ</th><th>المخزن</th><th>الصنف</th><th>الوزن (كجم)</th><th>العدد</th><th>العميل/الجهة</th><th>ملاحظات</th><th>حذف</th></tr>
+              <tr><th>#</th><th>التاريخ</th><th>المخزن</th><th>الصنف</th><th>الوزن (كجم)</th><th>القيمة (ج)</th><th>العدد</th><th>العميل/الجهة</th><th>ملاحظات</th><th>إجراءات</th></tr>
             </thead>
             <tbody id="exports-tbody"></tbody>
           </table>
@@ -2708,12 +2708,13 @@
     </div>
   </div>
 
-<!-- Export Modal -->
+<!-- Export Modal - Parcel System -->
 <div class="modal-backdrop" id="modal-export">
-  <div class="modal" style="max-width:480px">
+  <div class="modal" style="max-width:650px;max-height:90vh;overflow-y:auto">
     <div class="modal-header">
       <span style="font-size:22px">📦</span>
-      <h3>تسجيل صادر</h3>
+      <h3 id="export-modal-title">تسجيل صادر - طرود جبنة</h3>
+      <input type="hidden" id="ex-edit-id" value="">
       <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-export')">✕</button>
     </div>
     <div class="modal-body">
@@ -2726,17 +2727,70 @@
             <option value="warehouse2">🏪 المخزن الثاني</option>
           </select>
         </div>
-        <div class="form-group"><label>الصنف *</label><select id="ex-item"><option value="">اختر صنفاً...</option></select></div>
-        <div class="form-group"><label>الوزن (كجم) *</label><input type="number" id="ex-qty" placeholder="0.00" min="0" step="0.01" oninput="calcExportTotal()"></div>
-        <div class="form-group"><label>العدد (اختياري)</label><input type="number" id="ex-count" placeholder="مثال: 5 أقراص" min="0" step="1"></div>
-        <div class="form-group"><label>وحدة العدد</label><input type="text" id="ex-count-unit" placeholder="قرص / كيس / علبة ..."></div>
-        <div class="form-group"><label>العميل / الجهة</label><input type="text" id="ex-client" placeholder="اسم العميل"></div>
-        <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="ex-notes" placeholder="ملاحظات"></div>
+        <div class="form-group" id="ex-item-group"><label>الصنف *</label>
+          <select id="ex-item"><option value="">اختر صنفاً...</option></select>
+          <input type="text" id="ex-item-free" placeholder="مثال: جبنة بيضاء، زبدة..." style="display:none;width:100%;padding:10px 12px;background:var(--bg-600);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text-100);font-family:inherit;font-size:14px;box-sizing:border-box;margin-top:6px">
+        </div>
+        <div class="form-group"><label>العميل / الجهة *</label><input type="text" id="ex-client" placeholder="اسم العميل"></div>
+        <div class="form-group"><label>وحدة العدد</label><input type="text" id="ex-count-unit" placeholder="طرد / قرص / كيس ..." value="طرد"></div>
+        
+        <!-- قسم الطرود الديناميكي -->
+        <div class="form-group" style="grid-column:1/-1">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <label style="margin:0;color:var(--gold);font-weight:700;font-size:15px">📦 تفاصيل الطرود</label>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="addParcelRow()" style="font-size:12px">+ إضافة طرد آخر</button>
+          </div>
+          <div id="parcels-container">
+            <!-- سيتم إضافة صفوف الطرود هنا ديناميكياً -->
+          </div>
+        </div>
+        
+        <!-- ملخص الطرود -->
+        <div class="form-group" style="grid-column:1/-1;background:linear-gradient(135deg,rgba(212,168,67,0.1),rgba(16,185,129,0.05));border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-top:8px">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center">
+            <div><div style="color:var(--text-400);font-size:11px">إجمالي الوزن</div><div id="ex-total-weight" style="color:var(--gold);font-weight:700;font-size:16px">0 كجم</div></div>
+            <div><div style="color:var(--text-400);font-size:11px">إجمالي القيمة</div><div id="ex-total-amount" style="color:var(--success);font-weight:700;font-size:16px">0 ج</div></div>
+            <div><div style="color:var(--text-400);font-size:11px">عدد الطرود</div><div id="ex-total-parcels" style="color:var(--info);font-weight:700;font-size:16px">0</div></div>
+          </div>
+        </div>
+        
+        <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><textarea id="ex-notes" placeholder="ملاحظات" rows="2" style="width:100%;padding:10px 12px;background:var(--bg-600);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text-100);font-family:inherit;font-size:14px;resize:vertical;box-sizing:border-box"></textarea></div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-export')">إلغاء</button>
-      <button class="btn btn-primary" onclick="saveExport()">💾 حفظ</button>
+      <button class="btn btn-primary" onclick="saveExport()">💾 حفظ الصادر</button>
+    </div>
+  </div>
+</div>
+
+<!-- Return Modal -->
+<div class="modal-backdrop" id="modal-return">
+  <div class="modal" style="max-width:450px">
+    <div class="modal-header">
+      <span style="font-size:22px">↩️</span>
+      <h3>تسجيل مرتجع</h3>
+      <input type="hidden" id="ret-export-id" value="">
+      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-return')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>تاريخ المرتجع *</label><input type="date" id="ret-date"></div>
+        <div class="form-group"><label>كمية المرتجع (طرد/قرص) *</label><input type="number" id="ret-qty" placeholder="0" min="0" step="1"></div>
+        <div class="form-group"><label>نوع المرتجع</label>
+          <select id="ret-type">
+            <option value="parcel">طرد كامل</option>
+            <option value="discs">أقراص فقط</option>
+            <option value="weight">وزن (كجم)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>سبب المرتجع</label><input type="text" id="ret-reason" placeholder="السبب..."></div>
+        <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><textarea id="ret-notes" rows="2" style="width:100%;padding:10px 12px;background:var(--bg-600);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text-100);font-family:inherit;font-size:14px;resize:vertical;box-sizing:border-box"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-return')">إلغاء</button>
+      <button class="btn btn-warning" onclick="saveReturn()">↩️ تسجيل مرتجع</button>
     </div>
   </div>
 </div>
@@ -3298,6 +3352,28 @@ window.deleteSupplier = async function(id) {
 
 window.filterSuppliers = function() { renderSuppliers($('suppliers-search').value); };
 
+function calcSupplierWeekBalance(supplierId) {
+  const { start: ws, end: we } = getWeekBounds();
+  // حسابات الأسبوع الحالي
+  const weekMilk = Object.values(state.milkRecords)
+    .filter(r => r.supplierId === supplierId && r.date >= ws && r.date <= we)
+    .reduce((s, r) => s + Number(r.total || 0), 0);
+  const weekPayments = Object.values(state.supplierPayments)
+    .filter(p => p.supplierId === supplierId && p.date >= ws && p.date <= we)
+    .reduce((s, p) => s + Number(p.amount || 0), 0);
+  const weekAdvances = Object.values(state.supplierAdvances)
+    .filter(a => a.supplierId === supplierId && a.date >= ws && a.date <= we)
+    .reduce((s, a) => s + Number(a.amount || 0), 0);
+  return {
+    weekMilk,
+    weekPayments,
+    weekAdvances,
+    weekBalance: weekMilk - weekPayments - weekAdvances,
+    weekStart: ws,
+    weekEnd: we
+  };
+}
+
 function renderSuppliers(search='') {
   const rows = Object.entries(state.suppliers)
     .filter(([, s]) => !search || fuzzyMatch(search, s.name || '') || s.phone?.includes(search));
@@ -3305,22 +3381,27 @@ function renderSuppliers(search='') {
   $('suppliers-count').textContent = `(${rows.length} مورد)`;
 
   if (!rows.length) {
-    $('suppliers-tbody').innerHTML = `<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">👥</span><p>لا يوجد موردون</p></div></td></tr>`;
+    $('suppliers-tbody').innerHTML = `<tr><td colspan="9"><div class="empty-state"><span class="empty-icon">👥</span><p>لا يوجد موردون</p></div></td></tr>`;
     return;
   }
-  let grandTotalMilkQty=0, grandTotalMilkAmt=0;
+  let grandTotalMilkQty=0, grandTotalMilkAmt=0, grandWeekBalance=0;
   $('suppliers-tbody').innerHTML = rows.map(([id, s], i) => {
     const bal = calcSupplierBalance(id);
     const balClass = bal > 0 ? 'balance-positive' : bal < 0 ? 'balance-negative' : 'balance-zero';
     const milkQty = Object.values(state.milkRecords).filter(r => r.supplierId === id).reduce((sm,r) => sm + Number(r.qty||0), 0);
     const milkAmt = Object.values(state.milkRecords).filter(r => r.supplierId === id).reduce((sm,r) => sm + Number(r.total||0), 0);
     grandTotalMilkQty += milkQty; grandTotalMilkAmt += milkAmt;
+    
+    // حساب إجمالي الأسبوع الحالي
+    const weekData = calcSupplierWeekBalance(id);
+    const weekBalClass = weekData.weekBalance > 0 ? 'balance-positive' : weekData.weekBalance < 0 ? 'balance-negative' : 'balance-zero';
+    grandWeekBalance += weekData.weekBalance;
     const waPhone = (s.phone||'').replace(/\D/g,'');
     const waMsg = encodeURIComponent(`السلام عليكم ${s.name}،\nكشف حسابك الأسبوعي:\nإجمالي المستحقات: ${fmt(bal,2)} جنيه\nشكراً لتعاملكم معنا 🥛`);
     const waLink = waPhone ? `https://wa.me/2${waPhone}?text=${waMsg}` : '#';
     return `<tr style="animation: rowFadeIn 0.3s ease ${i*0.05}s both">
       <td>${i+1}</td>
-      <td><strong>${sanitize(s.name)}</strong></td>
+      <td><strong style="font-size:17px;font-weight:700">${sanitize(s.name)}</strong></td>
       <td dir="ltr">
         <div style="display:flex;align-items:center;gap:6px">
           <span>${sanitize(s.phone||'—')}</span>
@@ -3333,6 +3414,7 @@ function renderSuppliers(search='') {
       <td style="color:var(--success);font-weight:700">${fmt(milkQty,1)} كجم</td>
       <td>${fmt(s.price,2)} ج</td>
       <td class="${balClass}" style="font-weight:700">${fmt(bal,2)} ج</td>
+      <td class="${weekBalClass}" style="font-weight:700;background:rgba(212,168,67,0.08);border-radius:6px;padding:4px 8px" title="رصيد الأسبوع (${weekData.weekStart} - ${weekData.weekEnd})">${fmt(weekData.weekBalance,2)} ج</td>
       <td><span class="badge ${s.status==='active'?'badge-success':'badge-danger'}">${s.status==='active'?'نشط':'متوقف'}</span></td>
       <td>
         <div style="display:flex;gap:6px">
@@ -3348,7 +3430,8 @@ function renderSuppliers(search='') {
       <td style="font-weight:900;color:var(--success);font-size:15px">${fmt(grandTotalMilkQty,1)} كجم</td>
       <td></td>
       <td style="font-weight:900;color:var(--info);font-size:15px">${fmt(grandTotalMilkAmt,2)} ج</td>
-      <td colspan="2"></td>
+      <td style="font-weight:900;color:var(--warning);font-size:15px">${fmt(grandWeekBalance,2)} ج</td>
+      <td></td>
     </tr>`;
 }
 
@@ -3598,7 +3681,7 @@ function renderAccounts(search='') {
   const suppliers = Object.entries(state.suppliers)
     .filter(([,s]) => !search || fuzzyMatch(search, s.name || ''));
 
-  let acctGrandMilkQty=0, acctGrandMilkAmt=0, acctGrandPay=0, acctGrandAdv=0, acctGrandPur=0;
+  let acctGrandMilkQty=0, acctGrandMilkAmt=0, acctGrandPay=0, acctGrandAdv=0, acctGrandPur=0, acctGrandWeekBal=0;
   $('accounts-tbody').innerHTML = suppliers.length ? suppliers.map(([id,s], i) => {
     const milkRecs = Object.values(state.milkRecords).filter(r => r.supplierId === id && (!acctFrom || r.date >= acctFrom) && (!acctTo || r.date <= acctTo));
     const milkQty = milkRecs.reduce((s,r) => s + Number(r.qty||0), 0);
@@ -3609,14 +3692,20 @@ function renderAccounts(search='') {
     const balance   = milkTotal - payments - advances - purchases;
     const balClass  = balance > 0 ? 'balance-positive' : balance < 0 ? 'balance-negative' : 'balance-zero';
     acctGrandMilkQty += milkQty; acctGrandMilkAmt += milkTotal; acctGrandPay += payments; acctGrandAdv += advances; acctGrandPur += purchases;
+    
+    // حساب رصيد الأسبوع الحالي
+    const weekData = calcSupplierWeekBalance(id);
+    const weekBalClass = weekData.weekBalance > 0 ? 'balance-positive' : weekData.weekBalance < 0 ? 'balance-negative' : 'balance-zero';
+    acctGrandWeekBal += weekData.weekBalance;
+    
     const waPhone = (s.phone||'').replace(/\D/g,'');
-    const waMsg = encodeURIComponent(`السلام عليكم ${s.name}،\n📊 كشف حسابك:\n🥛 كمية الحليب: ${fmt(milkQty,1)} كجم\n💰 إجمالي الحليب: ${fmt(milkTotal,2)} ج\n✅ المدفوع: ${fmt(payments,2)} ج\n💵 السلف: ${fmt(advances,2)} ج\n🛍️ المشتريات: ${fmt(purchases,2)} ج\n📌 الرصيد المستحق: ${fmt(balance,2)} ج\nشكراً 🥛`);
+    const waMsg = encodeURIComponent(`السلام عليكم ${s.name}，\n📊 كشف حسابك:\n🥛 كمية الحليب: ${fmt(milkQty,1)} كجم\n💰 إجمالي الحليب: ${fmt(milkTotal,2)} ج\n✅ المدفوع: ${fmt(payments,2)} ج\n💵 السلف: ${fmt(advances,2)} ج\n🛍️ المشتريات: ${fmt(purchases,2)} ج\n📌 الرصيد المستحق: ${fmt(balance,2)} ج\n📅 رصيد هذا الأسبوع: ${fmt(weekData.weekBalance,2)} ج\nشكراً 🥛`);
     const waLink = waPhone ? `https://wa.me/2${waPhone}?text=${waMsg}` : '#';
     return `<tr style="animation: rowFadeIn 0.3s ease ${i*0.05}s both">
       <td>${i+1}</td>
       <td>
         <div style="display:flex;align-items:center;gap:8px">
-          <strong>${sanitize(s.name)}</strong>
+          <strong style="font-size:17px;font-weight:700">${sanitize(s.name)}</strong>
           ${waPhone ? `<a href="${waLink}" target="_blank" class="wa-btn" title="إرسال الحساب">
             <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.888 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           </a>` : ''}
@@ -3628,6 +3717,7 @@ function renderAccounts(search='') {
       <td style="color:var(--warning)">${fmt(advances,2)} ج</td>
       <td style="color:var(--info)">${fmt(purchases,2)} ج</td>
       <td class="${balClass}" style="font-weight:900;font-size:15px">${fmt(balance,2)} ج</td>
+      <td class="${weekBalClass}" style="font-weight:700;background:rgba(212,168,67,0.08);border-radius:6px;padding:4px 8px" title="رصيد الأسبوع (${weekData.weekStart} - ${weekData.weekEnd})">${fmt(weekData.weekBalance,2)} ج</td>
       <td>
         <div style="display:flex;gap:6px">
           <button class="btn btn-primary btn-sm" onclick="openPaymentModal('${id}')">💳 دفعة</button>
@@ -3645,8 +3735,8 @@ function renderAccounts(search='') {
       <td style="font-weight:900;color:var(--warning);font-size:15px">${fmt(acctGrandAdv,2)} ج</td>
       <td style="font-weight:900;color:var(--info);font-size:15px">${fmt(acctGrandPur,2)} ج</td>
       <td style="font-weight:900;color:${(acctGrandMilkAmt-acctGrandPay-acctGrandAdv-acctGrandPur)>0?'var(--success)':'var(--danger)'};font-size:15px">${fmt(acctGrandMilkAmt-acctGrandPay-acctGrandAdv-acctGrandPur,2)} ج</td>
-      <td></td>
-    </tr>` : `<tr><td colspan="9"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>`;
+      <td style="font-weight:900;color:var(--warning);font-size:15px">${fmt(acctGrandWeekBal,2)} ج</td>
+    </tr>` : `<tr><td colspan="10"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>`;
 }
 
 window.filterAccounts = function() { renderAccounts($('accounts-search')?.value || ''); };
@@ -3918,28 +4008,142 @@ window.deleteWHItem = async function(wh, id) {
 };
 
 // ══════════════════════════════════════════════════════════════════
-// EXPORTS
+// EXPORTS - PARCEL SYSTEM
 // ══════════════════════════════════════════════════════════════════
-window.openExportModal = function() {
+
+let parcelRowCount = 0;
+
+window.addParcelRow = function(parcelData = null) {
+  const container = document.getElementById('parcels-container');
+  const idx = ++parcelRowCount;
+  
+  const rowHtml = `
+    <div id="parcel-row-${idx}" class="parcel-row" style="background:var(--bg-700);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;position:relative">
+      ${parcelRowCount > 1 ? `<button type="button" onclick="removeParcelRow(${idx})" style="position:absolute;top:6px;left:6px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:14px;line-height:1">✕</button>` : ''}
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:${parcelRowCount > 1 ? '18' : '0'}px">
+        <div>
+          <label style="font-size:11px;color:var(--text-400)">عدد الطرود</label>
+          <input type="number" id="pc-count-${idx}" value="${parcelData?.parcelCount || 1}" min="0" step="1" placeholder="1" oninput="calcParcelTotal()" style="width:100%;padding:8px;background:var(--bg-600);border:1px solid var(--border);border-radius:6px;color:var(--text-100);font-size:13px">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-400)">أقراص/طرد</label>
+          <input type="number" id="pc-discs-${idx}" value="${parcelData?.discsPerParcel || 4}" min="1" step="1" placeholder="4" oninput="calcParcelTotal()" style="width:100%;padding:8px;background:var(--bg-600);border:1px solid var(--border);border-radius:6px;color:var(--text-100);font-size:13px">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-400)">الوزن (كجم)</label>
+          <input type="number" id="pc-weight-${idx}" value="${parcelData?.totalWeight || ''}" min="0" step="0.1" placeholder="0.00" oninput="calcParcelTotal()" style="width:100%;padding:8px;background:var(--bg-600);border:1px solid var(--border);border-radius:6px;color:var(--text-100);font-size:13px">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-400)">سعر الكيلو (ج)</label>
+          <input type="number" id="pc-price-${idx}" value="${parcelData?.pricePerKg || ''}" min="0" step="0.5" placeholder="0" oninput="calcParcelTotal()" style="width:100%;padding:8px;background:var(--bg-600);border:1px solid var(--border);border-radius:6px;color:var(--gold);font-weight:700;font-size:13px">
+        </div>
+      </div>
+      <div style="margin-top:8px;text-align:left;color:var(--info);font-size:12px;font-weight:600">
+        قيمة الطرد: <span id="pc-val-${idx}">0 ج</span>
+      </div>
+    </div>`;
+  
+  container.insertAdjacentHTML('beforeend', rowHtml);
+  calcParcelTotal();
+};
+
+window.removeParcelRow = function(idx) {
+  const row = document.getElementById(`parcel-row-${idx}`);
+  if (row) { row.remove(); calcParcelTotal(); }
+};
+
+window.calcParcelTotal = function() {
+  let totalWeight = 0, totalAmount = 0, totalParcels = 0;
+  
+  for (let i = 1; i <= parcelRowCount; i++) {
+    if (!document.getElementById(`pc-count-${i}`)) continue;
+    const count = parseFloat(document.getElementById(`pc-count-${i}`).value) || 0;
+    const discs = parseFloat(document.getElementById(`pc-discs-${i}`).value) || 0;
+    const weight = parseFloat(document.getElementById(`pc-weight-${i}`).value) || 0;
+    const price = parseFloat(document.getElementById(`pc-price-${i}`).value) || 0;
+    
+    const rowVal = weight * price;
+    totalWeight += weight;
+    totalAmount += rowVal;
+    totalParcels += count;
+    
+    const valEl = document.getElementById(`pc-val-${i}`);
+    if (valEl) valEl.textContent = `${fmt(rowVal, 2)} ج`;
+  }
+  
+  const twEl = document.getElementById('ex-total-weight');
+  const taEl = document.getElementById('ex-total-amount');
+  const tpEl = document.getElementById('ex-total-parcels');
+  if (twEl) twEl.textContent = `${fmt(totalWeight, 2)} كجم`;
+  if (taEl) taEl.textContent = `${fmt(totalAmount, 2)} ج`;
+  if (tpEl) tpEl.textContent = `${totalParcels}`;
+};
+
+window.openExportModal = function(editId = null) {
+  // إعادة تعيين النموذج
+  $('ex-edit-id').value = editId || '';
   $('ex-date').value = today();
-  $('ex-qty').value = '';
-  $('ex-count').value = '';
-  $('ex-count-unit').value = '';
   $('ex-client').value = '';
+  $('ex-count-unit').value = 'طرد';
   $('ex-notes').value = '';
-  // reset free input
+  $('export-modal-title').textContent = editId ? 'تعديل صادر' : 'تسجيل صادر - طرود جبنة';
+  
+  // إعادة تعيين حقل الصنف
   const fi = document.getElementById('ex-item-free');
   if (fi) { fi.style.display = 'none'; fi.value = ''; }
   $('ex-item').style.display = 'block';
-  loadExportItems();
+  $('ex-warehouse').value = 'factory';
+  
+  // مسح وإضافة صف طرد أول
+  parcelRowCount = 0;
+  document.getElementById('parcels-container').innerHTML = '';
+  
+  if (editId && state.exports[editId]) {
+    // وضع التعديل - ملء البيانات
+    const exp = state.exports[editId];
+    $('ex-date').value = exp.date || today();
+    $('ex-warehouse').value = exp.warehouse || 'factory';
+    $('ex-client').value = exp.client || '';
+    $('ex-count-unit').value = exp.countUnit || 'طرد';
+    $('ex-notes').value = exp.notes || '';
+    
+    loadExportItems();
+    
+    // تعبئة حقل الصنف
+    setTimeout(() => {
+      if (exp.warehouse === 'factory') {
+        const freeInput = document.getElementById('ex-item-free');
+        if (freeInput) freeInput.value = exp.itemName || '';
+      } else {
+        $('ex-item').value = exp.itemId || '';
+      }
+      
+      // إضافة صفوف الطرود
+      if (exp.parcels && exp.parcels.length > 0) {
+        exp.parcels.forEach(p => addParcelRow(p));
+      } else {
+        // للبيانات القديمة بدون طرود - تحويلها لطرد واحد
+        addParcelRow({
+          parcelCount: exp.count || 1,
+          discsPerParcel: 4,
+          totalWeight: exp.qty || 0,
+          pricePerKg: exp.pricePerKg || (exp.totalAmount / exp.qty) || 0
+        });
+      }
+    }, 100);
+  } else {
+    loadExportItems();
+    addParcelRow(); // إضافة صف طرد أول
+  }
+  
   openModal('modal-export');
 };
 
 window.loadExportItems = function() {
   const wh  = $('ex-warehouse').value;
   const sel = $('ex-item');
-  // إدارة حقل النص الحر لـ "خارج من المعمل"
   let freeInput = document.getElementById('ex-item-free');
+  
   if (wh === 'factory') {
     sel.style.display = 'none';
     if (!freeInput) {
@@ -3947,10 +4151,11 @@ window.loadExportItems = function() {
       freeInput.type = 'text';
       freeInput.id = 'ex-item-free';
       freeInput.placeholder = 'مثال: جبنة بيضاء، زبدة، لبنة...';
-      freeInput.style.cssText = 'width:100%;padding:10px 12px;background:var(--bg-600);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text-100);font-family:inherit;font-size:14px;box-sizing:border-box';
+      freeInput.style.cssText = 'display:block;width:100%;padding:10px 12px;background:var(--bg-600);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text-100);font-family:inherit;font-size:14px;box-sizing:border-box;margin-top:6px';
       sel.parentNode.insertBefore(freeInput, sel.nextSibling);
+    } else {
+      freeInput.style.display = 'block';
     }
-    freeInput.style.display = 'block';
     freeInput.value = '';
     sel.value = '';
   } else {
@@ -3983,59 +4188,132 @@ window.loadExports = function() {
     const itemName = e.warehouse === 'factory'
       ? sanitize(e.itemName || e.itemId || '—')
       : state[e.warehouse]?.[e.itemId]?.name || e.itemId || '—';
-    const countStr = e.count ? `${fmt(e.count,0)} ${sanitize(e.countUnit||'')}` : '—';
+    
+    // حساب تفاصيل الطرود
+    const parcelsInfo = e.parcels && e.parcels.length > 0 
+      ? e.parcels.map(p => `${p.parcelCount}طرد × ${p.discsPerParcel}قرص = ${p.totalWeight}كجم`).join(' | ')
+      : `${e.qty || 0} كجم`;
+    
+    const returnsCount = (e.returns || []).length;
+    const returnsBadge = returnsCount > 0 
+      ? `<span class="badge badge-danger" title="يوجد مرتجعات">${returnsCount} مرتجع</span>` 
+      : '';
+    
     return `<tr>
       <td>${i+1}</td><td>${e.date}</td>
       <td><span class="badge ${badgeClass}">${whn}</span></td>
-      <td>${sanitize(itemName)}</td>
-      <td style="color:var(--gold);font-weight:700">${fmt(e.qty,2)} كجم</td>
-      <td style="color:var(--info)">${countStr}</td>
+      <td><strong>${sanitize(itemName)}</strong></td>
+      <td style="color:var(--gold);font-weight:700">${fmt(e.totalWeight || e.qty || 0, 2)} كجم</td>
+      <td style="color:var(--success);font-weight:700">${fmt(e.totalAmount || 0, 2)} ج</td>
+      <td style="color:var(--info)">${e.totalCountUnit ? `${e.totalParcels || 0} ${e.totalCountUnit}` : parcelsInfo}</td>
       <td>${sanitize(e.client||'—')}</td>
-      <td>${sanitize(e.notes||'—')}</td>
-      <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteExport('${id}','${e.warehouse}','${e.itemId}',${e.qty})">🗑️</button></td>
+      <td>${returnsBadge}${sanitize(e.notes||'—')}</td>
+      <td>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm btn-icon" onclick="openExportModal('${id}')" title="تعديل">✏️</button>
+          <button class="btn btn-warning btn-sm btn-icon" onclick="openReturnModal('${id}')" title="مرتجع">↩️</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteExport('${id}','${e.warehouse}','${e.itemId}',${e.totalWeight || e.qty || 0})" title="حذف">🗑️</button>
+        </div>
+      </td>
     </tr>`;
-  }).join('') : `<tr><td colspan="9"><div class="empty-state"><span class="empty-icon">📦</span><p>لا توجد صادرات</p></div></td></tr>`;
+  }).join('') : `<tr><td colspan="10"><div class="empty-state"><span class="empty-icon">📦</span><p>لا توجد صادرات</p></div></td></tr>`;
 };
 
 window.saveExport = async function() {
-  const wh        = $('ex-warehouse').value;
-  const qty       = parseFloat($('ex-qty').value);
-  const count     = parseFloat($('ex-count').value) || 0;
-  const countUnit = sanitize($('ex-count-unit').value || '');
-
-  if (!qty || qty <= 0) { toast('الوزن يجب أن يكون أكبر من صفر', 'error'); return; }
+  const wh = $('ex-warehouse').value;
+  const client = sanitize($('ex-client').value);
+  const countUnit = sanitize($('ex-count-unit').value || 'طرد');
+  const notes = sanitize($('ex-notes').value);
+  const editId = $('ex-edit-id').value;
+  
+  if (!client) { toast('أدخل اسم العميل/الجهة', 'error'); return; }
+  
+  // جمع بيانات الطرود
+  const parcels = [];
+  let totalWeight = 0, totalAmount = 0, totalParcels = 0;
+  
+  for (let i = 1; i <= parcelRowCount; i++) {
+    if (!document.getElementById(`pc-count-${i}`)) continue;
+    const pCount = parseFloat(document.getElementById(`pc-count-${i}`).value) || 0;
+    const pDiscs = parseFloat(document.getElementById(`pc-discs-${i}`).value) || 4;
+    const pWeight = parseFloat(document.getElementById(`pc-weight-${i}`).value) || 0;
+    const pPrice = parseFloat(document.getElementById(`pc-price-${i}`).value) || 0;
+    
+    if (pWeight <= 0) { toast('أدخل وزن الطرد بشكل صحيح', 'error'); return; }
+    
+    parcels.push({
+      parcelCount: pCount,
+      discsPerParcel: pDiscs,
+      totalWeight: pWeight,
+      pricePerKg: pPrice
+    });
+    
+    totalWeight += pWeight;
+    totalAmount += (pWeight * pPrice);
+    totalParcels += pCount;
+  }
+  
+  if (parcels.length === 0 || totalWeight <= 0) { toast('أدخل بيانات طرد واحد على الأقل', 'error'); return; }
+  
+  let itemId, itemName;
+  if (wh === 'factory') {
+    const freeInput = document.getElementById('ex-item-free');
+    itemName = sanitize(freeInput ? freeInput.value : '');
+    itemId = itemName;
+    if (!itemName) { toast('أدخل اسم المنتج', 'error'); return; }
+  } else {
+    itemId = $('ex-item').value;
+    if (!itemId) { toast('اختر الصنف', 'error'); return; }
+    const item = state[wh][itemId];
+    if (!item) { toast('الصنف غير موجود', 'error'); return; }
+    itemName = item.name;
+    if (Number(item.qty||0) < totalWeight) { toast('الوزن المطلوب أكبر من المتاح في المخزن', 'error'); return; }
+  }
 
   loading(true);
   try {
-    if (wh === 'factory') {
-      const freeInput = document.getElementById('ex-item-free');
-      const itemName  = sanitize(freeInput ? freeInput.value : $('ex-item').value);
-      if (!itemName) { toast('أدخل اسم المنتج', 'error'); loading(false); return; }
-      await dbPush('exports', {
-        date: $('ex-date').value, warehouse: 'factory',
-        itemId: itemName, itemName,
-        qty, count, countUnit,
-        client: sanitize($('ex-client').value),
-        notes: sanitize($('ex-notes').value)
-      });
-      toast('تم تسجيل الصادر من المعمل ✅', 'success');
+    const exportData = {
+      date: $('ex-date').value,
+      warehouse: wh,
+      itemId,
+      itemName,
+      client,
+      notes,
+      parcels,
+      totalCountUnit: countUnit,
+      totalParcels,
+      totalWeight,
+      totalAmount,
+      returns: [],
+      createdAt: new Date().toISOString()
+    };
+    
+    if (editId && state.exports[editId]) {
+      // تحديث سجل موجود - الاحتفاظ بالمرتجعات السابقة
+      const existing = state.exports[editId];
+      exportData.returns = existing.returns || [];
+      
+      // استرجاع الكمية القديمة للمخزن إذا كان من مخزن
+      if (existing.warehouse !== 'factory') {
+        const oldItem = state[existing.warehouse]?.[existing.itemId];
+        if (oldItem) await dbUpdate(`${existing.warehouse}/${existing.itemId}`, { qty: Number(oldItem.qty||0) + (existing.totalWeight || existing.qty || 0) });
+      }
+      
+      await dbUpdate(`exports/${editId}`, exportData);
+      toast('تم تحديث الصادر ✅', 'success');
     } else {
-      const itemId = $('ex-item').value;
-      if (!itemId) { toast('اختر الصنف', 'error'); loading(false); return; }
-      const item = state[wh][itemId];
-      if (!item) { toast('الصنف غير موجود', 'error'); loading(false); return; }
-      if (Number(item.qty||0) < qty) { toast('الوزن المطلوب أكبر من المتاح في المخزن', 'error'); loading(false); return; }
-      await dbPush('exports', {
-        date: $('ex-date').value, warehouse: wh, itemId,
-        itemName: item.name, qty, count, countUnit,
-        client: sanitize($('ex-client').value),
-        notes: sanitize($('ex-notes').value)
-      });
-      await dbUpdate(`${wh}/${itemId}`, { qty: Number(item.qty) - qty });
-      renderWarehouse(wh);
-      toast('تم تسجيل الصادر وخصم الوزن من المخزن ✅', 'success');
+      await dbPush('exports', exportData);
+      toast('تم تسجيل الصادر ✅', 'success');
     }
-    track('export_create', { wh, qty });
+    
+    // خصم من المخزن إذا لم يكن من المعمل
+    if (wh !== 'factory') {
+      const item = state[wh][itemId];
+      if (item) await dbUpdate(`${wh}/${itemId}`, { qty: Number(item.qty||0) - totalWeight });
+      renderWarehouse(wh);
+    }
+    
+    track('export_create', { wh, totalWeight });
     closeModal('modal-export');
     loadExports();
   } catch(e) { toast('خطأ: ' + e.message, 'error'); }
@@ -4046,11 +4324,71 @@ window.deleteExport = async function(id, wh, itemId, qty) {
   if (!confirm('حذف هذا الصادر واسترجاع الكمية للمخزن؟')) return;
   loading(true);
   try {
-    const item = state[wh]?.[itemId];
-    if (item) await dbUpdate(`${wh}/${itemId}`, { qty: Number(item.qty||0) + Number(qty) });
+    // استرجاع الكمية للمخزن
+    if (wh !== 'factory' && itemId) {
+      const item = state[wh]?.[itemId];
+      if (item) await dbUpdate(`${wh}/${itemId}`, { qty: Number(item.qty||0) + Number(qty) });
+    }
     await dbRemove(`exports/${id}`);
     toast('تم الحذف واسترجاع الكمية', 'success');
     loadExports(); renderWarehouse(wh);
+  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  finally { loading(false); }
+};
+
+// ── Returns System ──
+window.openReturnModal = function(exportId) {
+  if (!exportId || !state.exports[exportId]) { toast('الصادر غير موجود', 'error'); return; }
+  $('ret-export-id').value = exportId;
+  $('ret-date').value = today();
+  $('ret-qty').value = '';
+  $('ret-type').value = 'parcel';
+  $('ret-reason').value = '';
+  $('ret-notes').value = '';
+  openModal('modal-return');
+};
+
+window.saveReturn = async function() {
+  const exportId = $('ret-export-id').value;
+  const retQty = parseFloat($('ret-qty').value) || 0;
+  const retType = $('ret-type').value;
+  const retReason = sanitize($('ret-reason').value);
+  const retNotes = sanitize($('ret-notes').value);
+  
+  if (!exportId) { toast('معرف الصادر غير محدد', 'error'); return; }
+  if (retQty <= 0) { toast('أدخل كمية المرتجع', 'error'); return; }
+  
+  const exp = state.exports[exportId];
+  if (!exp) { toast('الصادر غير موجود', 'error'); return; }
+  
+  loading(true);
+  try {
+    const returnData = {
+      date: $('ret-date').value,
+      qty: retQty,
+      type: retType,
+      reason: retReason,
+      notes: retNotes,
+      createdAt: new Date().toISOString()
+    };
+    
+    // إضافة المرتجع للصادر
+    const updatedReturns = [...(exp.returns || []), returnData];
+    await dbUpdate(`exports/${exportId}`, { returns: updatedReturns });
+    
+    // استرجاع الكمية للمخزن إذا كان من مخزن
+    if (exp.warehouse !== 'factory' && exp.itemId) {
+      const item = state[exp.warehouse]?.[exp.itemId];
+      if (item) {
+        const returnWeight = retType === 'weight' ? retQty : (retQty * ((exp.totalWeight || 0) / (exp.totalParcels || 1)));
+        await dbUpdate(`${exp.warehouse}/${exp.itemId}`, { qty: Number(item.qty||0) + returnWeight });
+        renderWarehouse(exp.warehouse);
+      }
+    }
+    
+    toast('تم تسجيل المرتجع بنجاح ↩️', 'success');
+    closeModal('modal-return');
+    loadExports();
   } catch(e) { toast('خطأ: ' + e.message, 'error'); }
   finally { loading(false); }
 };
