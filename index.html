@@ -14,14 +14,140 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-/* إخفاء عناصر الواتساب والأزرار عند الطباعة المباشرة */
+/* ═══════════════════════════════════════════════════════════════
+   الطباعة بالأبيض والأسود - Black & White Print Styles
+   ═══════════════════════════════════════════════════════════════ */
 @media print {
+  /* إخفاء العناصر غير الضرورية */
   .wa-btn, .btn-whatsapp, .sidebar, .sidebar-overlay,
   .topbar, .btn, button, .nav-item, .modal,
   #login-screen, #loading-overlay, #toast-container,
-  .ticker-bar { display: none !important; }
-  .app-shell { display: block !important; }
-  .main-content { margin: 0 !important; padding: 0 !important; }
+  .ticker-bar, .bottom-nav, .bottom-sheet, .bottom-sheet-backdrop,
+  .search-bar, .form-group input, .form-group select,
+  .easy-ui-container { display: none !important; }
+  
+  /* إظهار المحتوى الرئيسي */
+  .app-shell { display: block !important; background: #fff !important; }
+  .main-content { margin: 0 !important; padding: 10px !important; background: #fff !important; }
+  .page { background: #fff !important; color: #000 !important; }
+  .card { background: #fff !important; border: 2px solid #000 !important; box-shadow: none !important; page-break-inside: avoid; }
+  .card-header, .card-body { background: #fff !important; color: #000 !important; }
+  
+  /* النصوص - أسود على أبيض */
+  body { background: #fff !important; color: #000 !important; font-size: 13px !important; }
+  * { color: #000 !important; background: #fff !important; border-color: #000 !important; }
+  h1, h2, h3, h4, h5, h6 { color: #000 !important; font-weight: bold !important; }
+  strong, b { font-weight: bold !important; color: #000 !important; }
+  
+  /* الجداول - حدود سوداء واضحة */
+  table { border-collapse: collapse !important; width: 100% !important; }
+  th { 
+    background: #000 !important; 
+    color: #fff !important; 
+    border: 2px solid #000 !important;
+    padding: 8px !important;
+    font-weight: bold !important;
+    font-size: 13px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  td { 
+    border: 1px solid #000 !important; 
+    padding: 6px 8px !important; 
+    color: #000 !important;
+    background: #fff !important;
+    font-size: 12px !important;
+  }
+  tr:nth-child(even) td { background: #f5f5f5 !important; }
+  thead th { background: #000 !important; color: #fff !important; }
+  
+  /* الشارات والأوسمة */
+  .badge { 
+    border: 1px solid #000 !important; 
+    background: #fff !important; 
+    color: #000 !important;
+    padding: 2px 6px !important;
+  }
+  
+  /* ملخص الإحصائيات */
+  .summary-bar { 
+    background: #fff !important; 
+    border: 2px solid #000 !important; 
+    padding: 10px !important;
+    margin: 10px 0 !important;
+  }
+  .summary-item { 
+    border: 1px solid #ccc !important; 
+    padding: 8px !important; 
+    background: #f9f9f9 !important;
+  }
+  .summary-item .val { 
+    color: #000 !important; 
+    font-weight: bold !important; 
+    font-size: 16px !important;
+  }
+  .summary-item .lbl { 
+    color: #333 !important; 
+    font-size: 11px !important;
+  }
+  
+  /* بطاقات الإحصائيات */
+  .stat-card {
+    background: #fff !important;
+    border: 2px solid #000 !important;
+    box-shadow: none !important;
+  }
+  .stat-value { color: #000 !important; font-weight: bold !important; }
+  .stat-label { color: #333 !important; }
+  
+  /* الرصيد */
+  .balance-positive, .balance-negative, .balance-zero { 
+    color: #000 !important; 
+    font-weight: bold !important;
+  }
+  
+  /* إخفاء الألوان الزخرفية */
+  *::before, *::after { 
+    content: none !important; 
+    background: transparent !important;
+    border-color: transparent !important;
+  }
+  
+  /* الروابط */
+  a { color: #000 !important; text-decoration: underline !important; }
+  a[href]::after { content: " (" attr(href) ")" !important; font-size: 10px !important; }
+  
+  /* عناوين الأقسام */
+  .section-header { 
+    border-bottom: 3px solid #000 !important; 
+    margin-bottom: 15px !important;
+    padding-bottom: 10px !important;
+  }
+  .section-header h2 { 
+    font-size: 18px !important; 
+    font-weight: bold !important;
+    color: #000 !important;
+  }
+  
+  /* الحالة الفارغة */
+  .empty-state { 
+    border: 1px dashed #999 !important; 
+    padding: 20px !important;
+    color: #666 !important;
+  }
+  
+  /* فصل الصفحات */
+  .card { page-break-inside: avoid; }
+  table { page-break-inside: auto; }
+  tr { page-break-inside: avoid; }
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  
+  /* التذييل والترويسة */
+  @page { 
+    margin: 15mm 10mm; 
+    size: A4;
+  }
 }
 </style>
 <style id="ticker-enhancements">
@@ -6298,34 +6424,33 @@ function fuzzyMatch(query, text) {
       const summaryItems = Object.entries(colTotals)
         .filter(([ci, v]) => v > 0 && thEls[ci])
         .map(([ci, v]) => ({ label: thEls[ci].innerText.trim(), value: v, unit: colUnits[ci] || '' }));
-      const colors = ['#D4A843','#8B6914','#A0826D','#2c7a4b','#2563eb','#dc2626'];
       const summaryCards = summaryItems.map((s,i) => `
-        <div style="border:1px solid #D4A843;border-radius:8px;padding:12px;text-align:center;background:#fffdf5">
-          <div style="font-size:20px;font-weight:900;color:${colors[i%colors.length]};margin-bottom:2px">
+        <div style="border:2px solid #000;border-radius:8px;padding:12px;text-align:center;background:#fff">
+          <div style="font-size:20px;font-weight:900;color:#000;margin-bottom:2px">
             ${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}
           </div>
-          ${s.unit ? `<div style="font-size:9px;color:#b8860b;font-weight:600;margin-bottom:3px">${s.unit}</div>` : ''}
-          <div style="font-size:10px;color:#888">إجمالي ${s.label}</div>
+          ${s.unit ? `<div style="font-size:9px;color:#333;font-weight:600;margin-bottom:3px">${s.unit}</div>` : ''}
+          <div style="font-size:10px;color:#666">إجمالي ${s.label}</div>
         </div>`).join('');
 
       const CSS = `<style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
         @page{size:A4;margin:15mm}
         *{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:'Cairo',Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff;font-size:12px}
-        .doc-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #D4A843;padding-bottom:12px;margin-bottom:10px}
-        .doc-top h1{color:#8B6914;font-size:20px;margin-bottom:2px}
-        .doc-top .sub{font-size:11px;color:#A0826D;font-weight:600}
-        .doc-top .meta{font-size:10px;color:#999;text-align:left}
+        body{font-family:'Cairo',Tajawal,Arial,sans-serif;direction:rtl;color:#000;padding:20px;background:#fff;font-size:12px}
+        .doc-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #000;padding-bottom:12px;margin-bottom:10px}
+        .doc-top h1{color:#000;font-size:20px;margin-bottom:2px;font-weight:bold}
+        .doc-top .sub{font-size:11px;color:#333;font-weight:600}
+        .doc-top .meta{font-size:10px;color:#666;text-align:left}
         .sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0 18px}
-        h3{color:#b8860b;font-size:13px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}
-        table{width:100%;border-collapse:collapse;margin:8px 0;font-size:11px}
-        th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a;font-weight:700}
-        td{border:1px solid #ddd;padding:6px 8px;text-align:center}
-        tr:nth-child(even) td{background:#fffbf0}
-        tfoot tr td{background:#fffdf5;border-top:2px solid #D4A843}
-        .footer{margin-top:16px;padding-top:10px;border-top:1px solid #e8d5c4;display:flex;justify-content:space-between;font-size:10px;color:#aaa}
-        @media print{th{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+        h3{color:#000;font-size:13px;margin:14px 0 6px;border-bottom:2px solid #000;padding-bottom:3px;font-weight:bold}
+        table{width:100%;border-collapse:collapse;margin:8px 0;font-size:11px;border:2px solid #000}
+        th{background:#000;color:#fff;padding:7px 8px;text-align:center;border:2px solid #000;font-weight:700;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+        td{border:1px solid #000;padding:6px 8px;text-align:center;color:#000}
+        tr:nth-child(even) td{background:#f5f5f5}
+        tfoot tr td{background:#eee;border-top:2px solid #000;font-weight:700}
+        .footer{margin-top:16px;padding-top:10px;border-top:1px solid #000;display:flex;justify-content:space-between;font-size:10px;color:#666}
+        @media print{th,td,tfoot td{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
       </style>`;
 
       function buildFull() {
@@ -6346,9 +6471,9 @@ function fuzzyMatch(query, text) {
           <tr>
             <td>${i+1}</td>
             <td style="text-align:right;font-weight:600">إجمالي ${s.label}</td>
-            <td style="font-weight:900;color:#8B6914;font-size:14px">
+            <td style="font-weight:900;color:#000;font-size:14px">
               ${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}
-              ${s.unit ? `<span style="font-size:10px;color:#aaa;font-weight:400"> ${s.unit}</span>` : ''}
+              ${s.unit ? `<span style="font-size:10px;color:#666;font-weight:400"> ${s.unit}</span>` : ''}
             </td>
           </tr>`).join('');
         return `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${title} — إجمالي</title>${CSS}</head><body>
@@ -6362,7 +6487,7 @@ function fuzzyMatch(query, text) {
             <thead><tr><th>#</th><th>البيان</th><th>الإجمالي</th></tr></thead>
             <tbody>
               ${tableRows || '<tr><td colspan="3">لا توجد أعمدة رقمية</td></tr>'}
-              <tr><td colspan="2" style="font-weight:700;text-align:right">عدد السجلات</td><td style="font-weight:900;color:#8B6914">${rows.length}</td></tr>
+              <tr><td colspan="2" style="font-weight:700;text-align:right">عدد السجلات</td><td style="font-weight:900;color:#000">${rows.length}</td></tr>
             </tbody>
           </table>
           <div class="footer"><span>${factoryName}</span><span>${new Date().toLocaleDateString('ar-EG')}</span></div>
@@ -6481,40 +6606,39 @@ window.exportTableToPDF = function(selector, fileName) {
   const summaryItems = Object.entries(colTotals)
     .filter(([ci, v]) => v > 0 && thEls[ci])
     .map(([ci, v]) => ({ label: thEls[ci].innerText.trim(), value: v, unit: colUnits[ci]||'' }));
-  const colors = ['#D4A843','#8B6914','#A0826D','#2c7a4b','#2563eb','#dc2626'];
   const summaryCards = summaryItems.map((s,i) => `
-    <div class="sum-card">
-      <div class="sum-val" style="color:${colors[i%colors.length]}">${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-      ${s.unit ? `<div class="sum-unit">${s.unit}</div>` : ''}
-      <div class="sum-lbl">إجمالي ${s.label}</div>
+    <div class="sum-card" style="border:2px solid #000;background:#fff">
+      <div class="sum-val" style="color:#000">${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+      ${s.unit ? `<div class="sum-unit" style="color:#333">${s.unit}</div>` : ''}
+      <div class="sum-lbl" style="color:#666">إجمالي ${s.label}</div>
     </div>`).join('');
 
   const CSS = `<style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
     @page{size:A4;margin:15mm}
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Cairo',Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff;font-size:12px}
-    .doc-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #D4A843;padding-bottom:12px;margin-bottom:10px}
-    .doc-top h1{color:#8B6914;font-size:20px;margin-bottom:2px}
-    .doc-top .sub{font-size:11px;color:#A0826D;font-weight:600}
-    .doc-top .meta{font-size:10px;color:#999;text-align:left;direction:ltr}
+    body{font-family:'Cairo',Tajawal,Arial,sans-serif;direction:rtl;color:#000;padding:20px;background:#fff;font-size:12px}
+    .doc-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #000;padding-bottom:12px;margin-bottom:10px}
+    .doc-top h1{color:#000;font-size:20px;margin-bottom:2px;font-weight:bold}
+    .doc-top .sub{font-size:11px;color:#333;font-weight:600}
+    .doc-top .meta{font-size:10px;color:#666;text-align:left;direction:ltr}
     .sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:14px 0 18px}
-    .sum-card{border:1px solid #D4A843;border-radius:8px;padding:12px;text-align:center;background:#fffdf5}
-    .sum-val{font-size:18px;font-weight:900;margin-bottom:2px}
-    .sum-unit{font-size:9px;color:#b8860b;font-weight:600;margin-bottom:3px}
-    .sum-lbl{font-size:10px;color:#888}
-    h3{color:#b8860b;font-size:13px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}
-    table{width:100%;border-collapse:collapse;margin:8px 0;font-size:11px}
-    th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a;font-weight:700}
-    td{border:1px solid #ddd;padding:6px 8px;text-align:center}
-    tr:nth-child(even) td{background:#fffbf0}
-    tfoot tr td{background:#fffdf5;border-top:2px solid #D4A843;font-weight:900}
-    .total-label{font-weight:700;text-align:right;background:#D4A843;color:#fff}
-    .total-val{font-weight:900;color:#8B6914;background:#fffbf0}
-    .total-empty{background:#fffbf0}
-    .unit{font-size:9px;color:#aaa;font-weight:400;display:block;margin-top:1px}
-    .footer{margin-top:16px;padding-top:10px;border-top:1px solid #e8d5c4;display:flex;justify-content:space-between;font-size:10px;color:#aaa}
-    @media print{th,tfoot td{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+    .sum-card{border:2px solid #000;border-radius:8px;padding:12px;text-align:center;background:#fff}
+    .sum-val{font-size:18px;font-weight:900;margin-bottom:2px;color:#000}
+    .sum-unit{font-size:9px;color:#333;font-weight:600;margin-bottom:3px}
+    .sum-lbl{font-size:10px;color:#666}
+    h3{color:#000;font-size:13px;margin:14px 0 6px;border-bottom:2px solid #000;padding-bottom:3px;font-weight:bold}
+    table{width:100%;border-collapse:collapse;margin:8px 0;font-size:11px;border:2px solid #000}
+    th{background:#000;color:#fff;padding:7px 8px;text-align:center;border:2px solid #000;font-weight:700;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    td{border:1px solid #000;padding:6px 8px;text-align:center;color:#000}
+    tr:nth-child(even) td{background:#f5f5f5}
+    tfoot tr td{background:#eee;border-top:2px solid #000;font-weight:900}
+    .total-label{font-weight:700;text-align:right;background:#000;color:#fff}
+    .total-val{font-weight:900;color:#000;background:#f5f5f5}
+    .total-empty{background:#f5f5f5}
+    .unit{font-size:9px;color:#666;font-weight:400;display:block;margin-top:1px}
+    .footer{margin-top:16px;padding-top:10px;border-top:1px solid #000;display:flex;justify-content:space-between;font-size:10px;color:#666}
+    @media print{th,tfoot td,.total-label{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
   </style>`;
 
   function buildFull() {
@@ -6535,9 +6659,9 @@ window.exportTableToPDF = function(selector, fileName) {
       <tr>
         <td>${i+1}</td>
         <td style="text-align:right;font-weight:600">إجمالي ${s.label}</td>
-        <td style="font-weight:900;color:#8B6914;font-size:14px">
+        <td style="font-weight:900;color:#000;font-size:14px">
           ${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}
-          ${s.unit ? `<span style="font-size:10px;color:#aaa;font-weight:400"> ${s.unit}</span>` : ''}
+          ${s.unit ? `<span style="font-size:10px;color:#666;font-weight:400"> ${s.unit}</span>` : ''}
         </td>
       </tr>`).join('');
     return `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${title} — إجمالي</title>${CSS}</head><body>
@@ -7810,17 +7934,17 @@ window.deleteBuyerPayment = async function(id) { if (!confirm('حذف هذه ا�
 // PRINT STATEMENTS (A4 Professional)
 // ══════════════════════════════════════════════════════════════════
 function printA4Header(title, infoRows) {
-  return `<h1 style="text-align:center;color:#b8860b;font-size:20px;margin-bottom:4px">${infoRows.factoryName || 'مصنع الألبان'}</h1>
-    <div style="text-align:center;color:#777;font-size:13px;margin-bottom:14px;border-bottom:2px solid #D4A843;padding-bottom:8px">${title}</div>
+  return `<h1 style="text-align:center;color:#000;font-size:20px;margin-bottom:4px;font-weight:bold">${infoRows.factoryName || 'مصنع الألبان'}</h1>
+    <div style="text-align:center;color:#333;font-size:13px;margin-bottom:14px;border-bottom:2px solid #000;padding-bottom:8px">${title}</div>
     <div class="info-grid">${infoRows.rows.map(r => `<div class="info-row"><span>${r[0]}:</span><span>${r[1]}</span></div>`).join('')}</div>`;
 }
 
 function getA4Style() {
-  return `@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:20px;background:#fff}h1{color:#b8860b;font-size:20px;margin-bottom:4px;text-align:center}h2,h3{color:#b8860b;font-size:14px;margin:14px 0 6px;border-bottom:2px solid #D4A843;padding-bottom:3px}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}th{background:#D4A843;color:#fff;padding:7px 8px;text-align:center;border:1px solid #c8981a}td{border:1px solid #ddd;padding:6px 8px;text-align:center}tr:nth-child(even) td{background:#fffbf0}.totals{margin-top:16px;padding:12px 16px;border:2px solid #D4A843;border-radius:8px;background:#fffdf5}.total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #f0e8cc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #D4A843;margin-top:8px;padding-top:10px;color:#333}.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.summary-card{border:2px solid #D4A843;border-radius:8px;padding:10px;text-align:center;background:#fffdf5}.summary-card .val{font-size:18px;font-weight:900;color:#b8860b}.summary-card .lbl{font-size:10px;color:#888;margin-top:3px}.summary-card.green .val{color:#16a34a}.summary-card.red .val{color:#dc2626}.summary-card.blue .val{color:#2563eb}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px}.info-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #f0ead0}.info-row span:first-child{font-weight:bold;color:#666;min-width:90px}.footer{text-align:center;margin-top:24px;color:#aaa;font-size:11px;border-top:1px solid #eee;padding-top:8px}a{display:none!important}@media print{a{display:none!important}}`;
+  return `@page{size:A4;margin:15mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#000;padding:20px;background:#fff}h1{color:#000;font-size:20px;margin-bottom:4px;text-align:center;font-weight:bold}h2,h3{color:#000;font-size:14px;margin:14px 0 6px;border-bottom:2px solid #000;padding-bottom:3px;font-weight:bold}table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px;border:2px solid #000}th{background:#000;color:#fff;padding:7px 8px;text-align:center;border:2px solid #000;font-weight:700;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}td{border:1px solid #000;padding:6px 8px;text-align:center;color:#000}tr:nth-child(even) td{background:#f5f5f5}.totals{margin-top:16px;padding:12px 16px;border:2px solid #000;border-radius:8px;background:#fff}.total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #ccc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:bold;font-size:16px;border-top:2px solid #000;margin-top:8px;padding-top:10px;color:#000}.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}.summary-card{border:2px solid #000;border-radius:8px;padding:10px;text-align:center;background:#fff}.summary-card .val{font-size:18px;font-weight:900;color:#000}.summary-card .lbl{font-size:10px;color:#666;margin-top:3px}.summary-card.green .val,.summary-card.red .val,.summary-card.blue .val{color:#000}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;font-size:12px}.info-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid #eee}.info-row span:first-child{font-weight:bold;color:#333;min-width:90px}.footer{text-align:center;margin-top:24px;color:#666;font-size:11px;border-top:1px solid #000;padding-top:8px}a{display:none!important}@media print{a{display:none!important}}`;
 }
 
 function getA5Style() {
-  return `@page{size:A5;margin:8mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#222;padding:8px 10px;background:#fff;font-size:14px}h1{color:#b8860b;font-size:18px;margin-bottom:2px;text-align:center}h2,h3{color:#b8860b;font-size:13px;margin:8px 0 4px;border-bottom:2px solid #D4A843;padding-bottom:2px}table{width:100%;border-collapse:collapse;margin:4px 0;font-size:11px}th{background:#D4A843;color:#fff;padding:4px 5px;text-align:center;border:1px solid #c8981a;font-size:11px}td{border:1px solid #ddd;padding:3px 5px;text-align:center;font-size:11px}tr:nth-child(even) td{background:#fffbf0}.totals{margin-top:8px;padding:8px 10px;border:2px solid #D4A843;border-radius:6px;background:#fffdf5}.total-row{display:flex;justify-content:space-between;padding:3px 0;font-size:13px;font-weight:700;border-bottom:1px solid #f0e8cc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:900;font-size:16px;border-top:2px solid #D4A843;margin-top:6px;padding-top:6px;color:#333}.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.summary-card{border:2px solid #D4A843;border-radius:6px;padding:6px;text-align:center;background:#fffdf5}.summary-card .val{font-size:16px;font-weight:900;color:#b8860b}.summary-card .lbl{font-size:10px;color:#888;margin-top:2px}.summary-card.green .val{color:#16a34a}.summary-card.red .val{color:#dc2626}.summary-card.blue .val{color:#2563eb}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px;font-size:12px}.info-row{display:flex;gap:6px;padding:2px 0;border-bottom:1px solid #f0ead0}.info-row span:first-child{font-weight:bold;color:#666;min-width:80px}.info-row span:last-child{font-weight:700;color:#222;font-size:13px}.footer{text-align:center;margin-top:12px;color:#aaa;font-size:10px;border-top:1px solid #eee;padding-top:6px}a{display:none!important}@media print{a{display:none!important}}`;
+  return `@page{size:A5;margin:8mm}body{font-family:Cairo,Tajawal,Arial,sans-serif;direction:rtl;color:#000;padding:8px 10px;background:#fff;font-size:14px}h1{color:#000;font-size:18px;margin-bottom:2px;text-align:center;font-weight:bold}h2,h3{color:#000;font-size:13px;margin:8px 0 4px;border-bottom:2px solid #000;padding-bottom:2px;font-weight:bold}table{width:100%;border-collapse:collapse;margin:4px 0;font-size:11px;border:1px solid #000}th{background:#000;color:#fff;padding:4px 5px;text-align:center;border:1px solid #000;font-size:11px;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}td{border:1px solid #000;padding:3px 5px;text-align:center;font-size:11px;color:#000}tr:nth-child(even) td{background:#f5f5f5}.totals{margin-top:8px;padding:8px 10px;border:2px solid #000;border-radius:6px;background:#fff}.total-row{display:flex;justify-content:space-between;padding:3px 0;font-size:13px;font-weight:700;border-bottom:1px solid #ccc}.total-row:last-child{border-bottom:none}.total-row.final{font-weight:900;font-size:16px;border-top:2px solid #000;margin-top:6px;padding-top:6px;color:#000}.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.summary-card{border:2px solid #000;border-radius:6px;padding:6px;text-align:center;background:#fff}.summary-card .val{font-size:16px;font-weight:900;color:#000}.summary-card .lbl{font-size:10px;color:#666;margin-top:2px}.summary-card.green .val,.summary-card.red .val,.summary-card.blue .val{color:#000}.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px;font-size:12px}.info-row{display:flex;gap:6px;padding:2px 0;border-bottom:1px solid #eee}.info-row span:first-child{font-weight:bold;color:#333;min-width:80px}.info-row span:last-child{font-weight:700;color:#000;font-size:13px}.footer{text-align:center;margin-top:12px;color:#666;font-size:10px;border-top:1px solid #000;padding-top:6px}a{display:none!important}@media print{a{display:none!important}}`;
 }
 
 function openPrintWindow(htmlContent, style) {
@@ -7851,20 +7975,20 @@ function getSupplierStmtData() {
 }
 
 function buildSupplierFullHTML(d) {
-  return `<h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
-    <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب مورد</div>
+  return `<h1 style="color:#000;font-weight:bold">${state.settings.factoryName || 'مصنع الألبان'}</h1>
+    <div style="text-align:center;color:#333;font-size:12px;margin-bottom:16px">كشف حساب مورد</div>
     <div class="info-grid">
       <div class="info-row"><span>المورد:</span><span>${d.s.name}</span></div>
       <div class="info-row"><span>الهاتف:</span><span>${d.s.phone||'—'}</span></div>
       <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
       <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
     </div>
-    <h3>سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${d.milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${d.pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${d.adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${d.pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${d.pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي كمية الحليب:</span><span>${fmt(d.milkQtyKg,1)} كجم</span></div><div class="total-row"><span>إجمالي قيمة الحليب:</span><span>${fmt(d.milkSum,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(d.paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(d.advSum,2)} ج</span></div>${d.purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(d.purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${d.balance>0?'green':'red'}">${fmt(d.balance,2)} ج</span></div></div>`;
+    <h3>سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${d.milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3>المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${d.pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3>السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${d.adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${d.pur.length?`<h3>المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${d.pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي كمية الحليب:</span><span>${fmt(d.milkQtyKg,1)} كجم</span></div><div class="total-row"><span>إجمالي قيمة الحليب:</span><span>${fmt(d.milkSum,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(d.paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(d.advSum,2)} ج</span></div>${d.purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(d.purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:#000;font-weight:900">${fmt(d.balance,2)} ج</span></div></div>`;
 }
 
 function buildSupplierSummaryHTML(d) {
-  return `<h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
-    <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب مورد - الإجمالي</div>
+  return `<h1 style="color:#000;font-weight:bold">${state.settings.factoryName || 'مصنع الألبان'}</h1>
+    <div style="text-align:center;color:#333;font-size:12px;margin-bottom:16px">كشف حساب مورد - الإجمالي</div>
     <div class="info-grid">
       <div class="info-row"><span>المورد:</span><span>${d.s.name}</span></div>
       <div class="info-row"><span>الهاتف:</span><span>${d.s.phone||'—'}</span></div>
@@ -7873,13 +7997,13 @@ function buildSupplierSummaryHTML(d) {
     </div>
     <div class="summary-grid">
       <div class="summary-card green"><div class="val">${fmt(d.milkQtyKg,1)} كجم</div><div class="lbl">كمية الحليب</div></div>
-      <div class="summary-card"><div class="val" style="color:#b8860b">${fmt(d.milkSum,2)} ج</div><div class="lbl">قيمة الحليب</div></div>
-      <div class="summary-card red"><div class="val">${fmt(d.paySum,2)} ج</div><div class="lbl">المدفوعات</div></div>
-      <div class="summary-card"><div class="val" style="color:#d97706">${fmt(d.advSum,2)} ج</div><div class="lbl">السلف</div></div>
-      ${d.purSum>0?`<div class="summary-card blue"><div class="val">${fmt(d.purSum,2)} ج</div><div class="lbl">المشتريات</div></div>`:''}
-      <div class="summary-card ${d.balance>0?'green':'red'}"><div class="val" style="font-size:22px">${fmt(d.balance,2)} ج</div><div class="lbl">الرصيد المستحق</div></div>
+      <div class="summary-card"><div class="val" style="color:#000">${fmt(d.milkSum,2)} ج</div><div class="lbl">قيمة الحليب</div></div>
+      <div class="summary-card red"><div class="val" style="color:#000">${fmt(d.paySum,2)} ج</div><div class="lbl">المدفوعات</div></div>
+      <div class="summary-card"><div class="val" style="color:#000">${fmt(d.advSum,2)} ج</div><div class="lbl">السلف</div></div>
+      ${d.purSum>0?`<div class="summary-card blue"><div class="val" style="color:#000">${fmt(d.purSum,2)} ج</div><div class="lbl">المشتريات</div></div>`:''}
+      <div class="summary-card ${d.balance>0?'green':'red'}"><div class="val" style="font-size:22px;color:#000">${fmt(d.balance,2)} ج</div><div class="lbl">الرصيد المستحق</div></div>
     </div>
-    <div class="totals"><div class="total-row final"><span>الرصيد المستحق:</span><span style="color:${d.balance>0?'green':'red'}">${fmt(d.balance,2)} ج</span></div></div>`;
+    <div class="totals"><div class="total-row final"><span>الرصيد المستحق:</span><span style="color:#000;font-weight:900">${fmt(d.balance,2)} ج</span></div></div>`;
 }
 
 window.printSupplierStatementChoice = function(mode) {
@@ -7912,19 +8036,19 @@ function getWorkerStmtData() {
 }
 
 function buildWorkerFullHTML(d) {
-  return `<h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
-    <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب عامل</div>
+  return `<h1 style="color:#000;font-weight:bold">${state.settings.factoryName || 'مصنع الألبان'}</h1>
+    <div style="text-align:center;color:#333;font-size:12px;margin-bottom:16px">كشف حساب عامل</div>
     <div class="info-grid">
       <div class="info-row"><span>العامل:</span><span>${d.w.name}</span></div>
       <div class="info-row"><span>اليومية:</span><span>${fmt(d.dailyRate,2)} ج</span></div>
       <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
       <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
-    </div><h3 style="color:#D4A843">سجل الحضور (${d.totalDays} يوم)</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${d.att.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(d.dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${d.pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3 style="color:#D4A843">السلفة</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${d.adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${d.pur.length?`<h3 style="color:#D4A843">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${d.pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>المستحق (${d.totalDays} يوم):</span><span>${fmt(d.totalEarned,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(d.paySum,2)} ج</span></div><div class="total-row"><span>السلفة:</span><span>${fmt(d.advSum,2)} ج</span></div>${d.purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(d.purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:${d.remaining>0?'red':'green'}">${fmt(d.remaining,2)} ج</span></div></div>`;
+    </div><h3>سجل الحضور (${d.totalDays} يوم)</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المستحق</th></tr></thead><tbody>${d.att.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(d.dailyRate,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3>المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${d.pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table><h3>السلفة</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>${d.adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)} ج</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table>${d.pur.length?`<h3>المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${d.pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)} ج</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>المستحق (${d.totalDays} يوم):</span><span>${fmt(d.totalEarned,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(d.paySum,2)} ج</span></div><div class="total-row"><span>السلفة:</span><span>${fmt(d.advSum,2)} ج</span></div>${d.purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(d.purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>المتبقي:</span><span style="color:#000;font-weight:900">${fmt(d.remaining,2)} ج</span></div></div>`;
 }
 
 function buildWorkerSummaryHTML(d) {
-  return `<h1>${state.settings.factoryName || 'مصنع الألبان'}</h1>
-    <div style="text-align:center;color:#666;font-size:12px;margin-bottom:16px">كشف حساب عامل - الإجمالي</div>
+  return `<h1 style="color:#000;font-weight:bold">${state.settings.factoryName || 'مصنع الألبان'}</h1>
+    <div style="text-align:center;color:#333;font-size:12px;margin-bottom:16px">كشف حساب عامل - الإجمالي</div>
     <div class="info-grid">
       <div class="info-row"><span>العامل:</span><span>${d.w.name}</span></div>
       <div class="info-row"><span>اليومية:</span><span>${fmt(d.dailyRate,2)} ج</span></div>
@@ -7932,14 +8056,14 @@ function buildWorkerSummaryHTML(d) {
       <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
     </div>
     <div class="summary-grid">
-      <div class="summary-card blue"><div class="val">${d.totalDays}</div><div class="lbl">أيام الحضور</div></div>
-      <div class="summary-card"><div class="val">${fmt(d.totalEarned,2)} ج</div><div class="lbl">المستحق</div></div>
-      <div class="summary-card green"><div class="val">${fmt(d.paySum,2)} ج</div><div class="lbl">المدفوعات</div></div>
-      <div class="summary-card"><div class="val" style="color:#d97706">${fmt(d.advSum,2)} ج</div><div class="lbl">السلفة</div></div>
-      ${d.purSum>0?`<div class="summary-card blue"><div class="val">${fmt(d.purSum,2)} ج</div><div class="lbl">المشتريات</div></div>`:''}
-      <div class="summary-card ${d.remaining>0?'red':'green'}"><div class="val" style="font-size:22px">${fmt(d.remaining,2)} ج</div><div class="lbl">المتبقي</div></div>
+      <div class="summary-card blue"><div class="val" style="color:#000">${d.totalDays}</div><div class="lbl">أيام الحضور</div></div>
+      <div class="summary-card"><div class="val" style="color:#000">${fmt(d.totalEarned,2)} ج</div><div class="lbl">المستحق</div></div>
+      <div class="summary-card green"><div class="val" style="color:#000">${fmt(d.paySum,2)} ج</div><div class="lbl">المدفوعات</div></div>
+      <div class="summary-card"><div class="val" style="color:#000">${fmt(d.advSum,2)} ج</div><div class="lbl">السلفة</div></div>
+      ${d.purSum>0?`<div class="summary-card blue"><div class="val" style="color:#000">${fmt(d.purSum,2)} ج</div><div class="lbl">المشتريات</div></div>`:''}
+      <div class="summary-card ${d.remaining>0?'red':'green'}"><div class="val" style="font-size:22px;color:#000">${fmt(d.remaining,2)} ج</div><div class="lbl">المتبقي</div></div>
     </div>
-    <div class="totals"><div class="total-row final"><span>المتبقي:</span><span style="color:${d.remaining>0?'red':'green'}">${fmt(d.remaining,2)} ج</span></div></div>`;
+    <div class="totals"><div class="total-row final"><span>المتبقي:</span><span style="color:#000;font-weight:900">${fmt(d.remaining,2)} ج</span></div></div>`;
 }
 
 window.printWorkerStatementChoice = function(mode) {
