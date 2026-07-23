@@ -3158,6 +3158,8 @@ const state = {
 // ── Utils ──────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 const fmt = (n, dec=0) => (isNaN(n) ? 0 : Number(n)).toLocaleString('ar-EG', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+// دالة تقريب المبلغ لأقرب 5 (مثال: 1023→1025، 1051→1050)
+const roundTo5 = (n) => { const num = Number(n) || 0; return Math.round(num / 5) * 5; };
 const today = () => new Date().toISOString().slice(0,10);
 const now   = () => new Date().toTimeString().slice(0,5);
 const sanitize = s => String(s || '').trim().replace(/[<>]/g,'');
@@ -3824,8 +3826,16 @@ function renderAccounts(search='') {
     const weekBalClass = weekData.weekBalance > 0 ? 'balance-positive' : weekData.weekBalance < 0 ? 'balance-negative' : 'balance-zero';
     acctGrandWeekBal += weekData.weekBalance;
     
+    // تقريب المبالغ لأقرب 5
+    const roundedMilkTotal = roundTo5(milkTotal);
+    const roundedPayments = roundTo5(payments);
+    const roundedAdvances = roundTo5(advances);
+    const roundedPurchases = roundTo5(purchases);
+    const roundedBalance = roundTo5(balance);
+    const roundedWeekBalance = roundTo5(weekData.weekBalance);
+    
     const waPhone = (s.phone||'').replace(/\D/g,'');
-    const waMsg = encodeURIComponent(`السلام عليكم ${s.name}，\n📊 كشف حسابك:\n🥛 كمية الحليب: ${fmt(milkQty,1)} كجم\n💰 إجمالي الحليب: ${fmt(milkTotal,2)} ج\n✅ المدفوع: ${fmt(payments,2)} ج\n💵 السلف: ${fmt(advances,2)} ج\n🛍️ المشتريات: ${fmt(purchases,2)} ج\n📌 الرصيد المستحق: ${fmt(balance,2)} ج\n📅 رصيد هذا الأسبوع: ${fmt(weekData.weekBalance,2)} ج\nشكراً 🥛`);
+    const waMsg = encodeURIComponent(`السلام عليكم ${s.name}，\n📊 كشف حسابك:\n🥛 كمية الحليب: ${fmt(milkQty,1)} كجم\n💰 إجمالي الحليب: ${fmt(roundedMilkTotal,0)} ج\n✅ المدفوع: ${fmt(roundedPayments,0)} ج\n💵 السلف: ${fmt(roundedAdvances,0)} ج\n🛍️ المشتريات: ${fmt(roundedPurchases,0)} ج\n📌 الرصيد المستحق: ${fmt(roundedBalance,0)} ج\n📅 رصيد هذا الأسبوع: ${fmt(roundedWeekBalance,0)} ج\nشكراً 🥛`);
     const waLink = waPhone ? `https://wa.me/2${waPhone}?text=${waMsg}` : '#';
     return `<tr style="animation: rowFadeIn 0.3s ease ${i*0.05}s both">
       <td>${i+1}</td>
@@ -3838,12 +3848,12 @@ function renderAccounts(search='') {
         </div>
       </td>
       <td style="color:var(--success);font-weight:700">${fmt(milkQty,1)} كجم</td>
-      <td style="color:var(--gold)">${fmt(milkTotal,2)} ج</td>
-      <td style="color:var(--danger)">${fmt(payments,2)} ج</td>
-      <td style="color:var(--warning)">${fmt(advances,2)} ج</td>
-      <td style="color:var(--info)">${fmt(purchases,2)} ج</td>
-      <td class="${balClass}" style="font-weight:900;font-size:15px">${fmt(balance,2)} ج</td>
-      <td class="${weekBalClass}" style="font-weight:700;background:rgba(212,168,67,0.08);border-radius:6px;padding:4px 8px" title="رصيد الأسبوع (${weekData.weekStart} - ${weekData.weekEnd})">${fmt(weekData.weekBalance,2)} ج</td>
+      <td style="color:var(--gold)">${fmt(roundedMilkTotal,0)} ج</td>
+      <td style="color:var(--danger)">${fmt(roundedPayments,0)} ج</td>
+      <td style="color:var(--warning)">${fmt(roundedAdvances,0)} ج</td>
+      <td style="color:var(--info)">${fmt(roundedPurchases,0)} ج</td>
+      <td class="${balClass}" style="font-weight:900;font-size:15px">${fmt(roundedBalance,0)} ج</td>
+      <td class="${weekBalClass}" style="font-weight:700;background:rgba(212,168,67,0.08);border-radius:6px;padding:4px 8px" title="رصيد الأسبوع (${weekData.weekStart} - ${weekData.weekEnd})">${fmt(roundedWeekBalance,0)} ج</td>
       <td>
         <div style="display:flex;gap:6px">
           <button class="btn btn-primary btn-sm" onclick="openPaymentModal('${id}')">💳 دفعة</button>
@@ -3856,12 +3866,12 @@ function renderAccounts(search='') {
     <tr style="background:var(--bg-300);border-top:2px solid var(--gold)">
       <td colspan="2" style="font-weight:900;color:var(--gold);font-size:15px;text-align:center">الإجمالي الكلي</td>
       <td style="font-weight:900;color:var(--success);font-size:15px">${fmt(acctGrandMilkQty,1)} كجم</td>
-      <td style="font-weight:900;color:var(--gold);font-size:15px">${fmt(acctGrandMilkAmt,2)} ج</td>
-      <td style="font-weight:900;color:var(--danger);font-size:15px">${fmt(acctGrandPay,2)} ج</td>
-      <td style="font-weight:900;color:var(--warning);font-size:15px">${fmt(acctGrandAdv,2)} ج</td>
-      <td style="font-weight:900;color:var(--info);font-size:15px">${fmt(acctGrandPur,2)} ج</td>
-      <td style="font-weight:900;color:${(acctGrandMilkAmt-acctGrandPay-acctGrandAdv-acctGrandPur)>0?'var(--success)':'var(--danger)'};font-size:15px">${fmt(acctGrandMilkAmt-acctGrandPay-acctGrandAdv-acctGrandPur,2)} ج</td>
-      <td style="font-weight:900;color:var(--warning);font-size:15px">${fmt(acctGrandWeekBal,2)} ج</td>
+      <td style="font-weight:900;color:var(--gold);font-size:15px">${fmt(roundTo5(acctGrandMilkAmt),0)} ج</td>
+      <td style="font-weight:900;color:var(--danger);font-size:15px">${fmt(roundTo5(acctGrandPay),0)} ج</td>
+      <td style="font-weight:900;color:var(--warning);font-size:15px">${fmt(roundTo5(acctGrandAdv),0)} ج</td>
+      <td style="font-weight:900;color:var(--info);font-size:15px">${fmt(roundTo5(acctGrandPur),0)} ج</td>
+      <td style="font-weight:900;color:${(acctGrandMilkAmt-acctGrandPay-acctGrandAdv-acctGrandPur)>0?'var(--success)':'var(--danger)'};font-size:15px">${fmt(roundTo5(acctGrandMilkAmt-acctGrandPay-acctGrandAdv-acctGrandPur),0)} ج</td>
+      <td style="font-weight:900;color:var(--warning);font-size:15px">${fmt(roundTo5(acctGrandWeekBal),0)} ج</td>
     </tr>` : `<tr><td colspan="10"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>`;
 }
 
@@ -8147,12 +8157,20 @@ window.showAccountDetail = function(supplierId) {
   const advSum = advances.reduce((s,[,a])=>s+Number(a.amount||0),0);
   const purSum = purchases.reduce((s,[,p])=>s+Number(p.totalPrice||0),0);
   const balance = milkSum - paySum - advSum - purSum;
-  $('account-detail-body').innerHTML = `<div class="summary-bar" style="margin-bottom:20px"><div class="summary-item"><div class="val" style="color:var(--success)">${fmt(milkQtyKg,1)}</div><div class="lbl">الحليب (كجم)</div></div><div class="summary-item"><div class="val">${fmt(milkSum,2)}</div><div class="lbl">إجمالي الحليب (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--danger)">${fmt(paySum,2)}</div><div class="lbl">المدفوعات (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(advSum,2)}</div><div class="lbl">السلف (ج)</div></div>${purSum>0?`<div class="summary-item"><div class="val" style="color:var(--info)">${fmt(purSum,2)}</div><div class="lbl">المشتريات (ج)</div></div>`:''}<div class="summary-item"><div class="val" style="color:${balance>0?'var(--success)':'var(--danger)'}">${fmt(balance,2)}</div><div class="lbl">الرصيد (ج)</div></div></div><h4 style="color:var(--gold);margin-bottom:10px">سجل الحليب (${milkRecords.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${milkRecords.slice(0,30).map(([,r])=>`<tr><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td style="color:var(--gold)">${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text-400)">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">المدفوعات</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${payments.map(([,p])=>`<tr><td>${p.date}</td><td style="color:var(--danger)">${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">السلف</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${advances.map(([,a])=>`<tr><td>${a.date}</td><td style="color:var(--warning)">${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div>${purchases.length?`<h4 style="color:var(--gold);margin-bottom:10px">المشتريات</h4><div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>الوصف</th><th>الكمية</th><th>الإجمالي</th></tr></thead><tbody>${purchases.map(([,p])=>`<tr><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.qty,2)} ${sanitize(p.unit)}</td><td style="color:var(--danger)">${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table></div>`:''}`;
+  
+  // تقريب المبالغ لأقرب 5
+  const roundedMilkSum = roundTo5(milkSum);
+  const roundedPaySum = roundTo5(paySum);
+  const roundedAdvSum = roundTo5(advSum);
+  const roundedPurSum = roundTo5(purSum);
+  const roundedBalance = roundTo5(balance);
+  
+  $('account-detail-body').innerHTML = `<div class="summary-bar" style="margin-bottom:20px"><div class="summary-item"><div class="val" style="color:var(--success)">${fmt(milkQtyKg,1)}</div><div class="lbl">الحليب (كجم)</div></div><div class="summary-item"><div class="val">${fmt(roundedMilkSum,0)}</div><div class="lbl">إجمالي الحليب (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--danger)">${fmt(roundedPaySum,0)}</div><div class="lbl">المدفوعات (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(roundedAdvSum,0)}</div><div class="lbl">السلف (ج)</div></div>${roundedPurSum>0?`<div class="summary-item"><div class="val" style="color:var(--info)">${fmt(roundedPurSum,0)}</div><div class="lbl">المشتريات (ج)</div></div>`:''}<div class="summary-item"><div class="val" style="color:${roundedBalance>0?'var(--success)':'var(--danger)'}">${fmt(roundedBalance,0)}</div><div class="lbl">الرصيد (ج)</div></div></div><h4 style="color:var(--gold);margin-bottom:10px">سجل الحليب (${milkRecords.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${milkRecords.slice(0,30).map(([,r])=>`<tr><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td style="color:var(--gold)">${fmt(roundTo5(r.total),0)}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text-400)">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">المدفوعات (${payments.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${payments.map(([,p])=>`<tr><td>${p.date}</td><td style="color:var(--danger)">${fmt(roundTo5(p.amount),0)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">السلف (${advances.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${advances.map(([,a])=>`<tr><td>${a.date}</td><td style="color:var(--warning)">${fmt(roundTo5(a.amount),0)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div>${purchases.length?`<h4 style="color:var(--gold);margin-bottom:10px">المشتريات (${purchases.length})</h4><div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>الوصف</th><th>الكمية</th><th>الإجمالي</th></tr></thead><tbody>${purchases.map(([,p])=>`<tr><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.qty,2)} ${sanitize(p.unit)}</td><td style="color:var(--danger)">${fmt(roundTo5(p.totalPrice),0)}</td></tr>`).join('')}</tbody></table></div>`:''}`;
   const waPhone = (s.phone||'').replace(/\D/g,'');
   const waBtnEl = $('wa-send-btn');
   if (waPhone && waBtnEl) {
     waBtnEl.style.display = '';
-    const waMsg = encodeURIComponent('السلام عليكم '+s.name+' 🥛\n\n📋 كشف حسابك\n━━━━━━━━\n🥛 كمية الحليب: '+fmt(milkQtyKg,1)+' كجم\n💰 إجمالي الحليب: '+fmt(milkSum,2)+' ج\n✅ المدفوعات: '+fmt(paySum,2)+' ج\n💵 السلف: '+fmt(advSum,2)+' ج\n📌 الرصيد: '+fmt(balance,2)+' ج\nشكراً 🙏');
+    const waMsg = encodeURIComponent('السلام عليكم '+s.name+' 🥛\n\n📋 كشف حسابك\n━━━━━━━━\n🥛 كمية الحليب: '+fmt(milkQtyKg,1)+' كجم\n💰 إجمالي الحليب: '+fmt(roundedMilkSum,0)+' ج\n✅ المدفوعات: '+fmt(roundedPaySum,0)+' ج\n💵 السلف: '+fmt(roundedAdvSum,0)+' ج\n📌 الرصيد: '+fmt(roundedBalance,0)+' ج\nشكراً 🙏');
     waBtnEl.onclick = () => window.open('https://wa.me/2'+waPhone+'?text='+waMsg, '_blank');
   } else if (waBtnEl) waBtnEl.style.display = 'none';
   openModal('modal-account-detail');
