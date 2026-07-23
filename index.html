@@ -1842,7 +1842,7 @@
         <div class="table-wrapper">
           <table>
             <thead>
-              <tr><th>#</th><th>التاريخ</th><th>العميل</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>طريقة الدفع</th><th>ملاحظات</th><th>تعديل</th><th>حذف</th></tr>
+              <tr><th>#</th><th>التاريخ</th><th>العميل</th><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>طريقة الدفع</th><th>ملاحظات</th><th>فاتورة</th><th>تعديل</th><th>حذف</th></tr>
             </thead>
             <tbody id="sales-tbody"></tbody>
           </table>
@@ -3005,6 +3005,25 @@
   </div>
 </div>
 
+<!-- Invoice Modal -->
+<div class="modal-backdrop" id="modal-invoice">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header">
+      <span style="font-size:22px">🧾</span>
+      <h3 id="invoice-title">فاتورة مبيعات</h3>
+      <button class="btn btn-secondary btn-icon" type="button" onclick="closeModal('modal-invoice')">✕</button>
+    </div>
+    <div class="modal-body" id="invoice-body">
+      <!-- سيتم ملؤها بالجافاسكربت -->
+    </div>
+    <div class="modal-footer" style="flex-wrap:wrap;gap:8px">
+      <button class="btn btn-secondary" onclick="printInvoice()">🖨️ طباعة</button>
+      <button class="btn btn-secondary" onclick="exportInvoiceToPDF()">📄 تصدير PDF</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-invoice')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
 <!-- Supplier Account Detail Modal -->
 <div class="modal-backdrop" id="modal-account-detail">
   <div class="modal" style="max-width:720px">
@@ -3596,6 +3615,12 @@ window.showAccountDetail = function(supplierId) {
   const paySum      = payments.reduce((s,[,p]) => s + Number(p.amount||0), 0);
   const advSum      = advances.reduce((s,[,a]) => s + Number(a.amount||0), 0);
 
+  // تقريب جميع المبالغ
+  const rMilkSum = roundSmart(milkSum);
+  const rPaySum = roundSmart(paySum);
+  const rAdvSum = roundSmart(advSum);
+  const rBalance = roundSmart(balance);
+
   // Get current week records
   const now = new Date();
   const dayOfWeek = now.getDay(); // 0=sun
@@ -3606,14 +3631,15 @@ window.showAccountDetail = function(supplierId) {
   const weekDayNames = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 
   const weekRecords = milkRecords.filter(([,r]) => r.date >= ws && r.date <= we);
+  const rWeekTotal = roundSmart(weekRecords.reduce((s,[,r])=>s+Number(r.total||0),0));
 
   $('account-detail-body').innerHTML = `
     <div class="summary-bar" style="margin-bottom:20px">
       <div class="summary-item"><div class="val" style="color:var(--success)">${fmt(milkQtyKg,1)} كجم</div><div class="lbl">الكمية (كجم)</div></div>
-      <div class="summary-item"><div class="val">${fmt(milkSum,2)}</div><div class="lbl">الكمية (ج)</div></div>
-      <div class="summary-item"><div class="val" style="color:var(--danger)">${fmt(paySum,2)}</div><div class="lbl">المدفوعات (ج)</div></div>
-      <div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(advSum,2)}</div><div class="lbl">السلف (ج)</div></div>
-      <div class="summary-item"><div class="val" style="color:${balance>0?'var(--success)':'var(--danger)'}">${fmt(balance,2)}</div><div class="lbl">الرصيد المستحق (ج)</div></div>
+      <div class="summary-item"><div class="val">${fmt(rMilkSum,0)}</div><div class="lbl">الكمية (ج)</div></div>
+      <div class="summary-item"><div class="val" style="color:var(--danger)">${fmt(rPaySum,0)}</div><div class="lbl">المدفوعات (ج)</div></div>
+      <div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(rAdvSum,0)}</div><div class="lbl">السلف (ج)</div></div>
+      <div class="summary-item"><div class="val" style="color:${balance>0?'var(--success)':'var(--danger)'}">${fmt(rBalance,0)}</div><div class="lbl">الرصيد المستحق (ج)</div></div>
     </div>
     <div style="background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(16,185,129,0.05));border:1px solid var(--border-soft);border-radius:10px;padding:14px;margin-bottom:16px">
       <div style="color:var(--gold);font-weight:700;margin-bottom:10px">📅 تفاصيل الأسبوع الحالي (${ws} : ${we})</div>
@@ -3621,22 +3647,22 @@ window.showAccountDetail = function(supplierId) {
         <table><thead><tr><th>اليوم</th><th>التاريخ</th><th>الكمية (كجم)</th><th>السعر</th><th>الإجمالي</th></tr></thead>
         <tbody>${weekRecords.length ? weekRecords.map(([,r]) => {
           const d = new Date(r.date); const dayName = weekDayNames[d.getDay()];
-          return `<tr><td style="color:var(--gold);font-weight:600">${dayName}</td><td>${r.date}</td><td>${fmt(r.qty,1)} كجم</td><td>${fmt(r.price,2)} ج</td><td style="color:var(--success);font-weight:700">${fmt(r.total,2)} ج</td></tr>`;
+          return `<tr><td style="color:var(--gold);font-weight:600">${dayName}</td><td>${r.date}</td><td>${fmt(r.qty,1)} كجم</td><td>${fmt(r.price,2)} ج</td><td style="color:var(--success);font-weight:700">${fmt(roundSmart(r.total),0)} ج</td></tr>`;
         }).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--text-400)">لا توجد سجلات هذا الأسبوع</td></tr>'}
-        ${weekRecords.length ? `<tr style="background:var(--bg-300)"><td colspan="2" style="font-weight:700;color:var(--gold)">الإجمالي</td><td style="font-weight:700">${fmt(weekRecords.reduce((s,[,r])=>s+Number(r.qty||0),0),1)} كجم</td><td></td><td style="font-weight:900;color:var(--success)">${fmt(weekRecords.reduce((s,[,r])=>s+Number(r.total||0),0),2)} ج</td></tr>` : ''}
+        ${weekRecords.length ? `<tr style="background:var(--bg-300)"><td colspan="2" style="font-weight:700;color:var(--gold)">الإجمالي</td><td style="font-weight:700">${fmt(weekRecords.reduce((s,[,r])=>s+Number(r.qty||0),0),1)} كجم</td><td></td><td style="font-weight:900;color:var(--success)">${fmt(rWeekTotal,0)} ج</td></tr>` : ''}
         </tbody></table>
       </div>
     </div>
     <h4 style="color:var(--gold);margin-bottom:10px">سجل الحليب الكامل (${milkRecords.length} سجل)</h4>
     <div class="table-wrapper" style="margin-bottom:16px">
       <table><thead><tr><th>التاريخ</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead>
-      <tbody>${milkRecords.slice(0,20).map(([,r]) => `<tr><td>${r.date}</td><td>${fmt(r.qty,1)} كجم</td><td>${fmt(r.price,2)}</td><td style="color:var(--gold)">${fmt(r.total,2)} ج</td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text-400)">لا توجد سجلات</td></tr>'}</tbody>
+      <tbody>${milkRecords.slice(0,20).map(([,r]) => `<tr><td>${r.date}</td><td>${fmt(r.qty,1)} كجم</td><td>${fmt(r.price,2)}</td><td style="color:var(--gold)">${fmt(roundSmart(r.total),0)} ج</td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text-400)">لا توجد سجلات</td></tr>'}</tbody>
       </table>
     </div>
     <h4 style="color:var(--gold);margin-bottom:10px">المدفوعات</h4>
     <div class="table-wrapper">
       <table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead>
-      <tbody>${payments.map(([,p]) => `<tr><td>${p.date}</td><td style="color:var(--danger)">${fmt(p.amount,2)} ج</td><td>${sanitize(p.method)}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--text-400)">لا توجد مدفوعات</td></tr>'}</tbody>
+      <tbody>${payments.map(([,p]) => `<tr><td>${p.date}</td><td style="color:var(--danger)">${fmt(roundSmart(p.amount),0)} ج</td><td>${sanitize(p.method)}</td></tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--text-400)">لا توجد مدفوعات</td></tr>'}</tbody>
       </table>
     </div>`;
 
@@ -3645,9 +3671,9 @@ window.showAccountDetail = function(supplierId) {
   const waBtnEl = $('wa-send-btn');
   if (waPhone && waBtnEl) {
     const weeklyQty  = weekRecords.reduce((s,[,r])=>s+Number(r.qty||0),0);
-    const weeklyAmt  = weekRecords.reduce((s,[,r])=>s+Number(r.total||0),0);
+    const weeklyAmt  = roundSmart(weekRecords.reduce((s,[,r])=>s+Number(r.total||0),0));
     const dayLines   = weekRecords.map(([,r]) => {
-      const d = new Date(r.date); return `  • ${weekDayNames[d.getDay()]} ${r.date}: ${fmt(r.qty,1)} كجم = ${fmt(r.total,2)} ج`;
+      const d = new Date(r.date); return `  • ${weekDayNames[d.getDay()]} ${r.date}: ${fmt(r.qty,1)} كجم = ${fmt(roundSmart(r.total),0)} ج`;
     }).join('\n');
     const waMsg = encodeURIComponent(
 `السلام عليكم ورحمة الله ${s.name} 🥛
@@ -3661,13 +3687,13 @@ ${dayLines || '  لا توجد سجلات هذا الأسبوع'}
 
 📊 *ملخص الأسبوع:*
   🥛 إجمالي الكمية: ${fmt(weeklyQty,1)} كجم
-  💰 إجمالي المبلغ: ${fmt(weeklyAmt,2)} ج
+  💰 إجمالي المبلغ: ${fmt(weeklyAmt,0)} ج
 
 💼 *الحساب الإجمالي:*
-  📥 الكمية: ${fmt(milkSum,2)} ج
-  ✅ المدفوعات: ${fmt(paySum,2)} ج
-  🟡 السلف: ${fmt(advSum,2)} ج
-  📌 *الرصيد المستحق: ${fmt(balance,2)} ج*
+  📥 الكمية: ${fmt(rMilkSum,0)} ج
+  ✅ المدفوعات: ${fmt(rPaySum,0)} ج
+  🟡 السلف: ${fmt(rAdvSum,0)} ج
+  📌 *الرصيد المستحق: ${fmt(rBalance,0)} ج*
 
 شكراً لتعاملكم معنا 🙏`
     );
@@ -4624,11 +4650,12 @@ window.loadSales = function() {
       <td style="color:${remAmt>0?'var(--danger)':'var(--success)'};font-weight:700">${fmt(remAmt,2)} ج</td>
       <td><span class="badge badge-info">${sanitize(s.method)}</span></td>
       <td>${sanitize(s.notes||'—')}</td>
+      <td><button class="btn btn-secondary btn-sm btn-icon" onclick="showInvoice('${id}')" title="عرض/طباعة الفاتورة">🧾</button></td>
       <td><button class="btn btn-secondary btn-sm btn-icon" onclick="editSale('${id}')">✏️</button></td>
       <td><button class="btn btn-danger btn-sm btn-icon" onclick="deleteSale('${id}')">🗑️</button></td>
     </tr>`;
   }).join('') :
-    `<tr><td colspan="12"><div class="empty-state"><span class="empty-icon">🛒</span><p>لا توجد مبيعات</p></div></td></tr>`;
+    `<tr><td colspan="13"><div class="empty-state"><span class="empty-icon">🛒</span><p>لا توجد مبيعات</p></div></td></tr>`;
 };
 
 window.saveSale = async function() {
@@ -4661,6 +4688,324 @@ window.saveSale = async function() {
 window.deleteSale = async function(id) {
   if (!confirm('حذف هذا البيع؟')) return;
   await dbRemove(`sales/${id}`); toast('تم الحذف', 'success'); loadSales();
+};
+
+// ══════════════════════════════════════════════════════════════════
+// INVOICE - عرض وطباعة وتصدير فاتورة مبيعات فردية
+// ══════════════════════════════════════════════════════════════════
+let currentInvoiceId = null;
+
+window.showInvoice = function(saleId) {
+  const s = state.sales[saleId];
+  if (!s) { toast('لم يتم العثور على الفاتورة', 'error'); return; }
+  currentInvoiceId = saleId;
+  
+  const paidAmt = Number(s.paidNow ?? s.total ?? 0);
+  const remAmt  = Number(s.total || 0) - paidAmt;
+  const factoryName = state?.settings?.factoryName || 'نظام إدارة مصنع الألبان';
+  const now = new Date().toLocaleString('ar-EG', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
+  
+  // تحديد حالة الفاتورة
+  let statusText, statusClass;
+  if (remAmt <= 0) { statusText = 'مدفوعة بالكامل'; statusClass = 'paid'; }
+  else if (paidAmt > 0) { statusText = 'مدفوع جزئياً'; statusClass = 'partial'; }
+  else { statusText = 'غير مدفوعة'; statusClass = 'unpaid'; }
+  
+  $('invoice-title').textContent = `فاتورة رقم ${saleId.slice(-6)}`;
+  
+  $('invoice-body').innerHTML = `
+    <div id="invoice-content" style="font-family:'Cairo',Tajawal,Arial,sans-serif;direction:rtl;color:#1a1a1a">
+      <!-- رأس الفاتورة -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #D4A843;padding-bottom:14px;margin-bottom:18px">
+        <div>
+          <h2 style="color:#D4A843;margin:0 0 6px;font-size:22px;font-weight:900">${sanitize(factoryName)}</h2>
+          <p style="margin:0;font-size:11px;color:#666">نظام إدارة مصنع الألبان</p>
+        </div>
+        <div style="text-align:left">
+          <div style="background:#D4A843;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700">
+            فاتورة مبيعات
+          </div>
+          <div style="margin-top:6px;font-size:11px;color:#666">رقم: #${saleId.slice(-6)}</div>
+          <div style="font-size:10px;color:#999">${now}</div>
+        </div>
+      </div>
+      
+      <!-- معلومات العميل والتاريخ -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+        <div style="background:#f8f5f0;border:1px solid #e0d5c5;border-radius:10px;padding:12px">
+          <div style="font-size:10px;color:#888;font-weight:600;margin-bottom:4px">👤 العميل</div>
+          <div style="font-size:15px;font-weight:800;color:#333">${sanitize(s.client)}</div>
+        </div>
+        <div style="background:#f8f5f0;border:1px solid #e0d5c5;border-radius:10px;padding:12px">
+          <div style="font-size:10px;color:#888;font-weight:600;margin-bottom:4px">📅 التاريخ</div>
+          <div style="font-size:15px;font-weight:800;color:#333">${s.date}</div>
+        </div>
+      </div>
+      
+      <!-- جدول المنتجات -->
+      <table style="width:100%;border-collapse:collapse;margin-bottom:16px;border:2px solid #D4A843;border-radius:8px;overflow:hidden">
+        <thead>
+          <tr style="background:#D4A843;color:#fff">
+            <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;border:none">#</th>
+            <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;border:none">المنتج</th>
+            <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;border:none">الكمية</th>
+            <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;border:none">سعر الوحدة</th>
+            <th style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;border:none">الإجمالي</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #e0d5c5">
+            <td style="padding:10px 12px;text-align:center;font-size:13px">1</td>
+            <td style="padding:10px 12px;text-align:center;font-size:13px;font-weight:600">${sanitize(s.product)}</td>
+            <td style="padding:10px 12px;text-align:center;font-size:13px">${fmt(s.qty,2)}</td>
+            <td style="padding:10px 12px;text-align:center;font-size:13px">${fmt(s.price,2)} ج</td>
+            <td style="padding:10px 12px;text-align:center;font-size:14px;font-weight:800;color:#D4A843">${fmt(s.total,2)} ج</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <!-- ملخص المبالغ -->
+      <div style="background:linear-gradient(135deg,#f8f5f0 0%,#fff9ed 100%);border:2px solid #D4A843;border-radius:12px;padding:16px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed #d0c0a0">
+          <span style="font-size:13px;color:#555">إجمالي الفاتورة</span>
+          <span style="font-size:16px;font-weight:800;color:#333">${fmt(s.total,2)} جنيه</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed #d0c0a0">
+          <span style="font-size:13px;color:#555">المدفوع (${s.method})</span>
+          <span style="font-size:16px;font-weight:800;color:#2e7d32">${fmt(paidAmt,2)} جنيه</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
+          <span style="font-size:15px;font-weight:700;color:#333">المتبقي</span>
+          <span style="font-size:20px;font-weight:900;color:${remAmt > 0 ? '#c62828' : '#2e7d32'}">${fmt(remAmt,2)} جنيه</span>
+        </div>
+      </div>
+      
+      <!-- حالة الفاتورة -->
+      <div style="text-align:center;margin-bottom:12px">
+        <span class="badge badge-${statusClass === 'paid' ? 'success' : statusClass === 'partial' ? 'warning' : 'danger'}" 
+              style="font-size:14px;padding:6px 20px;border-radius:20px">
+          ${statusText}
+        </span>
+      </div>
+      
+      <!-- طريقة الدفع -->
+      <div style="text-align:center;font-size:12px;color:#888;margin-bottom:8px">
+        طريقة الدفع: <strong>${sanitize(s.method)}</strong>
+        ${s.notes ? `<br>ملاحظات: ${sanitize(s.notes)}` : ''}
+      </div>
+      
+      <!-- تذييل الفاتورة -->
+      <div style="text-align:center;margin-top:16px;padding-top:12px;border-top:1px solid #e0d5c5;font-size:10px;color:#aaa">
+        شكراً لتعاملكم معنا 🥛 | ${factoryName}
+      </div>
+    </div>
+  `;
+  
+  openModal('modal-invoice');
+};
+
+// طباعة الفاتورة - أبيض وأسود فقط
+window.printInvoice = function() {
+  if (!currentInvoiceId) return;
+  const content = document.getElementById('invoice-content');
+  if (!content) return;
+  
+  const factoryName = state?.settings?.factoryName || 'نظام إدارة مصنع الألبان';
+  const now = new Date().toLocaleString('ar-EG', {year:'numeric',month:'2-digit',day:'2-digit'});
+  
+  // إنشاء نسخة للطباعة (أبيض وأسود)
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">
+    <title>فاتورة مبيعات</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+      @page{size:A4;margin:12mm}
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:'Cairo',Tajawal,Arial,sans-serif;direction:rtl;color:#000;padding:25px;background:#fff;font-size:13px}
+      .inv-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #000;padding-bottom:14px;margin-bottom:20px}
+      .inv-header h1{color:#000;font-size:24px;margin-bottom:4px;font-weight:900}
+      .inv-header .sub{font-size:12px;color:#333;font-weight:600}
+      .inv-header .meta{text-align:left}
+      .inv-header .inv-badge{background:#000;color:#fff;padding:8px 18px;border-radius:8px;font-size:14px;font-weight:700;display:inline-block}
+      .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+      .info-box{border:2px solid #000;border-radius:10px;padding:14px}
+      .info-box .lbl{font-size:10px;color:#666;font-weight:700;margin-bottom:4px}
+      .info-box .val{font-size:17px;font-weight:900;color:#000}
+      table{width:100%;border-collapse:collapse;margin-bottom:18px;border:2px solid #000}
+      th{background:#000;color:#fff;padding:10px 12px;text-align:center;font-size:12px;font-weight:700}
+      td{border:1px solid #000;padding:10px 12px;text-align:center;font-size:13px}
+      .summary{border:3px solid #000;border-radius:12px;padding:18px;margin-bottom:16px;background:#f5f5f5}
+      .sum-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #999}
+      .sum-row:last-child{border-bottom:none;padding-top:12px}
+      .sum-row .label{font-size:14px;color:#333;font-weight:700}
+      .sum-row .value{font-size:17px;font-weight:900;color:#000}
+      .status{text-align:center;margin:14px 0}
+      .status span{font-size:15px;padding:8px 24px;border-radius:20px;border:2px solid #000;font-weight:700}
+      .footer{text-align:center;margin-top:18px;padding-top:14px;border-top:2px solid #000;font-size:11px;color:#666;font-weight:600}
+      @media print{body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+    </style>
+  </head><body>
+    ${content.innerHTML
+      .replace(/#D4A843/g,'#000')
+      .replace(/#f8f5f0/g,'#f5f5f5')
+      .replace(/#fff9ed/g,'#eee')
+      .replace(/#e0d5c5/g,'#ccc')
+      .replace(/#d0c0a0/g,'#999')
+      .replace(/#D4A843/g,'#000')
+      .replace(/linear-gradient\(.*?\)/g,'#f5f5f5')
+      .replace(/color:\s*#[a-fA-F0-9]{3,6}/gi, (m) => {
+        const colors = {'#1a1a1a':'#000','#333':'#000','#555':'#333','#888':'#666','#999':'#666','#c62828':'#000','#2e7d32':'#000'};
+        return 'color:' + (colors[m.toLowerCase()] || '#000');
+      })
+    }
+    <script>window.onload=function(){window.print();}<\/script>
+  </body></html>`);
+  printWindow.document.close();
+};
+
+// تصدير الفاتورة كـ PDF - أبيض وأسود
+window.exportInvoiceToPDF = async function() {
+  if (!currentInvoiceId) return;
+  if (typeof isViewerMode === 'function' && isViewerMode()) {
+    toast('غير متاح في وضع المشاهدة', 'warning'); return;
+  }
+  
+  const s = state.sales[currentInvoiceId];
+  if (!s) { toast('لم يتم العثور على الفاتورة', 'error'); return; }
+  
+  const paidAmt = Number(s.paidNow ?? s.total ?? 0);
+  const remAmt  = Number(s.total || 0) - paidAmt;
+  const factoryName = state?.settings?.factoryName || 'نظام إدارة مصنع الألبان';
+  const now = new Date().toLocaleString('ar-EG', {year:'numeric',month:'2-digit',day:'2-digit'});
+  
+  // إنشاء محتوى HTML للـ PDF
+  const invoiceHTML = `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">
+    <title>فاتورة_${s.client}_${s.date}</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+      @page{size:A4;margin:12mm}
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:'Cairo',Tajawal,Arial,sans-serif;direction:rtl;color:#000;padding:25px;background:#fff;font-size:13px}
+      .inv-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #000;padding-bottom:14px;margin-bottom:20px}
+      .inv-header h1{color:#000;font-size:24px;margin-bottom:4px;font-weight:900}
+      .inv-header .sub{font-size:12px;color:#333;font-weight:600}
+      .inv-header .meta{text-align:left}
+      .inv-header .inv-badge{background:#000;color:#fff;padding:8px 18px;border-radius:8px;font-size:14px;font-weight:700;display:inline-block}
+      .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+      .info-box{border:2px solid #000;border-radius:10px;padding:14px}
+      .info-box .lbl{font-size:10px;color:#666;font-weight:700;margin-bottom:4px}
+      .info-box .val{font-size:17px;font-weight:900;color:#000}
+      table{width:100%;border-collapse:collapse;margin-bottom:18px;border:2px solid #000}
+      th{background:#000;color:#fff;padding:10px 12px;text-align:center;font-size:12px;font-weight:700}
+      td{border:1px solid #000;padding:10px 12px;text-align:center;font-size:13px}
+      .summary{border:3px solid #000;border-radius:12px;padding:18px;margin-bottom:16px;background:#f5f5f5}
+      .sum-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #999}
+      .sum-row:last-child{border-bottom:none;padding-top:12px}
+      .sum-row .label{font-size:14px;color:#333;font-weight:700}
+      .sum-row .value{font-size:17px;font-weight:900;color:#000}
+      .status{text-align:center;margin:14px 0}
+      .status span{font-size:15px;padding:8px 24px;border-radius:20px;border:2px solid #000;font-weight:700}
+      .footer{text-align:center;margin-top:18px;padding-top:14px;border-top:2px solid #000;font-size:11px;color:#666;font-weight:600}
+    </style>
+  </head><body>
+    <div class="inv-header">
+      <div>
+        <h1>${factoryName}</h1>
+        <div class="sub">نظام إدارة مصنع الألبان</div>
+      </div>
+      <div class="meta">
+        <div class="inv-badge">فاتورة مبيعات</div>
+        <div style="margin-top:6px;font-size:11px;color:#666">رقم: #${currentInvoiceId.slice(-6)}</div>
+        <div style="font-size:10px;color:#999">${now}</div>
+      </div>
+    </div>
+    
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="lbl">👤 العميل</div>
+        <div class="val">${s.client}</div>
+      </div>
+      <div class="info-box">
+        <div class="lbl">📅 التاريخ</div>
+        <div class="val">${s.date}</div>
+      </div>
+    </div>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>المنتج</th>
+          <th>الكمية</th>
+          <th>سعر الوحدة</th>
+          <th>الإجمالي</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td style="font-weight:600">${s.product}</td>
+          <td>${Number(s.qty||0).toFixed(2)}</td>
+          <td>${Number(s.price||0).toFixed(2)} ج</td>
+          <td style="font-weight:800">${Number(s.total||0).toFixed(2)} ج</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div class="summary">
+      <div class="sum-row">
+        <span class="label">إجمالي الفاتورة</span>
+        <span class="value">${Number(s.total||0).toFixed(2)} جنيه</span>
+      </div>
+      <div class="sum-row">
+        <span class="label">المدفوع (${s.method})</span>
+        <span class="value">${paidAmt.toFixed(2)} جنيه</span>
+      </div>
+      <div class="sum-row">
+        <span class="label" style="font-size:16px">المتبقي</span>
+        <span class="value" style="font-size:20px">${remAmt.toFixed(2)} جنيه</span>
+      </div>
+    </div>
+    
+    <div class="status">
+      <span>${remAmt <= 0 ? '✅ مدفوعة بالكامل' : paidAmt > 0 ? '⏳ مدفوع جزئياً' : '⬜ غير مدفوعة'}</span>
+    </div>
+    
+    ${s.notes ? `<div style="text-align:center;font-size:12px;color:#666;margin-bottom:8px">ملاحظات: ${s.notes}</div>` : ''}
+    
+    <div class="footer">
+      شكراً لتعاملكم معنا 🥛 | ${factoryName}
+    </div>
+  </body></html>`;
+  
+  try {
+    // استخدام html2canvas + jsPDF
+    if (typeof html2canvas !== 'undefined' && typeof jspdf !== 'undefined') {
+      const printDiv = document.createElement('div');
+      printDiv.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff';
+      printDiv.innerHTML = invoiceHTML;
+      document.body.appendChild(printDiv);
+      
+      const canvas = await html2canvas(printDiv.firstChild || printDiv, {scale:2,useCORS:true,backgroundColor:'#fff'});
+      document.body.removeChild(printDiv);
+      
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, Math.min(pdfHeight, pdf.internal.pageSize.getHeight()));
+      pdf.save(`فاتورة_${s.client}_${s.date}.pdf`);
+      toast('تم تصدير الفاتورة بنجاح', 'success');
+    } else {
+      // Fallback: فتح في نافذة جديدة للطباعة/حفظ كـ PDF
+      const win = window.open('', '_blank');
+      win.document.write(invoiceHTML);
+      win.document.close();
+      toast('افتح نافذة الطباعة (Ctrl+P) لحفظ كـ PDF', 'info');
+    }
+  } catch(e) {
+    toast('خطأ في التصدير: ' + e.message, 'error');
+  }
 };
 
 // ══════════════════════════════════════════════════════════════════
@@ -7996,20 +8341,34 @@ function getSupplierStmtData() {
 }
 
 function buildSupplierFullHTML(d) {
+  // تقريب جميع المبالغ
+  const rMilkSum = roundSmart(d.milkSum);
+  const rPaySum = roundSmart(d.paySum);
+  const rAdvSum = roundSmart(d.advSum);
+  const rPurSum = roundSmart(d.purSum);
+  const rBalance = roundSmart(d.balance);
+  
   return `<h1 style="color:#000;font-weight:bold">${state.settings.factoryName || 'مصنع الألبان'}</h1>
-    <div style="text-align:center;color:#333;font-size:12px;margin-bottom:16px">كشف حساب مورد</div>
+    <div style="text-align:center;color:#000;font-size:12px;margin-bottom:16px">كشف حساب مورد</div>
     <div class="info-grid">
       <div class="info-row"><span>المورد:</span><span>${d.s.name}</span></div>
       <div class="info-row"><span>الهاتف:</span><span>${d.s.phone||'—'}</span></div>
       <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
       <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
     </div>
-    <h3>سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${d.milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3>المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${d.pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3>السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${d.adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td>${fmt(a.amount,2)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${d.pur.length?`<h3>المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${d.pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.totalPrice,2)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي كمية الحليب:</span><span>${fmt(d.milkQtyKg,1)} كجم</span></div><div class="total-row"><span>إجمالي قيمة الحليب:</span><span>${fmt(d.milkSum,2)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span>${fmt(d.paySum,2)} ج</span></div><div class="total-row"><span>السلف:</span><span>${fmt(d.advSum,2)} ج</span></div>${d.purSum>0?`<div class="total-row"><span>المشتريات:</span><span>${fmt(d.purSum,2)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:#000;font-weight:900">${fmt(d.balance,2)} ج</span></div></div>`;
+    <h3 style="color:#000">سجل الحليب</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${d.milk.map(([,r],i)=>`<tr><td>${i+1}</td><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td style="font-weight:700">${fmt(roundSmart(r.total),0)}</td></tr>`).join('')||'<tr><td colspan="7">لا توجد سجلات</td></tr>'}</tbody></table><h3 style="color:#000">المدفوعات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${d.pay.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td style="font-weight:700">${fmt(roundSmart(p.amount),0)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table><h3 style="color:#000">السلف</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${d.adv.map(([,a],i)=>`<tr><td>${i+1}</td><td>${a.date}</td><td style="font-weight:700">${fmt(roundSmart(a.amount),0)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="4">لا توجد</td></tr>'}</tbody></table>${d.pur.length?`<h3 style="color:#000">المشتريات</h3><table><thead><tr><th>#</th><th>التاريخ</th><th>الوصف</th><th>الإجمالي</th></tr></thead><tbody>${d.pur.map(([,p],i)=>`<tr><td>${i+1}</td><td>${p.date}</td><td>${sanitize(p.desc)}</td><td style="font-weight:700">${fmt(roundSmart(p.totalPrice),0)}</td></tr>`).join('')}</tbody></table>`:''}<div class="totals"><div class="total-row"><span>إجمالي كمية الحليب:</span><span>${fmt(d.milkQtyKg,1)} كجم</span></div><div class="total-row"><span>إجمالي قيمة الحليب:</span><span style="font-weight:700">${fmt(rMilkSum,0)} ج</span></div><div class="total-row"><span>المدفوعات:</span><span style="font-weight:700">${fmt(rPaySum,0)} ج</span></div><div class="total-row"><span>السلف:</span><span style="font-weight:700">${fmt(rAdvSum,0)} ج</span></div>${d.purSum>0?`<div class="total-row"><span>المشتريات:</span><span style="font-weight:700">${fmt(rPurSum,0)} ج</span></div>`:''}<div class="total-row final"><span>الرصيد المستحق:</span><span style="color:#000;font-weight:900">${fmt(rBalance,0)} ج</span></div></div>`;
 }
 
 function buildSupplierSummaryHTML(d) {
+  // تقريب جميع المبالغ
+  const rMilkSum = roundSmart(d.milkSum);
+  const rPaySum = roundSmart(d.paySum);
+  const rAdvSum = roundSmart(d.advSum);
+  const rPurSum = roundSmart(d.purSum);
+  const rBalance = roundSmart(d.balance);
+  
   return `<h1 style="color:#000;font-weight:bold">${state.settings.factoryName || 'مصنع الألبان'}</h1>
-    <div style="text-align:center;color:#333;font-size:12px;margin-bottom:16px">كشف حساب مورد - الإجمالي</div>
+    <div style="text-align:center;color:#000;font-size:12px;margin-bottom:16px">كشف حساب مورد - الإجمالي</div>
     <div class="info-grid">
       <div class="info-row"><span>المورد:</span><span>${d.s.name}</span></div>
       <div class="info-row"><span>الهاتف:</span><span>${d.s.phone||'—'}</span></div>
@@ -8017,14 +8376,14 @@ function buildSupplierSummaryHTML(d) {
       <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
     </div>
     <div class="summary-grid">
-      <div class="summary-card green"><div class="val">${fmt(d.milkQtyKg,1)} كجم</div><div class="lbl">كمية الحليب</div></div>
-      <div class="summary-card"><div class="val" style="color:#000">${fmt(d.milkSum,2)} ج</div><div class="lbl">قيمة الحليب</div></div>
-      <div class="summary-card red"><div class="val" style="color:#000">${fmt(d.paySum,2)} ج</div><div class="lbl">المدفوعات</div></div>
-      <div class="summary-card"><div class="val" style="color:#000">${fmt(d.advSum,2)} ج</div><div class="lbl">السلف</div></div>
-      ${d.purSum>0?`<div class="summary-card blue"><div class="val" style="color:#000">${fmt(d.purSum,2)} ج</div><div class="lbl">المشتريات</div></div>`:''}
-      <div class="summary-card ${d.balance>0?'green':'red'}"><div class="val" style="font-size:22px;color:#000">${fmt(d.balance,2)} ج</div><div class="lbl">الرصيد المستحق</div></div>
+      <div class="summary-card" style="border:2px solid #000;background:#fff"><div class="val" style="color:#000">${fmt(d.milkQtyKg,1)} كجم</div><div class="lbl" style="color:#000">كمية الحليب</div></div>
+      <div class="summary-card" style="border:2px solid #000;background:#fff"><div class="val" style="color:#000;font-weight:700">${fmt(rMilkSum,0)} ج</div><div class="lbl" style="color:#000">قيمة الحليب</div></div>
+      <div class="summary-card" style="border:2px solid #000;background:#fff"><div class="val" style="color:#000;font-weight:700">${fmt(rPaySum,0)} ج</div><div class="lbl" style="color:#000">المدفوعات</div></div>
+      <div class="summary-card" style="border:2px solid #000;background:#fff"><div class="val" style="color:#000;font-weight:700">${fmt(rAdvSum,0)} ج</div><div class="lbl" style="color:#000">السلف</div></div>
+      ${d.purSum>0?`<div class="summary-card" style="border:2px solid #000;background:#fff"><div class="val" style="color:#000;font-weight:700">${fmt(rPurSum,0)} ج</div><div class="lbl" style="color:#000">المشتريات</div></div>`:''}
+      <div class="summary-card" style="border:2px solid #000;background:#fff"><div class="val" style="font-size:22px;color:#000;font-weight:900">${fmt(rBalance,0)} ج</div><div class="lbl" style="color:#000">الرصيد المستحق</div></div>
     </div>
-    <div class="totals"><div class="total-row final"><span>الرصيد المستحق:</span><span style="color:#000;font-weight:900">${fmt(d.balance,2)} ج</span></div></div>`;
+    <div class="totals"><div class="total-row final"><span>الرصيد المستحق:</span><span style="color:#000;font-weight:900">${fmt(rBalance,0)} ج</span></div></div>`;
 }
 
 window.printSupplierStatementChoice = function(mode) {
