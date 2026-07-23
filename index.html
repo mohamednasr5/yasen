@@ -3158,8 +3158,13 @@ const state = {
 // ── Utils ──────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 const fmt = (n, dec=0) => (isNaN(n) ? 0 : Number(n)).toLocaleString('ar-EG', { minimumFractionDigits: dec, maximumFractionDigits: dec });
-// دالة تقريب المبلغ لأقرب 5 (مثال: 1023→1025، 1051→1050)
-const roundTo5 = (n) => { const num = Number(n) || 0; return Math.round(num / 5) * 5; };
+// دالة تقريب ذكية: أرقام صغيرة (<1000) → أقرب 5، أرقام كبيرة (≥1000) → أقرب 10
+// أمثلة: 203→205، 1023→1020، 1554→1560， 1203→1210
+const roundSmart = (n) => { 
+  const num = Number(n) || 0; 
+  if (num < 1000) return Math.round(num / 5) * 5;   // أرقام صغيرة → أقرب 5
+  return Math.round(num / 10) * 10;                  // أرقام كبيرة → أقرب 10
+};
 const today = () => new Date().toISOString().slice(0,10);
 const now   = () => new Date().toTimeString().slice(0,5);
 const sanitize = s => String(s || '').trim().replace(/[<>]/g,'');
@@ -3827,12 +3832,12 @@ function renderAccounts(search='') {
     acctGrandWeekBal += weekData.weekBalance;
     
     // تقريب المبالغ لأقرب 5
-    const roundedMilkTotal = roundTo5(milkTotal);
-    const roundedPayments = roundTo5(payments);
-    const roundedAdvances = roundTo5(advances);
-    const roundedPurchases = roundTo5(purchases);
-    const roundedBalance = roundTo5(balance);
-    const roundedWeekBalance = roundTo5(weekData.weekBalance);
+    const roundedMilkTotal = roundSmart(milkTotal);
+    const roundedPayments = roundSmart(payments);
+    const roundedAdvances = roundSmart(advances);
+    const roundedPurchases = roundSmart(purchases);
+    const roundedBalance = roundSmart(balance);
+    const roundedWeekBalance = roundSmart(weekData.weekBalance);
     
     const waPhone = (s.phone||'').replace(/\D/g,'');
     const waMsg = encodeURIComponent(`السلام عليكم ${s.name}，\n📊 كشف حسابك:\n🥛 كمية الحليب: ${fmt(milkQty,1)} كجم\n💰 إجمالي الحليب: ${fmt(roundedMilkTotal,0)} ج\n✅ المدفوع: ${fmt(roundedPayments,0)} ج\n💵 السلف: ${fmt(roundedAdvances,0)} ج\n🛍️ المشتريات: ${fmt(roundedPurchases,0)} ج\n📌 الرصيد المستحق: ${fmt(roundedBalance,0)} ج\n📅 رصيد هذا الأسبوع: ${fmt(roundedWeekBalance,0)} ج\nشكراً 🥛`);
@@ -3866,12 +3871,12 @@ function renderAccounts(search='') {
     <tr style="background:var(--bg-300);border-top:2px solid var(--gold)">
       <td colspan="2" style="font-weight:900;color:var(--gold);font-size:15px;text-align:center">الإجمالي الكلي</td>
       <td style="font-weight:900;color:var(--success);font-size:15px">${fmt(acctGrandMilkQty,1)} كجم</td>
-      <td style="font-weight:900;color:var(--gold);font-size:15px">${fmt(roundTo5(acctGrandMilkAmt),0)} ج</td>
-      <td style="font-weight:900;color:var(--danger);font-size:15px">${fmt(roundTo5(acctGrandPay),0)} ج</td>
-      <td style="font-weight:900;color:var(--warning);font-size:15px">${fmt(roundTo5(acctGrandAdv),0)} ج</td>
-      <td style="font-weight:900;color:var(--info);font-size:15px">${fmt(roundTo5(acctGrandPur),0)} ج</td>
-      <td style="font-weight:900;color:${(acctGrandMilkAmt-acctGrandPay-acctGrandAdv-acctGrandPur)>0?'var(--success)':'var(--danger)'};font-size:15px">${fmt(roundTo5(acctGrandMilkAmt-acctGrandPay-acctGrandAdv-acctGrandPur),0)} ج</td>
-      <td style="font-weight:900;color:var(--warning);font-size:15px">${fmt(roundTo5(acctGrandWeekBal),0)} ج</td>
+      <td style="font-weight:900;color:var(--gold);font-size:15px">${fmt(roundSmart(acctGrandMilkAmt),0)} ج</td>
+      <td style="font-weight:900;color:var(--danger);font-size:15px">${fmt(roundSmart(acctGrandPay),0)} ج</td>
+      <td style="font-weight:900;color:var(--warning);font-size:15px">${fmt(roundSmart(acctGrandAdv),0)} ج</td>
+      <td style="font-weight:900;color:var(--info);font-size:15px">${fmt(roundSmart(acctGrandPur),0)} ج</td>
+      <td style="font-weight:900;color:${(acctGrandMilkAmt-acctGrandPay-acctGrandAdv-acctGrandPur)>0?'var(--success)':'var(--danger)'};font-size:15px">${fmt(roundSmart(acctGrandMilkAmt-acctGrandPay-acctGrandAdv-acctGrandPur),0)} ج</td>
+      <td style="font-weight:900;color:var(--warning);font-size:15px">${fmt(roundSmart(acctGrandWeekBal),0)} ج</td>
     </tr>` : `<tr><td colspan="10"><div class="empty-state"><span class="empty-icon">💰</span><p>لا توجد بيانات</p></div></td></tr>`;
 }
 
@@ -6619,8 +6624,8 @@ window.exportTableToPDF = function(selector, fileName) {
   const summaryCards = summaryItems.map((s,i) => `
     <div class="sum-card" style="border:2px solid #000;background:#fff">
       <div class="sum-val" style="color:#000">${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-      ${s.unit ? `<div class="sum-unit" style="color:#333">${s.unit}</div>` : ''}
-      <div class="sum-lbl" style="color:#666">إجمالي ${s.label}</div>
+      ${s.unit ? `<div class="sum-unit" style="color:#000">${s.unit}</div>` : ''}
+      <div class="sum-lbl" style="color:#000">إجمالي ${s.label}</div>
     </div>`).join('');
 
   const CSS = `<style>
@@ -6630,25 +6635,31 @@ window.exportTableToPDF = function(selector, fileName) {
     body{font-family:'Cairo',Tajawal,Arial,sans-serif;direction:rtl;color:#000;padding:20px;background:#fff;font-size:12px}
     .doc-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #000;padding-bottom:12px;margin-bottom:10px}
     .doc-top h1{color:#000;font-size:20px;margin-bottom:2px;font-weight:bold}
-    .doc-top .sub{font-size:11px;color:#333;font-weight:600}
-    .doc-top .meta{font-size:10px;color:#666;text-align:left;direction:ltr}
+    .doc-top .sub{font-size:11px;color:#000;font-weight:600}
+    .doc-top .meta{font-size:10px;color:#000;text-align:left;direction:ltr}
     .sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:14px 0 18px}
     .sum-card{border:2px solid #000;border-radius:8px;padding:12px;text-align:center;background:#fff}
     .sum-val{font-size:18px;font-weight:900;margin-bottom:2px;color:#000}
-    .sum-unit{font-size:9px;color:#333;font-weight:600;margin-bottom:3px}
-    .sum-lbl{font-size:10px;color:#666}
+    .sum-unit{font-size:9px;color:#000;font-weight:600;margin-bottom:3px}
+    .sum-lbl{font-size:10px;color:#000}
     h3{color:#000;font-size:13px;margin:14px 0 6px;border-bottom:2px solid #000;padding-bottom:3px;font-weight:bold}
     table{width:100%;border-collapse:collapse;margin:8px 0;font-size:11px;border:2px solid #000}
     th{background:#000;color:#fff;padding:7px 8px;text-align:center;border:2px solid #000;font-weight:700;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-    td{border:1px solid #000;padding:6px 8px;text-align:center;color:#000}
+    td{border:1px solid #000;padding:6px 8px;text-align:center;color:#000;background:#fff}
     tr:nth-child(even) td{background:#f5f5f5}
-    tfoot tr td{background:#eee;border-top:2px solid #000;font-weight:900}
+    tfoot tr td{background:#eee;border-top:2px solid #000;font-weight:900;color:#000}
     .total-label{font-weight:700;text-align:right;background:#000;color:#fff}
     .total-val{font-weight:900;color:#000;background:#f5f5f5}
     .total-empty{background:#f5f5f5}
-    .unit{font-size:9px;color:#666;font-weight:400;display:block;margin-top:1px}
-    .footer{margin-top:16px;padding-top:10px;border-top:1px solid #000;display:flex;justify-content:space-between;font-size:10px;color:#666}
-    @media print{th,tfoot td,.total-label{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+    .unit{font-size:9px;color:#000;font-weight:400;display:block;margin-top:1px}
+    .footer{margin-top:16px;padding-top:10px;border-top:1px solid #000;display:flex;justify-content:space-between;font-size:10px;color:#000}
+    /* طباعة أبيض وأسود فقط - بدون أي ألوان */
+    @media print{
+      *{color:#000 !important;background:#fff !important;border-color:#000 !important}
+      th,tfoot td,.total-label{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+      .balance-positive,.balance-negative,.balance-zero{color:#000 !important;font-weight:bold !important}
+      [style*="color:var("]{color:#000 !important}
+    }
   </style>`;
 
   function buildFull() {
@@ -6668,10 +6679,10 @@ window.exportTableToPDF = function(selector, fileName) {
     const tableRows = summaryItems.map((s,i) => `
       <tr>
         <td>${i+1}</td>
-        <td style="text-align:right;font-weight:600">إجمالي ${s.label}</td>
+        <td style="text-align:right;font-weight:600;color:#000">إجمالي ${s.label}</td>
         <td style="font-weight:900;color:#000;font-size:14px">
           ${s.value.toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})}
-          ${s.unit ? `<span style="font-size:10px;color:#666;font-weight:400"> ${s.unit}</span>` : ''}
+          ${s.unit ? `<span style="font-size:10px;color:#000;font-weight:400"> ${s.unit}</span>` : ''}
         </td>
       </tr>`).join('');
     return `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${title} — إجمالي</title>${CSS}</head><body>
@@ -6685,7 +6696,7 @@ window.exportTableToPDF = function(selector, fileName) {
         <thead><tr><th>#</th><th>البيان</th><th>الإجمالي</th></tr></thead>
         <tbody>
           ${tableRows || '<tr><td colspan="3">لا توجد أعمدة رقمية</td></tr>'}
-          <tr><td colspan="2" style="font-weight:700;text-align:right">عدد السجلات</td><td style="font-weight:900;color:#8B6914">${rows.length}</td></tr>
+          <tr><td colspan="2" style="font-weight:700;text-align:right;color:#000">عدد السجلات</td><td style="font-weight:900;color:#000">${rows.length}</td></tr>
         </tbody>
       </table>
       <div class="footer"><span>${factoryName}</span><span>${new Date().toLocaleDateString('ar-EG')}</span></div>
@@ -8159,13 +8170,13 @@ window.showAccountDetail = function(supplierId) {
   const balance = milkSum - paySum - advSum - purSum;
   
   // تقريب المبالغ لأقرب 5
-  const roundedMilkSum = roundTo5(milkSum);
-  const roundedPaySum = roundTo5(paySum);
-  const roundedAdvSum = roundTo5(advSum);
-  const roundedPurSum = roundTo5(purSum);
-  const roundedBalance = roundTo5(balance);
+  const roundedMilkSum = roundSmart(milkSum);
+  const roundedPaySum = roundSmart(paySum);
+  const roundedAdvSum = roundSmart(advSum);
+  const roundedPurSum = roundSmart(purSum);
+  const roundedBalance = roundSmart(balance);
   
-  $('account-detail-body').innerHTML = `<div class="summary-bar" style="margin-bottom:20px"><div class="summary-item"><div class="val" style="color:var(--success)">${fmt(milkQtyKg,1)}</div><div class="lbl">الحليب (كجم)</div></div><div class="summary-item"><div class="val">${fmt(roundedMilkSum,0)}</div><div class="lbl">إجمالي الحليب (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--danger)">${fmt(roundedPaySum,0)}</div><div class="lbl">المدفوعات (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(roundedAdvSum,0)}</div><div class="lbl">السلف (ج)</div></div>${roundedPurSum>0?`<div class="summary-item"><div class="val" style="color:var(--info)">${fmt(roundedPurSum,0)}</div><div class="lbl">المشتريات (ج)</div></div>`:''}<div class="summary-item"><div class="val" style="color:${roundedBalance>0?'var(--success)':'var(--danger)'}">${fmt(roundedBalance,0)}</div><div class="lbl">الرصيد (ج)</div></div></div><h4 style="color:var(--gold);margin-bottom:10px">سجل الحليب (${milkRecords.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${milkRecords.slice(0,30).map(([,r])=>`<tr><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td style="color:var(--gold)">${fmt(roundTo5(r.total),0)}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text-400)">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">المدفوعات (${payments.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${payments.map(([,p])=>`<tr><td>${p.date}</td><td style="color:var(--danger)">${fmt(roundTo5(p.amount),0)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">السلف (${advances.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${advances.map(([,a])=>`<tr><td>${a.date}</td><td style="color:var(--warning)">${fmt(roundTo5(a.amount),0)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div>${purchases.length?`<h4 style="color:var(--gold);margin-bottom:10px">المشتريات (${purchases.length})</h4><div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>الوصف</th><th>الكمية</th><th>الإجمالي</th></tr></thead><tbody>${purchases.map(([,p])=>`<tr><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.qty,2)} ${sanitize(p.unit)}</td><td style="color:var(--danger)">${fmt(roundTo5(p.totalPrice),0)}</td></tr>`).join('')}</tbody></table></div>`:''}`;
+  $('account-detail-body').innerHTML = `<div class="summary-bar" style="margin-bottom:20px"><div class="summary-item"><div class="val" style="color:var(--success)">${fmt(milkQtyKg,1)}</div><div class="lbl">الحليب (كجم)</div></div><div class="summary-item"><div class="val">${fmt(roundedMilkSum,0)}</div><div class="lbl">إجمالي الحليب (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--danger)">${fmt(roundedPaySum,0)}</div><div class="lbl">المدفوعات (ج)</div></div><div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(roundedAdvSum,0)}</div><div class="lbl">السلف (ج)</div></div>${roundedPurSum>0?`<div class="summary-item"><div class="val" style="color:var(--info)">${fmt(roundedPurSum,0)}</div><div class="lbl">المشتريات (ج)</div></div>`:''}<div class="summary-item"><div class="val" style="color:${roundedBalance>0?'var(--success)':'var(--danger)'}">${fmt(roundedBalance,0)}</div><div class="lbl">الرصيد (ج)</div></div></div><h4 style="color:var(--gold);margin-bottom:10px">سجل الحليب (${milkRecords.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>الوقت</th><th>الفترة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>${milkRecords.slice(0,30).map(([,r])=>`<tr><td>${r.date}</td><td>${to12Hour(r.time||'')}</td><td>${r.period||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td style="color:var(--gold)">${fmt(roundSmart(r.total),0)}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text-400)">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">المدفوعات (${payments.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th></tr></thead><tbody>${payments.map(([,p])=>`<tr><td>${p.date}</td><td style="color:var(--danger)">${fmt(roundSmart(p.amount),0)}</td><td>${sanitize(p.method)}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div><h4 style="color:var(--gold);margin-bottom:10px">السلف (${advances.length})</h4><div class="table-wrapper" style="margin-bottom:16px"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الوصف</th></tr></thead><tbody>${advances.map(([,a])=>`<tr><td>${a.date}</td><td style="color:var(--warning)">${fmt(roundSmart(a.amount),0)}</td><td>${sanitize(a.description||a.reason||'')}</td></tr>`).join('')||'<tr><td colspan="3">لا توجد</td></tr>'}</tbody></table></div>${purchases.length?`<h4 style="color:var(--gold);margin-bottom:10px">المشتريات (${purchases.length})</h4><div class="table-wrapper"><table><thead><tr><th>التاريخ</th><th>الوصف</th><th>الكمية</th><th>الإجمالي</th></tr></thead><tbody>${purchases.map(([,p])=>`<tr><td>${p.date}</td><td>${sanitize(p.desc)}</td><td>${fmt(p.qty,2)} ${sanitize(p.unit)}</td><td style="color:var(--danger)">${fmt(roundSmart(p.totalPrice),0)}</td></tr>`).join('')}</tbody></table></div>`:''}`;
   const waPhone = (s.phone||'').replace(/\D/g,'');
   const waBtnEl = $('wa-send-btn');
   if (waPhone && waBtnEl) {
