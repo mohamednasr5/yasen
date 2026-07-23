@@ -4804,7 +4804,7 @@ window.showInvoice = function(saleId) {
   openModal('modal-invoice');
 };
 
-// طباعة الفاتورة - أبيض وأسود فقط
+// طباعة الفاتورة - بالألوان الأصلية
 window.printInvoice = function() {
   if (!currentInvoiceId) return;
   const content = document.getElementById('invoice-content');
@@ -4813,7 +4813,7 @@ window.printInvoice = function() {
   const factoryName = state?.settings?.factoryName || 'نظام إدارة مصنع الألبان';
   const now = new Date().toLocaleString('ar-EG', {year:'numeric',month:'2-digit',day:'2-digit'});
   
-  // إنشاء نسخة للطباعة (أبيض وأسود)
+  // إنشاء نسخة للطباعة - بالألوان الأصلية (ذهبي + ألوان جميلة)
   const printWindow = window.open('', '_blank');
   printWindow.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">
     <title>فاتورة مبيعات</title>
@@ -4821,49 +4821,60 @@ window.printInvoice = function() {
       @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
       @page{size:A4;margin:12mm}
       *{box-sizing:border-box;margin:0;padding:0}
-      body{font-family:'Cairo',Tajawal,Arial,sans-serif;direction:rtl;color:#000;padding:25px;background:#fff;font-size:13px}
-      .inv-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #000;padding-bottom:14px;margin-bottom:20px}
-      .inv-header h1{color:#000;font-size:24px;margin-bottom:4px;font-weight:900}
-      .inv-header .sub{font-size:12px;color:#333;font-weight:600}
+      body{font-family:'Cairo',Tajawal,Arial,sans-serif;direction:rtl;color:#1a1a1a;padding:25px;background:#fff;font-size:13px}
+      
+      /* رأس الفاتورة باللون الذهبي */
+      .inv-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #D4A843;padding-bottom:14px;margin-bottom:20px}
+      .inv-header h1{color:#D4A843;font-size:24px;margin-bottom:4px;font-weight:900}
+      .inv-header .sub{font-size:12px;color:#666;font-weight:600}
       .inv-header .meta{text-align:left}
-      .inv-header .inv-badge{background:#000;color:#fff;padding:8px 18px;border-radius:8px;font-size:14px;font-weight:700;display:inline-block}
+      .inv-badge{background:#D4A843;color:#fff;padding:8px 18px;border-radius:8px;font-size:14px;font-weight:700;display:inline-block}
+      
+      /* معلومات العميل */
       .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
-      .info-box{border:2px solid #000;border-radius:10px;padding:14px}
-      .info-box .lbl{font-size:10px;color:#666;font-weight:700;margin-bottom:4px}
-      .info-box .val{font-size:17px;font-weight:900;color:#000}
-      table{width:100%;border-collapse:collapse;margin-bottom:18px;border:2px solid #000}
-      th{background:#000;color:#fff;padding:10px 12px;text-align:center;font-size:12px;font-weight:700}
-      td{border:1px solid #000;padding:10px 12px;text-align:center;font-size:13px}
-      .summary{border:3px solid #000;border-radius:12px;padding:18px;margin-bottom:16px;background:#f5f5f5}
-      .sum-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #999}
+      .info-box{background:#f8f5f0;border:1px solid #e0d5c5;border-radius:10px;padding:14px}
+      .info-box .lbl{font-size:10px;color:#888;font-weight:700;margin-bottom:4px}
+      .info-box .val{font-size:17px;font-weight:900;color:#333}
+      
+      /* جدول المنتجات */
+      table{width:100%;border-collapse:collapse;margin-bottom:18px;border:2px solid #D4A843;border-radius:8px;overflow:hidden}
+      th{background:#D4A843;color:#fff;padding:10px 12px;text-align:center;font-size:12px;font-weight:700}
+      td{border:1px solid #e0d5c5;padding:10px 12px;text-align:center;font-size:13px}
+      
+      /* ملخص المبالغ */
+      .summary{background:linear-gradient(135deg,#f8f5f0 0%,#fff9ed 100%);border:2px solid #D4A843;border-radius:12px;padding:18px;margin-bottom:16px}
+      .sum-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed #d0c0a0}
       .sum-row:last-child{border-bottom:none;padding-top:12px}
-      .sum-row .label{font-size:14px;color:#333;font-weight:700}
-      .sum-row .value{font-size:17px;font-weight:900;color:#000}
+      .sum-row .label{font-size:14px;color:#555;font-weight:700}
+      .sum-row .value{font-size:17px;font-weight:900;color:#333}
+      
+      /* حالة الفاتورة */
       .status{text-align:center;margin:14px 0}
-      .status span{font-size:15px;padding:8px 24px;border-radius:20px;border:2px solid #000;font-weight:700}
-      .footer{text-align:center;margin-top:18px;padding-top:14px;border-top:2px solid #000;font-size:11px;color:#666;font-weight:600}
-      @media print{body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+      .status span{font-size:15px;padding:8px 24px;border-radius:20px;font-weight:700}
+      .status-paid{background:#e8f5e9;color:#2e7d32;border:2px solid #4caf50}
+      .status-partial{background:#fff8e1;color:#f57f17;border:2px solid #ffc107}
+      .status-unpaid{background:#ffebee;color:#c62828;border:2px solid #ef5350}
+      
+      /* التذييل */
+      .footer{text-align:center;margin-top:18px;padding-top:14px;border-top:1px solid #e0d5c5;font-size:11px;color:#aaa}
+      
+      /* ضمان طباعة الألوان */
+      @media print{
+        *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+        th{background:#D4A843!important;color:#fff!important}
+        .inv-badge{background:#D4A843!important;color:#fff!important}
+        .summary{background:linear-gradient(135deg,#f8f5f0 0%,#fff9ed 100%)!important;border-color:#D4A843!important}
+        .status-paid,.status-partial,.status-unpaid{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+      }
     </style>
   </head><body>
-    ${content.innerHTML
-      .replace(/#D4A843/g,'#000')
-      .replace(/#f8f5f0/g,'#f5f5f5')
-      .replace(/#fff9ed/g,'#eee')
-      .replace(/#e0d5c5/g,'#ccc')
-      .replace(/#d0c0a0/g,'#999')
-      .replace(/#D4A843/g,'#000')
-      .replace(/linear-gradient\(.*?\)/g,'#f5f5f5')
-      .replace(/color:\s*#[a-fA-F0-9]{3,6}/gi, (m) => {
-        const colors = {'#1a1a1a':'#000','#333':'#000','#555':'#333','#888':'#666','#999':'#666','#c62828':'#000','#2e7d32':'#000'};
-        return 'color:' + (colors[m.toLowerCase()] || '#000');
-      })
-    }
+    ${content.innerHTML}
     <script>window.onload=function(){window.print();}<\/script>
   </body></html>`);
   printWindow.document.close();
 };
 
-// تصدير الفاتورة كـ PDF - أبيض وأسود
+// تصدير الفاتورة كـ PDF - بالألوان الأصلية
 window.exportInvoiceToPDF = async function() {
   if (!currentInvoiceId) return;
   if (typeof isViewerMode === 'function' && isViewerMode()) {
@@ -4878,34 +4889,55 @@ window.exportInvoiceToPDF = async function() {
   const factoryName = state?.settings?.factoryName || 'نظام إدارة مصنع الألبان';
   const now = new Date().toLocaleString('ar-EG', {year:'numeric',month:'2-digit',day:'2-digit'});
   
-  // إنشاء محتوى HTML للـ PDF
+  // تحديد حالة الفاتورة
+  let statusHTML, statusClass;
+  if (remAmt <= 0) { statusHTML = '✅ مدفوعة بالكامل'; statusClass = 'status-paid'; }
+  else if (paidAmt > 0) { statusHTML = '⏳ مدفوع جزئياً'; statusClass = 'status-partial'; }
+  else { statusHTML = '⬜ غير مدفوعة'; statusClass = 'status-unpaid'; }
+  
+  // إنشاء محتوى HTML للـ PDF - بالألوان الأصلية (ذهبي)
   const invoiceHTML = `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">
     <title>فاتورة_${s.client}_${s.date}</title>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
       @page{size:A4;margin:12mm}
       *{box-sizing:border-box;margin:0;padding:0}
-      body{font-family:'Cairo',Tajawal,Arial,sans-serif;direction:rtl;color:#000;padding:25px;background:#fff;font-size:13px}
-      .inv-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #000;padding-bottom:14px;margin-bottom:20px}
-      .inv-header h1{color:#000;font-size:24px;margin-bottom:4px;font-weight:900}
-      .inv-header .sub{font-size:12px;color:#333;font-weight:600}
+      body{font-family:'Cairo',Tajawal,Arial,sans-serif;direction:rtl;color:#1a1a1a;padding:25px;background:#fff;font-size:13px}
+      
+      /* رأس الفاتورة - ذهبي */
+      .inv-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #D4A843;padding-bottom:14px;margin-bottom:20px}
+      .inv-header h1{color:#D4A843;font-size:24px;margin-bottom:4px;font-weight:900}
+      .inv-header .sub{font-size:12px;color:#666;font-weight:600}
       .inv-header .meta{text-align:left}
-      .inv-header .inv-badge{background:#000;color:#fff;padding:8px 18px;border-radius:8px;font-size:14px;font-weight:700;display:inline-block}
+      .inv-badge{background:#D4A843;color:#fff;padding:8px 18px;border-radius:8px;font-size:14px;font-weight:700;display:inline-block}
+      
+      /* معلومات العميل */
       .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
-      .info-box{border:2px solid #000;border-radius:10px;padding:14px}
-      .info-box .lbl{font-size:10px;color:#666;font-weight:700;margin-bottom:4px}
-      .info-box .val{font-size:17px;font-weight:900;color:#000}
-      table{width:100%;border-collapse:collapse;margin-bottom:18px;border:2px solid #000}
-      th{background:#000;color:#fff;padding:10px 12px;text-align:center;font-size:12px;font-weight:700}
-      td{border:1px solid #000;padding:10px 12px;text-align:center;font-size:13px}
-      .summary{border:3px solid #000;border-radius:12px;padding:18px;margin-bottom:16px;background:#f5f5f5}
-      .sum-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #999}
+      .info-box{background:#f8f5f0;border:1px solid #e0d5c5;border-radius:10px;padding:14px}
+      .info-box .lbl{font-size:10px;color:#888;font-weight:700;margin-bottom:4px}
+      .info-box .val{font-size:17px;font-weight:900;color:#333}
+      
+      /* جدول المنتجات - ذهبي */
+      table{width:100%;border-collapse:collapse;margin-bottom:18px;border:2px solid #D4A843;border-radius:8px;overflow:hidden}
+      th{background:#D4A843;color:#fff;padding:10px 12px;text-align:center;font-size:12px;font-weight:700}
+      td{border:1px solid #e0d5c5;padding:10px 12px;text-align:center;font-size:13px}
+      
+      /* ملخص المبالغ - ذهبي متدرج */
+      .summary{background:linear-gradient(135deg,#f8f5f0 0%,#fff9ed 100%);border:2px solid #D4A843;border-radius:12px;padding:18px;margin-bottom:16px}
+      .sum-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed #d0c0a0}
       .sum-row:last-child{border-bottom:none;padding-top:12px}
-      .sum-row .label{font-size:14px;color:#333;font-weight:700}
-      .sum-row .value{font-size:17px;font-weight:900;color:#000}
+      .sum-row .label{font-size:14px;color:#555;font-weight:700}
+      .sum-row .value{font-size:17px;font-weight:900;color:#333}
+      
+      /* حالة الفاتورة ملونة */
       .status{text-align:center;margin:14px 0}
-      .status span{font-size:15px;padding:8px 24px;border-radius:20px;border:2px solid #000;font-weight:700}
-      .footer{text-align:center;margin-top:18px;padding-top:14px;border-top:2px solid #000;font-size:11px;color:#666;font-weight:600}
+      .status span{font-size:15px;padding:8px 24px;border-radius:20px;font-weight:700}
+      .status-paid{background:#e8f5e9;color:#2e7d32;border:2px solid #4caf50}
+      .status-partial{background:#fff8e1;color:#f57f17;border:2px solid #ffc107}
+      .status-unpaid{background:#ffebee;color:#c62828;border:2px solid #ef5350}
+      
+      /* التذييل */
+      .footer{text-align:center;margin-top:18px;padding-top:14px;border-top:1px solid #e0d5c5;font-size:11px;color:#aaa}
     </style>
   </head><body>
     <div class="inv-header">
@@ -4947,7 +4979,7 @@ window.exportInvoiceToPDF = async function() {
           <td style="font-weight:600">${s.product}</td>
           <td>${Number(s.qty||0).toFixed(2)}</td>
           <td>${Number(s.price||0).toFixed(2)} ج</td>
-          <td style="font-weight:800">${Number(s.total||0).toFixed(2)} ج</td>
+          <td style="font-weight:800;color:#D4A843">${Number(s.total||0).toFixed(2)} ج</td>
         </tr>
       </tbody>
     </table>
@@ -4955,23 +4987,23 @@ window.exportInvoiceToPDF = async function() {
     <div class="summary">
       <div class="sum-row">
         <span class="label">إجمالي الفاتورة</span>
-        <span class="value">${Number(s.total||0).toFixed(2)} جنيه</span>
+        <span class="value" style="color:#333">${Number(s.total||0).toFixed(2)} جنيه</span>
       </div>
       <div class="sum-row">
         <span class="label">المدفوع (${s.method})</span>
-        <span class="value">${paidAmt.toFixed(2)} جنيه</span>
+        <span class="value" style="color:#2e7d32">${paidAmt.toFixed(2)} جنيه</span>
       </div>
       <div class="sum-row">
         <span class="label" style="font-size:16px">المتبقي</span>
-        <span class="value" style="font-size:20px">${remAmt.toFixed(2)} جنيه</span>
+        <span class="value" style="font-size:20px;color:${remAmt > 0 ? '#c62828' : '#2e7d32'}">${remAmt.toFixed(2)} جنيه</span>
       </div>
     </div>
     
     <div class="status">
-      <span>${remAmt <= 0 ? '✅ مدفوعة بالكامل' : paidAmt > 0 ? '⏳ مدفوع جزئياً' : '⬜ غير مدفوعة'}</span>
+      <span class="${statusClass}">${statusHTML}</span>
     </div>
     
-    ${s.notes ? `<div style="text-align:center;font-size:12px;color:#666;margin-bottom:8px">ملاحظات: ${s.notes}</div>` : ''}
+    ${s.notes ? `<div style="text-align:center;font-size:12px;color:#888;margin-bottom:8px">ملاحظات: ${s.notes}</div>` : ''}
     
     <div class="footer">
       شكراً لتعاملكم معنا 🥛 | ${factoryName}
