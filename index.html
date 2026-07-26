@@ -1449,6 +1449,8 @@
 
       <div id="milk-summary" class="summary-bar" style="display:none">
         <div class="summary-item"><div class="val" id="milk-sum-qty">0</div><div class="lbl">إجمالي الكمية (كجم)</div></div>
+        <div class="summary-item"><div class="val" id="milk-sum-baqri">0</div><div class="lbl">🐄 بقري (كجم)</div></div>
+        <div class="summary-item"><div class="val" id="milk-sum-jammosi">0</div><div class="lbl">🐃 جاموسي (كجم)</div></div>
         <div class="summary-item"><div class="val" id="milk-sum-amt">0</div><div class="lbl">إجمالي المبلغ (جنيه)</div></div>
         <div class="summary-item"><div class="val" id="milk-sum-count">0</div><div class="lbl">عدد السجلات</div></div>
       </div>
@@ -1462,6 +1464,7 @@
                 <th>التاريخ</th>
                 <th>الوقت</th>
                 <th>المورد</th>
+                <th>نوع الحليب</th>
                 <th>الكمية (كجم)</th>
                 <th>سعر الكيلو</th>
                 <th>الإجمالي</th>
@@ -1470,7 +1473,7 @@
               </tr>
             </thead>
             <tbody id="milk-tbody">
-              <tr><td colspan="9"><div class="empty-state"><span class="empty-icon">🥛</span><p>لا توجد سجلات</p></div></td></tr>
+              <tr><td colspan="10"><div class="empty-state"><span class="empty-icon">🥛</span><p>لا توجد سجلات</p></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -1500,6 +1503,7 @@
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
           <div class="form-group" style="min-width:160px;margin:0"><label>من تاريخ</label><input type="date" id="acct-from" onchange="renderAccounts()"></div>
           <div class="form-group" style="min-width:160px;margin:0"><label>إلى تاريخ</label><input type="date" id="acct-to" onchange="renderAccounts()"></div>
+          <button class="btn btn-primary btn-sm" style="margin-top:22px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white" onclick="setLast7Days()" title="آخر 7 أيام (الأسبوع الأخير)">📅 آخر 7 أيام</button>
           <button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="document.getElementById('acct-from').value='';document.getElementById('acct-to').value='';renderAccounts()">الكل</button>
         </div>
       </div></div>
@@ -1602,6 +1606,7 @@
                 <option value="أخرى">أخرى</option>
               </select>
             </div>
+            <button class="btn btn-primary btn-sm" style="margin-top:22px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white" onclick="setFOLast7Days()" title="آخر 7 أيام">📅 آخر 7 أيام</button>
             <button class="btn btn-secondary" style="margin-top:22px"
               onclick="['fo-from','fo-to','fo-search'].forEach(id=>{document.getElementById(id).value='';});loadFactoryOut()">
               🔄 مسح
@@ -1667,6 +1672,9 @@
       </div>
       <div class="card" style="margin-bottom:16px"><div class="card-body">
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <div class="form-group" style="min-width:160px;margin:0"><label>من تاريخ</label><input type="date" id="wh1-from" onchange="renderWarehouse('warehouse1')"></div>
+          <div class="form-group" style="min-width:160px;margin:0"><label>إلى تاريخ</label><input type="date" id="wh1-to" onchange="renderWarehouse('warehouse1')"></div>
+          <button class="btn btn-primary btn-sm" style="margin-top:22px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white" onclick="setWHLast7Days('warehouse1')" title="آخر 7 أيام">📅 آخر 7 أيام</button>
           <div class="form-group" style="min-width:150px;margin:0"><label>فلتر حسب النوع</label>
             <select id="wh1-type-filter" onchange="renderWarehouse('warehouse1')">
               <option value="">الكل</option>
@@ -1675,6 +1683,7 @@
               <option value="أخرى">أخرى</option>
             </select>
           </div>
+          <button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="clearWHFilter('warehouse1')">🔄 مسح</button>
         </div>
       </div></div>
       <div id="wh1-type-cards" class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:16px;display:none">
@@ -1724,6 +1733,9 @@
       </div>
       <div class="card" style="margin-bottom:16px"><div class="card-body">
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <div class="form-group" style="min-width:160px;margin:0"><label>من تاريخ</label><input type="date" id="wh2-from" onchange="renderWarehouse('warehouse2')"></div>
+          <div class="form-group" style="min-width:160px;margin:0"><label>إلى تاريخ</label><input type="date" id="wh2-to" onchange="renderWarehouse('warehouse2')"></div>
+          <button class="btn btn-primary btn-sm" style="margin-top:22px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white" onclick="setWHLast7Days('warehouse2')" title="آخر 7 أيام">📅 آخر 7 أيام</button>
           <div class="form-group" style="min-width:150px;margin:0"><label>فلتر حسب النوع</label>
             <select id="wh2-type-filter" onchange="renderWarehouse('warehouse2')">
               <option value="">الكل</option>
@@ -1732,6 +1744,7 @@
               <option value="أخرى">أخرى</option>
             </select>
           </div>
+          <button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="clearWHFilter('warehouse2')">🔄 مسح</button>
         </div>
       </div></div>
       <div id="wh2-type-cards" class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:16px;display:none">
@@ -2570,6 +2583,7 @@
         <div class="form-group"><label>التاريخ *</label><input type="date" id="m-date"></div>
         <div class="form-group"><label>الوقت</label><input type="time" id="m-time"></div>
         <div class="form-group"><label>المورد *</label><select id="m-supplier"><option value="">اختر مورداً...</option></select></div>
+        <div class="form-group"><label>نوع الحليب *</label><select id="milk-type"><option value="بقري">🐄 بقري</option><option value="جاموسي">🐃 جاموسي</option></select></div>
         <div class="form-group"><label>الكمية (كجم) *</label><input type="number" id="m-qty" placeholder="0" min="0" step="0.1" oninput="calcMilkTotal()"></div>
         <div class="form-group"><label>سعر الكيلو</label><input type="number" id="m-price" placeholder="0" min="0" step="0.01" oninput="calcMilkTotal()"></div>
         <div class="form-group"><label>الإجمالي</label><input type="number" id="m-total" placeholder="0" readonly style="background:var(--bg-500);color:var(--gold);font-weight:700"></div>
@@ -3738,11 +3752,19 @@ window.loadMilkRecords = function() {
 
   const totalQty = records.reduce((s,[,r]) => s + Number(r.qty||0), 0);
   const totalAmt = records.reduce((s,[,r]) => s + Number(r.total||0), 0);
+  const baqriQty = records.filter(([,r]) => (r.milkType || 'بقري') === 'بقري').reduce((s,[,r]) => s + Number(r.qty||0), 0);
+  const jammosiQty = records.filter(([,r]) => (r.milkType || 'بقري') === 'جاموسي').reduce((s,[,r]) => s + Number(r.qty||0), 0);
 
   $('milk-sum-qty').textContent   = fmt(totalQty, 1);
   $('milk-sum-amt').textContent   = fmt(totalAmt, 2);
+  $('milk-sum-baqri').textContent = fmt(baqriQty, 1);
+  $('milk-sum-jammosi').textContent = fmt(jammosiQty, 1);
   $('milk-sum-count').textContent = records.length;
   $('milk-summary').style.display = records.length ? 'flex' : 'none';
+
+  // أيقونة نوع الحليب
+  const milkTypeIcon = (type) => type === 'جاموسي' ? '🐃' : '🐄';
+  const milkTypeBadge = (type) => `<span style="background:${type==='جاموسi'?'rgba(99,102,241,0.15)':'rgba(34,197,94,0.15)'};color:${type==='جاموسي'?'#6366f1':'#22c55e'};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600">${milkTypeIcon(type)} ${type||'بقري'}</span>`;
 
   $('milk-tbody').innerHTML = records.length ? records.map(([id,r], i) => `
     <tr>
@@ -3750,13 +3772,14 @@ window.loadMilkRecords = function() {
       <td>${r.date}</td>
       <td>${to12Hour(r.time||'')}<br><small style="color:var(--text-400)">${r.period||getPeriodLabel(r.time)||''}</small></td>
       <td>${sanitize(state.suppliers[r.supplierId]?.name || 'غير محدد')}</td>
+      <td>${milkTypeBadge(r.milkType)}</td>
       <td><strong style="color:var(--gold)">${fmt(r.qty,1)}</strong></td>
       <td>${fmt(r.price,2)} ج</td>
       <td style="color:var(--success);font-weight:700">${fmt(r.total,2)} ج</td>
       <td>${sanitize(r.notes||'—')}</td>
       <td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm btn-icon" onclick="editMilkRecord('${id}')">✏️</button><button class="btn btn-danger btn-sm btn-icon" onclick="deleteMilkRecord('${id}')">🗑️</button></div></td>
     </tr>`).join('') :
-    `<tr><td colspan="9"><div class="empty-state"><span class="empty-icon">🥛</span><p>لا توجد سجلات في الفترة المحددة</p></div></td></tr>`;
+    `<tr><td colspan="10"><div class="empty-state"><span class="empty-icon">🥛</span><p>لا توجد سجلات في الفترة المحددة</p></div></td></tr>`;
 };
 
 window.clearMilkFilter = function() {
@@ -3833,6 +3856,19 @@ window.switchAccountTab = function(tab) {
   });
 };
 
+// ══════════════════════════════════════════════════════════════════
+// ACCOUNTS - Last 7 Days Helper
+// ══════════════════════════════════════════════════════════════════
+window.setLast7Days = function() {
+  const today = new Date();
+  const weekAgo = new Date(today);
+  weekAgo.setDate(today.getDate() - 7);
+  
+  document.getElementById('acct-from').value = weekAgo.toISOString().slice(0,10);
+  document.getElementById('acct-to').value = today.toISOString().slice(0,10);
+  renderAccounts();
+};
+
 function renderAccounts(search='') {
   search = search || '';
   const acctFrom = document.getElementById('acct-from')?.value || '';
@@ -3841,16 +3877,25 @@ function renderAccounts(search='') {
     .filter(([,s]) => !search || fuzzyMatch(search, s.name || ''));
 
   let acctGrandMilkQty=0, acctGrandMilkAmt=0, acctGrandPay=0, acctGrandAdv=0, acctGrandPur=0, acctGrandWeekBal=0;
+  let acctGrandBaqriQty=0, acctGrandJammosiQty=0;
   $('accounts-tbody').innerHTML = suppliers.length ? suppliers.map(([id,s], i) => {
     const milkRecs = Object.values(state.milkRecords).filter(r => r.supplierId === id && (!acctFrom || r.date >= acctFrom) && (!acctTo || r.date <= acctTo));
     const milkQty = milkRecs.reduce((s,r) => s + Number(r.qty||0), 0);
     const milkTotal = milkRecs.reduce((s,r) => s + Number(r.total||0), 0);
+    
+    // حساب كميات الحليب حسب النوع
+    const baqriQty = milkRecs.filter(r => (r.milkType || 'بقري') === 'بقري').reduce((s,r) => s + Number(r.qty||0), 0);
+    const jammosiQty = milkRecs.filter(r => (r.milkType || 'بقري') === 'جاموسي').reduce((s,r) => s + Number(r.qty||0), 0);
+    
+    // حساب متوسط سعر الكيلو لهذا المورد
+    const avgPrice = milkQty > 0 ? milkTotal / milkQty : 0;
     const payments  = Object.values(state.supplierPayments).filter(p => p.supplierId === id && (!acctFrom || p.date >= acctFrom) && (!acctTo || p.date <= acctTo)).reduce((s,p) => s + Number(p.amount||0), 0);
     const advances  = Object.values(state.supplierAdvances).filter(a => a.supplierId === id && (!acctFrom || a.date >= acctFrom) && (!acctTo || a.date <= acctTo)).reduce((s,a) => s + Number(a.amount||0), 0);
     const purchases = Object.values(state.supplierPurchases||{}).filter(p => p.supplierId === id && (!acctFrom || p.date >= acctFrom) && (!acctTo || p.date <= acctTo)).reduce((s,p) => s + Number(p.totalPrice||0), 0);
     const balance   = milkTotal - payments - advances - purchases;
     const balClass  = balance > 0 ? 'balance-positive' : balance < 0 ? 'balance-negative' : 'balance-zero';
     acctGrandMilkQty += milkQty; acctGrandMilkAmt += milkTotal; acctGrandPay += payments; acctGrandAdv += advances; acctGrandPur += purchases;
+    acctGrandBaqriQty += baqriQty; acctGrandJammosiQty += jammosiQty;
     
     // حساب رصيد الأسبوع الحالي
     const weekData = calcSupplierWeekBalance(id);
@@ -3878,8 +3923,8 @@ function renderAccounts(search='') {
           </a>` : ''}
         </div>
       </td>
-      <td style="color:var(--success);font-weight:700">${fmt(milkQty,1)} كجم</td>
-      <td style="color:var(--gold)">${fmt(roundedMilkTotal,0)} ج</td>
+      <td style="color:var(--success);font-weight:700">${fmt(milkQty,1)} كجم<br><small style="color:var(--text-400)">🐄 ${fmt(baqriQty,1)} | 🐃 ${fmt(jammosiQty,1)}</small></td>
+      <td style="color:var(--gold)">${fmt(roundedMilkTotal,0)} ج<br><small style="color:var(--text-400)">سعر الكيلو: ${fmt(avgPrice,2)}</small></td>
       <td style="color:var(--danger)">${fmt(roundedPayments,0)} ج</td>
       <td style="color:var(--warning)">${fmt(roundedAdvances,0)} ج</td>
       <td style="color:var(--info)">${fmt(roundedPurchases,0)} ج</td>
@@ -3896,7 +3941,7 @@ function renderAccounts(search='') {
   }).join('') + `
     <tr style="background:var(--bg-300);border-top:2px solid var(--gold)">
       <td colspan="2" style="font-weight:900;color:var(--gold);font-size:15px;text-align:center">الإجمالي الكلي</td>
-      <td style="font-weight:900;color:var(--success);font-size:15px">${fmt(acctGrandMilkQty,1)} كجم</td>
+      <td style="font-weight:900;color:var(--success);font-size:15px">${fmt(acctGrandMilkQty,1)} كجم<br><small>🐄 ${fmt(acctGrandBaqriQty,1)} | 🐃 ${fmt(acctGrandJammosiQty,1)}</small></td>
       <td style="font-weight:900;color:var(--gold);font-size:15px">${fmt(roundSmart(acctGrandMilkAmt),0)} ج</td>
       <td style="font-weight:900;color:var(--danger);font-size:15px">${fmt(roundSmart(acctGrandPay),0)} ج</td>
       <td style="font-weight:900;color:var(--warning);font-size:15px">${fmt(roundSmart(acctGrandAdv),0)} ج</td>
@@ -4013,6 +4058,38 @@ window.deleteAdvance = async function(id) {
 // ══════════════════════════════════════════════════════════════════
 // WAREHOUSE
 // ══════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
+// WAREHOUSE DATE FILTER HELPERS
+// ══════════════════════════════════════════════════════════════════
+window.setWHLast7Days = function(wh) {
+  const today = new Date();
+  const weekAgo = new Date(today);
+  weekAgo.setDate(today.getDate() - 7);
+  
+  const prefix = wh === 'warehouse1' ? 'wh1' : 'wh2';
+  document.getElementById(prefix + '-from').value = weekAgo.toISOString().slice(0,10);
+  document.getElementById(prefix + '-to').value = today.toISOString().slice(0,10);
+  renderWarehouse(wh);
+};
+
+window.clearWHFilter = function(wh) {
+  const prefix = wh === 'warehouse1' ? 'wh1' : 'wh2';
+  document.getElementById(prefix + '-from').value = '';
+  document.getElementById(prefix + '-to').value = '';
+  document.getElementById(prefix + '-type-filter').value = '';
+  renderWarehouse(wh);
+};
+
+window.setFOLast7Days = function() {
+  const today = new Date();
+  const weekAgo = new Date(today);
+  weekAgo.setDate(today.getDate() - 7);
+  
+  document.getElementById('fo-from').value = weekAgo.toISOString().slice(0,10);
+  document.getElementById('fo-to').value = today.toISOString().slice(0,10);
+  loadFactoryOut();
+};
+
 function renderWarehouse(wh) {
   const allItems = Object.entries(state[wh]);
   const isWH1 = wh === 'warehouse1';
@@ -7758,6 +7835,7 @@ window.editMilkRecord = function(id) {
   $('m-qty').value = r.qty || '';
   $('m-price').value = r.price || '';
   $('m-total').value = r.total || '';
+  $('milk-type').value = r.milkType || 'بقري';
   $('m-period').value = r.period || 'صباحي';
   $('m-notes').value = r.notes || '';
 };
@@ -7766,16 +7844,17 @@ window.editMilkRecord = function(id) {
 window.saveMilkRecord = async function() {
   const supplierId = $('m-supplier').value;
   const qty = parseFloat($('m-qty').value);
+  const milkType = $('milk-type').value || 'بقري';
   if (!supplierId) { toast('اختر المورد', 'error'); return; }
   if (!qty || qty <= 0) { toast('الكمية يجب أن تكون أكبر من صفر', 'error'); return; }
   const price = parseFloat($('m-price').value) || 0;
   if (price < 0) { toast('السعر لا يمكن أن يكون سالباً', 'error'); return; }
-  const data = { supplierId, date: $('m-date').value, time: $('m-time').value, qty, price, total: qty * price, period: $('m-period').value, notes: sanitize($('m-notes').value) };
+  const data = { supplierId, date: $('m-date').value, time: $('m-time').value, qty, price, total: qty * price, milkType, period: $('m-period').value, notes: sanitize($('m-notes').value) };
   loading(true, 'جارٍ حفظ سجل الحليب...');
   try {
     const editId = $('m-record-id').value;
     if (editId) { await dbUpdate('milkRecords/' + editId, data); toast('تم تحديث السجل', 'success'); }
-    else { await dbPush('milkRecords', data); toast('تم تسجيل استلام الحليب', 'success'); track('milk_receive', { supplierId, qty }); }
+    else { await dbPush('milkRecords', data); toast('تم تسجيل استلام الحليب', 'success'); track('milk_receive', { supplierId, qty, milkType }); }
     closeModal('modal-milk'); loadMilkRecords(); recalcAll();
   } catch(e) { toast('خطأ: ' + e.message, 'error'); }
   finally { loading(false); }
@@ -7788,6 +7867,7 @@ window.openMilkModal = function() {
   $('milk-modal-title').textContent = 'تسجيل استلام حليب';
   $('m-record-id').value = '';
   $('m-period').value = 'صباحي';
+  $('milk-type').value = 'بقري';
 };
 
 // ══════════════════════════════════════════════════════════════════
@@ -8380,11 +8460,13 @@ function buildSupplierFullHTML(d) {
   const rPurSum = roundSmart(d.purSum);
   const rBalance = roundSmart(d.balance);
   
-  return `<h1 style="color:#000;font-weight:bold">${state.settings.factoryName || 'مصنع الألبان'}</h1>
-    <div style="text-align:center;color:#000;font-size:12px;margin-bottom:16px">كشف حساب مورد</div>
+  return `<h1 style="color:#000;font-weight:bold;text-align:center">${state.settings.factoryName || 'مصنع الألبان'}</h1>
+    <div style="text-align:center;color:#000;font-size:12px;margin-bottom:8px">كشف حساب مورد</div>
+    <div style="text-align:center;background:linear-gradient(135deg,#D4A843,#B8860B);color:#fff;padding:16px;border-radius:10px;margin-bottom:20px">
+      <div style="font-size:28px;font-weight:900;letter-spacing:1px">${d.s.name}</div>
+      ${d.s.phone ? `<div style="font-size:14px;margin-top:6px;opacity:0.9">📱 ${d.s.phone}</div>` : ''}
+    </div>
     <div class="info-grid">
-      <div class="info-row"><span>المورد:</span><span>${d.s.name}</span></div>
-      <div class="info-row"><span>الهاتف:</span><span>${d.s.phone||'—'}</span></div>
       <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
       <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
     </div>
@@ -8399,11 +8481,13 @@ function buildSupplierSummaryHTML(d) {
   const rPurSum = roundSmart(d.purSum);
   const rBalance = roundSmart(d.balance);
   
-  return `<h1 style="color:#000;font-weight:bold">${state.settings.factoryName || 'مصنع الألبان'}</h1>
-    <div style="text-align:center;color:#000;font-size:12px;margin-bottom:16px">كشف حساب مورد - الإجمالي</div>
+  return `<h1 style="color:#000;font-weight:bold;text-align:center">${state.settings.factoryName || 'مصنع الألبان'}</h1>
+    <div style="text-align:center;color:#000;font-size:12px;margin-bottom:8px">كشف حساب مورد - الإجمالي</div>
+    <div style="text-align:center;background:linear-gradient(135deg,#D4A843,#B8860B);color:#fff;padding:16px;border-radius:10px;margin-bottom:20px">
+      <div style="font-size:28px;font-weight:900;letter-spacing:1px">${d.s.name}</div>
+      ${d.s.phone ? `<div style="font-size:14px;margin-top:6px;opacity:0.9">📱 ${d.s.phone}</div>` : ''}
+    </div>
     <div class="info-grid">
-      <div class="info-row"><span>المورد:</span><span>${d.s.name}</span></div>
-      <div class="info-row"><span>الهاتف:</span><span>${d.s.phone||'—'}</span></div>
       <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
       <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
     </div>
