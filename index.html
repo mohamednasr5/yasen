@@ -6308,7 +6308,7 @@ function isViewerMode() {
   return currentUserRole === 'viewer';
 }
 
-function loginPinInput() {
+window.loginPinInput = function() {
   $('login-error').textContent = '';
   $('login-pin').style.borderColor = 'var(--border)';
   const pin = $('login-pin').value;
@@ -7966,7 +7966,10 @@ window.openMilkModal = function() {
   $('milk-modal-title').textContent = 'تسجيل استلام حليب';
   $('m-record-id').value = '';
   $('m-period').value = 'صباحي';
-  $('milk-type').value = 'بقري';
+  // Reset cow and buffalo quantities
+  if ($('m-baqri-qty')) $('m-baqri-qty').value = '0';
+  if ($('m-jammosi-qty')) $('m-jammosi-qty').value = '0';
+  calcMilkTotal();
 };
 
 // ══════════════════════════════════════════════════════════════════
@@ -7988,77 +7991,78 @@ const __origOpenMilkModal3 = window.openMilkModal;
 window.openMilkModal = function() {
   __origOpenMilkModal3();
   $('milk-modal-title').textContent = $('m-record-id').value ? 'تعديل سجل الحليب' : 'تسجيل استلام حليب';
-  // Price is always editable - no lock restriction
-  $('m-price').readOnly = false;
-  $('m-price').style.background = '';
-  $('m-price').title = '';
+  // Price fields are always editable - no lock restriction
+  if ($('m-baqri-price')) {
+    $('m-baqri-price').readOnly = false;
+    $('m-baqri-price').style.background = '';
+    $('m-baqri-price').title = '';
+  }
+  if ($('m-jammosi-price')) {
+    $('m-jammosi-price').readOnly = false;
+    $('m-jammosi-price').style.background = '';
+    $('m-jammosi-price').title = '';
+  }
 };
 
-// Updated saveMilkRecord with flexible price update
+// Updated saveMilkRecord with flexible price update - supports cow & buffalo milk
 window.saveMilkRecord = async function() {
   const supplierId = $('m-supplier').value;
-  const qty = parseFloat($('m-qty').value);
   if (!supplierId) { toast('اختر المورد', 'error'); return; }
-  if (!qty || qty <= 0) { toast('الكمية يجب أن تكون أكبر من صفر', 'error'); return; }
-  const price = parseFloat($('m-price').value) || 0;
-  if (price < 0) { toast('السعر لا يمكن أن يكون سالباً', 'error'); return; }
+
+  // Get cow milk data
+  const baqriQty = parseFloat($('m-baqri-qty').value) || 0;
+  const baqriPrice = parseFloat($('m-baqri-price').value) || 0;
+
+  // Get buffalo milk data
+  const jammosiQty = parseFloat($('m-jammosi-qty').value) || 0;
+  const jammosiPrice = parseFloat($('m-jammosi-price').value) || 0;
+
+  // Validate - at least one type must have quantity
+  if (baqriQty <= 0 && jammosiQty <= 0) { toast('الكمية يجب أن تكون أكبر من صفر (بقري أو جاموسي)', 'error'); return; }
+  if (baqriPrice < 0 || jammosiPrice < 0) { toast('السعر لا يمكن أن يكون سالباً', 'error'); return; }
+
   const dateStr = $('m-date').value || today();
   const editId = $('m-record-id').value;
 
-  // Check if price changed for an existing record
-  if (editId && state.milkRecords[editId]) {
-    const oldRec = state.milkRecords[editId];
-    const oldPrice = Number(oldRec.price || 0);
-    if (oldPrice > 0 && price > 0 && oldPrice !== price) {
-      // Price changed - store context and open the price update modal
-      const wb = getWeekBounds(dateStr);
-      const supplierName = state.suppliers[supplierId]?.name || '—';
-      _pendingPriceUpdate = { editId, supplierId, dateStr, oldPrice, newPrice: price, qty };
+  // Calculate totals
+  const baqriTotal = baqriQty * baqriPrice;
+  const jammosiTotal = jammosiQty * jammosiPrice;
+  const total = baqriTotal + jammosiTotal;
 
-      // Populate the modal
-      $('mpu-supplier-name').textContent = supplierName;
-      $('mpu-old-price').textContent = oldPrice + ' ج';
-      $('mpu-new-price').textContent = price + ' ج';
-      $('mpu-week-range').textContent = wb.start + ' → ' + wb.end;
+  // Build data object with separate cow/buffalo info
+  const data = {
+    supplierId,
+    date: dateStr,
+    time: $('m-time').value,
+    period: $('m-period').value,
+    notes: sanitize($('m-notes').value),
+    // Cow milk
+    baqriQty,
+    baqriPrice,
+    baqriTotal,
+    // Buffalo milk
+    jammosiQty,
+    jammosiPrice,
+    jammosiTotal,
+    // Totals for backward compatibility
+    qty: baqriQty + jammosiQty,
+    total,
+    avgPrice: total > 0 ? total / (baqriQty + jammosiQty) : 0
+  };
 
-      // Build dates list for the same supplier in this week
-      const weekDates = {};
-      Object.entries(state.milkRecords).forEach(([rid, r]) => {
-        if (r.supplierId === supplierId && r.date >= wb.start && r.date <= wb.end) {
-          if (!weekDates[r.date]) weekDates[r.date] = [];
-          weekDates[r.date].push({ id: rid, price: Number(r.price || 0), qty: Number(r.qty || 0) });
-        }
-      });
-
-      const datesContainer = $('mpu-dates-container');
-      const sortedDates = Object.keys(weekDates).sort();
-      datesContainer.innerHTML = sortedDates.length ? sortedDates.map(d => {
-        const recs = weekDates[d];
-        const hasOldPrice = recs.some(r => r.price === oldPrice);
-        return `<label style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;font-size:13px">
-          <input type="checkbox" class="mpu-date-check" value="${d}" ${hasOldPrice && d !== dateStr ? 'checked' : ''} style="width:16px;height:16px">
-          <span>${d}</span>
-          <span style="color:var(--text-400);font-size:11px">(${recs.length} سجل)</span>
-        </label>`;
-      }).join('') : '<div style="color:var(--text-400);font-size:12px">لا توجد سجلات أخرى في هذا الأسبوع</div>';
-
-      // Reset radio to "this" and show modal
-      document.querySelector('input[name="mpu-scope"][value="this"]').checked = true;
-      $('mpu-dates-container').style.display = 'none';
-      closeModal('modal-milk');
-      openModal('modal-milk-price-update');
-      setupMPURadioListeners();
-      return;
-    }
-  }
-
-  // Normal save (no price change or new record)
-  const data = { supplierId, date: dateStr, time: $('m-time').value, qty, price, total: qty * price, period: $('m-period').value, notes: sanitize($('m-notes').value) };
   loading(true, 'جارٍ حفظ سجل الحليب...');
   try {
-    if (editId) { await dbUpdate('milkRecords/' + editId, data); toast('تم تحديث السجل', 'success'); }
-    else { await dbPush('milkRecords', data); toast('تم تسجيل استلام الحليب', 'success'); track('milk_receive', { supplierId, qty }); }
-    closeModal('modal-milk'); loadMilkRecords(); recalcAll();
+    if (editId) {
+      await dbUpdate('milkRecords/' + editId, data);
+      toast('تم تحديث السجل', 'success');
+    } else {
+      await dbPush('milkRecords', data);
+      toast('تم تسجيل استلام الحليب', 'success');
+      track('milk_receive', { supplierId, qty: data.qty });
+    }
+    closeModal('modal-milk');
+    loadMilkRecords();
+    recalcAll();
   } catch(e) { toast('خطأ: ' + e.message, 'error'); }
   finally { loading(false); }
 };
