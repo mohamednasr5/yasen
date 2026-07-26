@@ -1464,16 +1464,14 @@
                 <th>التاريخ</th>
                 <th>الوقت</th>
                 <th>المورد</th>
-                <th>نوع الحليب</th>
-                <th>الكمية (كجم)</th>
-                <th>سعر الكيلو</th>
+                <th>الكميات (كجم)</th>
                 <th>الإجمالي</th>
                 <th>ملاحظات</th>
                 <th>الإجراءات</th>
               </tr>
             </thead>
             <tbody id="milk-tbody">
-              <tr><td colspan="10"><div class="empty-state"><span class="empty-icon">🥛</span><p>لا توجد سجلات</p></div></td></tr>
+              <tr><td colspan="8"><div class="empty-state"><span class="empty-icon">🥛</span><p>لا توجد سجلات</p></div></td></tr>
             </tbody>
           </table>
         </div>
@@ -2572,7 +2570,7 @@
 
 <!-- Milk Modal -->
 <div class="modal-backdrop" id="modal-milk">
-  <div class="modal" style="max-width:520px">
+  <div class="modal" style="max-width:580px">
     <div class="modal-header">
       <span style="font-size:22px">🥛</span>
       <h3 id="milk-modal-title">تسجيل استلام حليب</h3>
@@ -2583,11 +2581,40 @@
         <div class="form-group"><label>التاريخ *</label><input type="date" id="m-date"></div>
         <div class="form-group"><label>الوقت</label><input type="time" id="m-time"></div>
         <div class="form-group"><label>المورد *</label><select id="m-supplier"><option value="">اختر مورداً...</option></select></div>
-        <div class="form-group"><label>نوع الحليب *</label><select id="milk-type"><option value="بقري">🐄 بقري</option><option value="جاموسي">🐃 جاموسي</option></select></div>
-        <div class="form-group"><label>الكمية (كجم) *</label><input type="number" id="m-qty" placeholder="0" min="0" step="0.1" oninput="calcMilkTotal()"></div>
-        <div class="form-group"><label>سعر الكيلو</label><input type="number" id="m-price" placeholder="0" min="0" step="0.01" oninput="calcMilkTotal()"></div>
-        <div class="form-group"><label>الإجمالي</label><input type="number" id="m-total" placeholder="0" readonly style="background:var(--bg-500);color:var(--gold);font-weight:700"></div>
         <div class="form-group"><label>الفترة</label><select id="m-period"><option value="صباحي">صباحي</option><option value="مسائي">مسائي</option></select></div>
+        
+        <!-- 🐄 البقري -->
+        <div style="grid-column:1/-1;background:linear-gradient(135deg,rgba(34,197,94,0.1),rgba(34,197,94,0.05));border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:12px;margin-top:8px">
+          <div style="font-weight:700;color:#22c55e;margin-bottom:10px;font-size:15px">🐄 الحليب البقري</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group" style="margin:0"><label>الكمية (كجم)</label><input type="number" id="m-baqri-qty" placeholder="0" min="0" step="0.1" value="0" oninput="calcMilkTotal()"></div>
+            <div class="form-group" style="margin:0"><label>سعر الكيلو</label><input type="number" id="m-baqri-price" placeholder="0" min="0" step="0.01" oninput="calcMilkTotal()"></div>
+          </div>
+          <div style="margin-top:8px;padding:8px;background:rgba(34,197,94,0.1);border-radius:6px;text-align:center">
+            <span style="color:var(--text-400);font-size:12px">إجمالي البقري:</span>
+            <strong id="m-baqri-total" style="color:#22c55e;font-size:16px;margin-right:8px">0 ج</strong>
+          </div>
+        </div>
+
+        <!-- 🐃 الجاموسي -->
+        <div style="grid-column:1/-1;background:linear-gradient(135deg,rgba(99,102,241,0.1),rgba(99,102,241,0.05));border:1px solid rgba(99,102,241,0.3);border-radius:10px;padding:12px;margin-top:8px">
+          <div style="font-weight:700;color:#6366f1;margin-bottom:10px;font-size:15px">🐃 الحليب الجاموسي</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group" style="margin:0"><label>الكمية (كجم)</label><input type="number" id="m-jammosi-qty" placeholder="0" min="0" step="0.1" value="0" oninput="calcMilkTotal()"></div>
+            <div class="form-group" style="margin:0"><label>سعر الكيلو</label><input type="number" id="m-jammosi-price" placeholder="0" min="0" step="0.01" oninput="calcMilkTotal()"></div>
+          </div>
+          <div style="margin-top:8px;padding:8px;background:rgba(99,102,241,0.1);border-radius:6px;text-align:center">
+            <span style="color:var(--text-400);font-size:12px">إجمالي الجاموسي:</span>
+            <strong id="m-jammosi-total" style="color:#6366f1;font-size:16px;margin-right:8px">0 ج</strong>
+          </div>
+        </div>
+
+        <!-- الإجمالي الكلي -->
+        <div class="form-group" style="grid-column:1/-1">
+          <label style="font-weight:700;font-size:16px;color:var(--gold)">💰 الإجمالي الكلي</label>
+          <input type="number" id="m-total" placeholder="0" readonly style="background:var(--bg-500);color:var(--gold);font-weight:700;font-size:20px;text-align:center">
+        </div>
+
         <input type="hidden" id="m-record-id" value="">
         <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><input type="text" id="m-notes" placeholder="ملاحظات اختيارية"></div>
       </div>
@@ -3750,36 +3777,44 @@ window.loadMilkRecords = function() {
     return true;
   }).sort((a,b) => b[1].date > a[1].date ? 1 : b[1].date < a[1].date ? -1 : 0);
 
-  const totalQty = records.reduce((s,[,r]) => s + Number(r.qty||0), 0);
-  const totalAmt = records.reduce((s,[,r]) => s + Number(r.total||0), 0);
-  const baqriQty = records.filter(([,r]) => (r.milkType || 'بقري') === 'بقري').reduce((s,[,r]) => s + Number(r.qty||0), 0);
-  const jammosiQty = records.filter(([,r]) => (r.milkType || 'بقري') === 'جاموسي').reduce((s,[,r]) => s + Number(r.qty||0), 0);
+  // حساب الإجماليات
+  const totalQty     = records.reduce((s,[,r]) => s + Number(r.qty||0), 0);
+  const totalAmt     = records.reduce((s,[,r]) => s + Number(r.total||0), 0);
+  const totalBaqri   = records.reduce((s,[,r]) => s + Number(r.baqriQty||0), 0);
+  const totalJammosi = records.reduce((s,[,r]) => s + Number(r.jammosiQty||0), 0);
+  const baqriAmt    = records.reduce((s,[,r]) => s + Number(r.baqriTotal||0), 0);
+  const jammosiAmt  = records.reduce((s,[,r]) => s + Number(r.jammosiTotal||0), 0);
 
-  $('milk-sum-qty').textContent   = fmt(totalQty, 1);
-  $('milk-sum-amt').textContent   = fmt(totalAmt, 2);
-  $('milk-sum-baqri').textContent = fmt(baqriQty, 1);
-  $('milk-sum-jammosi').textContent = fmt(jammosiQty, 1);
-  $('milk-sum-count').textContent = records.length;
-  $('milk-summary').style.display = records.length ? 'flex' : 'none';
+  // تحديث الملخص
+  $('milk-sum-qty').textContent     = fmt(totalQty, 1);
+  $('milk-sum-amt').textContent     = fmt(totalAmt, 2);
+  $('milk-sum-baqri').textContent   = `🐄 ${fmt(totalBaqri,1)} كجم (${fmt(baqriAmt,0)} ج)`;
+  $('milk-sum-jammosi').textContent = `🐃 ${fmt(totalJammosi,1)} كجم (${fmt(jammosiAmt,0)} ج)`;
+  $('milk-sum-count').textContent    = records.length;
+  $('milk-summary').style.display   = records.length ? 'flex' : 'none';
 
-  // أيقونة نوع الحليب
-  const milkTypeIcon = (type) => type === 'جاموسي' ? '🐃' : '🐄';
-  const milkTypeBadge = (type) => `<span style="background:${type==='جاموسi'?'rgba(99,102,241,0.15)':'rgba(34,197,94,0.15)'};color:${type==='جاموسي'?'#6366f1':'#22c55e'};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600">${milkTypeIcon(type)} ${type||'بقري'}</span>`;
-
-  $('milk-tbody').innerHTML = records.length ? records.map(([id,r], i) => `
-    <tr>
+  // عرض الكميات في الجدول
+  $('milk-tbody').innerHTML = records.length ? records.map(([id,r], i) => {
+    const hasBaqri   = (r.baqriQty || 0) > 0;
+    const hasJammosi = (r.jammosiQty || 0) > 0;
+    
+    return `<tr>
       <td>${i+1}</td>
       <td>${r.date}</td>
       <td>${to12Hour(r.time||'')}<br><small style="color:var(--text-400)">${r.period||getPeriodLabel(r.time)||''}</small></td>
-      <td>${sanitize(state.suppliers[r.supplierId]?.name || 'غير محدد')}</td>
-      <td>${milkTypeBadge(r.milkType)}</td>
-      <td><strong style="color:var(--gold)">${fmt(r.qty,1)}</strong></td>
-      <td>${fmt(r.price,2)} ج</td>
-      <td style="color:var(--success);font-weight:700">${fmt(r.total,2)} ج</td>
+      <td><strong>${sanitize(state.suppliers[r.supplierId]?.name || 'غير محدد')}</strong></td>
+      <td>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          ${hasBaqri ? `<span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600">🐄 ${fmt(r.baqriQty,1)} كجم</span>` : ''}
+          ${hasJammosi ? `<span style="background:rgba(99,102,241,0.15);color:#6366f1;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600">🐃 ${fmt(r.jammosiQty,1)} كجم</span>` : ''}
+        </div>
+      </td>
+      <td style="color:var(--gold);font-weight:700">${fmt(r.total,2)} ج</td>
       <td>${sanitize(r.notes||'—')}</td>
       <td><div style="display:flex;gap:4px"><button class="btn btn-secondary btn-sm btn-icon" onclick="editMilkRecord('${id}')">✏️</button><button class="btn btn-danger btn-sm btn-icon" onclick="deleteMilkRecord('${id}')">🗑️</button></div></td>
-    </tr>`).join('') :
-    `<tr><td colspan="10"><div class="empty-state"><span class="empty-icon">🥛</span><p>لا توجد سجلات في الفترة المحددة</p></div></td></tr>`;
+    </tr>`;
+  }).join('') :
+    `<tr><td colspan="8"><div class="empty-state"><span class="empty-icon">🥛</span><p>لا توجد سجلات في الفترة المحددة</p></div></td></tr>`;
 };
 
 window.clearMilkFilter = function() {
@@ -3794,43 +3829,97 @@ window.openMilkModal = function() {
       .map(([id,s]) => `<option value="${id}">${sanitize(s.name)}</option>`).join('');
   sel.onchange = function() {
     const sup = state.suppliers[this.value];
-    if (sup && sup.price) $('m-price').value = sup.price;
+    // ملء سعر البقري والجاموسي من إعدادات المورد
+    if (sup && sup.price) {
+      $('m-baqri-price').value = sup.price;
+      $('m-jammosi-price').value = sup.jammosiPrice || sup.price; // سعر الجاموسي قد يكون مختلف
+    }
     calcMilkTotal();
   };
-  $('m-date').value  = today();
-  $('m-time').value  = now();
-  $('m-qty').value   = '';
-  $('m-price').value = state.settings.milkPrice || '';
-  $('m-total').value = '';
-  $('m-notes').value = '';
+  
+  // تهيئة الحقول
+  $('m-date').value        = today();
+  $('m-time').value        = now();
+  $('m-period').value      = 'صباحي';
+  $('m-baqri-qty').value   = '0';
+  $('m-baqri-price').value = state.settings.milkPrice || '';
+  $('m-jammosi-qty').value   = '0';
+  $('m-jammosi-price').value = state.settings.jammosiPrice || state.settings.milkPrice || '';
+  $('m-total').value       = '';
+  $('m-notes').value       = '';
+  $('m-record-id').value   = '';
+  
+  // حساب الإجمالي الأولي
+  calcMilkTotal();
+  
   openModal('modal-milk');
 };
 
 window.calcMilkTotal = function() {
-  const qty   = parseFloat($('m-qty').value)   || 0;
-  const price = parseFloat($('m-price').value) || 0;
-  $('m-total').value = (qty * price).toFixed(2);
+  // حساب البقري
+  const baqriQty   = parseFloat($('m-baqri-qty').value)   || 0;
+  const baqriPrice = parseFloat($('m-baqri-price').value) || 0;
+  const baqriTotal = baqriQty * baqriPrice;
+  
+  // حساب الجاموسي
+  const jammosiQty   = parseFloat($('m-jammosi-qty').value)   || 0;
+  const jammosiPrice = parseFloat($('m-jammosi-price').value) || 0;
+  const jammosiTotal = jammosiQty * jammosiPrice;
+  
+  // تحديث الإجماليات الفرعية
+  $('m-baqri-total').textContent   = fmt(baqriTotal, 2) + ' ج';
+  $('m-jammosi-total').textContent = fmt(jammosiTotal, 2) + ' ج';
+  
+  // الإجمالي الكلي
+  $('m-total').value = (baqriTotal + jammosiTotal).toFixed(2);
 };
 
 window.saveMilkRecord = async function() {
   const supplierId = $('m-supplier').value;
-  const qty = parseFloat($('m-qty').value);
   if (!supplierId) { toast('اختر المورد', 'error'); return; }
-  if (!qty || qty <= 0) { toast('الكمية يجب أن تكون أكبر من صفر', 'error'); return; }
+  
+  // بيانات البقري
+  const baqriQty   = parseFloat($('m-baqri-qty').value)   || 0;
+  const baqriPrice = parseFloat($('m-baqri-price').value) || 0;
+  
+  // بيانات الجاموسي
+  const jammosiQty   = parseFloat($('m-jammosi-qty').value)   || 0;
+  const jammosiPrice = parseFloat($('m-jammosi-price').value) || 0;
+  
+  // التحقق من وجود كمية واحدة على الأقل
+  if (baqriQty <= 0 && jammosiQty <= 0) { toast('يجب إدخال كمية واحدة على الأقل (بقري أو جاموسي)', 'error'); return; }
 
-  const price = parseFloat($('m-price').value) || 0;
+  const baqriTotal   = baqriQty * baqriPrice;
+  const jammosiTotal = jammosiQty * jammosiPrice;
+  const total        = baqriTotal + jammosiTotal;
+
   const data = {
-    supplierId, date: $('m-date').value, time: $('m-time').value,
-    qty, price, total: qty * price, notes: sanitize($('m-notes').value)
+    supplierId, 
+    date: $('m-date').value, 
+    time: $('m-time').value,
+    period: $('m-period').value,
+    // البقري
+    baqriQty,
+    baqriPrice,
+    baqriTotal,
+    // الجاموسي
+    jammosiQty,
+    jammosiPrice,
+    jammosiTotal,
+    // الإجمالي
+    qty: baqriQty + jammosiQty, // الكمية الكلية للتوافقية
+    total,
+    notes: sanitize($('m-notes').value)
   };
 
   loading(true, 'جارٍ حفظ سجل الحليب...');
   try {
-    await dbPush('milkRecords', data);
-    toast('تم تسجيل استلام الحليب', 'success');
-    track('milk_receive', { supplierId, qty });
+    const editId = $('m-record-id').value;
+    if (editId) { await dbUpdate('milkRecords/' + editId, data); toast('تم تحديث السجل', 'success'); }
+    else { await dbPush('milkRecords', data); toast('تم تسجيل استلام الحليب', 'success'); track('milk_receive', { supplierId, baqriQty, jammosiQty }); }
     closeModal('modal-milk');
     loadMilkRecords();
+    recalcAll();
   } catch(e) { toast('خطأ: ' + e.message, 'error'); }
   finally { loading(false); }
 };
@@ -7830,14 +7919,24 @@ window.editMilkRecord = function(id) {
     Object.entries(state.suppliers).map(([sid,s]) => `<option value="${sid}" ${sid===r.supplierId?'selected':''}>${sanitize(s.name)}</option>`).join('');
   $('milk-modal-title').textContent = 'تعديل سجل الحليب';
   $('m-record-id').value = id;
-  $('m-date').value = r.date || today();
-  $('m-time').value = r.time || now();
-  $('m-qty').value = r.qty || '';
-  $('m-price').value = r.price || '';
+  $('m-date').value        = r.date || today();
+  $('m-time').value        = r.time || now();
+  $('m-period').value      = r.period || 'صباحي';
+  
+  // بيانات البقري
+  $('m-baqri-qty').value   = r.baqriQty || '';
+  $('m-baqri-price').value = r.baqriPrice || '';
+  
+  // بيانات الجاموسي
+  $('m-jammosi-qty').value   = r.jammosiQty || '';
+  $('m-jammosi-price').value = r.jammosiPrice || '';
+  
+  // الإجمالي
   $('m-total').value = r.total || '';
-  $('milk-type').value = r.milkType || 'بقري';
-  $('m-period').value = r.period || 'صباحي';
   $('m-notes').value = r.notes || '';
+  
+  // حساب الإجماليات الفرعية
+  calcMilkTotal();
 };
 
 // Override saveMilkRecord
