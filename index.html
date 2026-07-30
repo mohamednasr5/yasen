@@ -387,25 +387,19 @@
 <div id="easy-ui-screen" style="position:fixed;inset:0;z-index:9997;display:none;flex-direction:column;overflow-y:auto;background:linear-gradient(135deg,#0A0C0F 0%,#111820 100%)">
   
   <!-- Easy UI Header -->
-  <div style="background:linear-gradient(135deg,#111820,#1a2030);border-bottom:2px solid rgba(212,168,67,0.3);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;backdrop-filter:blur(10px)">
-    <div style="display:flex;align-items:center;gap:12px">
-      <div style="font-size:28px">🥛</div>
+  <div style="background:rgba(15,19,26,0.85);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="width:46px;height:46px;border-radius:16px;background:linear-gradient(135deg,var(--gold-light),var(--gold) 45%,var(--gold-deep));display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:var(--glow-gold),inset 0 2px 4px rgba(255,255,255,.35)">🥛</div>
       <div>
-        <div style="font-size:16px;font-weight:800;color:#D4A843">نظام مصنع الألبان</div>
-        <div style="font-size:11px;color:#667788">الواجهة السهلة</div>
+        <div style="font-size:16px;font-weight:800;color:var(--gold-light)">نظام مصنع الألبان</div>
+        <div style="font-size:11px;color:var(--text-400)">الواجهة السهلة</div>
       </div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <div id="easy-date-bar" style="font-size:11px;color:#4a6a88;display:none"></div>
-      <button onclick="easyGoSettings()" style="background:#1a2030;border:1px solid #556677;color:#8899aa;padding:7px 14px;border-radius:20px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:600;transition:all 0.2s"
-              onmouseover="this.style.borderColor='#D4A843';this.style.color='#D4A843'"
-              onmouseout="this.style.borderColor='#556677';this.style.color='#8899aa'">⚙️ الإعدادات</button>
-      <button onclick="switchToNormalUI()" style="background:#1e3a5a;border:1px solid #4a9eff;color:#4a9eff;padding:7px 14px;border-radius:20px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:600;transition:all 0.2s"
-              onmouseover="this.style.background='#4a9eff';this.style.color='#fff'"
-              onmouseout="this.style.background='#1e3a5a';this.style.color='#4a9eff'">📊 الواجهة الكاملة</button>
-      <button onclick="logout()" style="background:#2a1520;border:1px solid #dc2626;color:#dc2626;padding:7px 14px;border-radius:20px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:600;transition:all 0.2s"
-              onmouseover="this.style.background='#dc2626';this.style.color='#fff'"
-              onmouseout="this.style.background='#2a1520';this.style.color='#dc2626'">🔒 خروج</button>
+    <div style="display:flex;gap:10px;align-items:center">
+      <div id="easy-date-bar" style="font-size:11px;color:var(--text-400);display:none"></div>
+      <button onclick="easyGoSettings()" class="easy-hdr-btn easy-hdr-btn--neutral">⚙️ الإعدادات</button>
+      <button onclick="switchToNormalUI()" class="easy-hdr-btn easy-hdr-btn--info">📊 الواجهة الكاملة</button>
+      <button onclick="logout()" class="easy-hdr-btn easy-hdr-btn--danger">🔒 خروج</button>
     </div>
   </div>
 
@@ -638,6 +632,19 @@
   </div><!-- /easy-stats-section -->
 
   <style>
+  /* ── Header buttons ── */
+  .easy-hdr-btn {
+    padding: 8px 16px; border-radius: 20px; cursor: pointer;
+    font-size: 11px; font-family: inherit; font-weight: 700;
+    transition: all 0.25s var(--ease); border: 1px solid;
+  }
+  .easy-hdr-btn--neutral { background: var(--bg-600); border-color: var(--border-soft); color: var(--text-300); }
+  .easy-hdr-btn--neutral:hover { border-color: var(--gold); color: var(--gold-light); }
+  .easy-hdr-btn--info { background: rgba(75,163,255,0.12); border-color: rgba(75,163,255,0.4); color: var(--info); }
+  .easy-hdr-btn--info:hover { background: var(--info); color: #fff; transform: translateY(-1px); }
+  .easy-hdr-btn--danger { background: rgba(255,92,77,0.12); border-color: rgba(255,92,77,0.4); color: var(--danger); }
+  .easy-hdr-btn--danger:hover { background: var(--danger); color: #fff; transform: translateY(-1px); }
+
   /* ── Stat card ── */
   .esc {
     display: flex;
@@ -645,19 +652,19 @@
     gap: 10px;
     background: var(--bg, #111820);
     border: 1.5px solid color-mix(in srgb, var(--c) 22%, transparent);
-    border-radius: 14px;
-    padding: 10px 14px;
+    border-radius: var(--radius-lg, 16px);
+    padding: 12px 16px;
     min-width: 160px;
     flex-shrink: 0;
     position: relative;
     overflow: hidden;
-    transition: border-color .25s, transform .22s, box-shadow .25s;
+    transition: border-color .3s var(--ease, ease), transform .3s var(--ease, ease), box-shadow .3s var(--ease, ease);
     cursor: default;
   }
   .esc:hover {
     border-color: var(--c);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px color-mix(in srgb, var(--c) 22%, transparent);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 28px color-mix(in srgb, var(--c) 24%, transparent);
   }
   .esc-glow {
     position: absolute;
@@ -706,14 +713,15 @@
     100% { transform: scale(1.1); }
   }
   .esc-body { flex: 1; min-width: 0; }
-  .esc-lbl  { font-size:10px; color:#5a6a7a; font-weight:600; white-space:nowrap; margin-bottom:2px; }
+  .esc-lbl  { font-size:10.5px; color:var(--text-400, #5a6a7a); font-weight:700; white-space:nowrap; margin-bottom:3px; letter-spacing:.2px; }
   .esc-val  {
-    font-size: 18px; font-weight: 900; color: #fff;
-    text-shadow: 0 0 12px var(--c);
+    font-size: 19px; font-weight: 900; color: var(--text-100, #fff);
+    text-shadow: 0 0 14px var(--c);
     white-space: nowrap;
-    transition: transform .35s, color .35s;
+    transition: transform .35s var(--ease, ease), color .35s var(--ease, ease);
+    font-family: 'Cairo', sans-serif;
   }
-  .esc-sub  { font-size:9px; color:#3a4a5a; margin-top:2px; white-space:nowrap; }
+  .esc-sub  { font-size:9.5px; color:var(--text-400, #3a4a5a); margin-top:3px; white-space:nowrap; }
 
   /* ── Ticker ── */
   @keyframes easyTickerScroll {
@@ -1037,16 +1045,16 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 24px 12px 20px;
-  background: var(--btn-bg, #1a2030);
-  border: 2px solid color-mix(in srgb, var(--btn-color) 30%, transparent);
-  border-radius: 18px;
+  padding: 26px 12px 22px;
+  background: linear-gradient(160deg, var(--btn-bg, #1a2030), color-mix(in srgb, var(--btn-bg, #1a2030) 70%, black));
+  border: 1.5px solid color-mix(in srgb, var(--btn-color) 28%, transparent);
+  border-radius: var(--radius-lg, 20px);
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.28s cubic-bezier(.34,1.56,.64,1);
+  transition: all 0.3s var(--ease-spring, cubic-bezier(.34,1.56,.64,1));
   position: relative;
   overflow: hidden;
-  min-height: 130px;
+  min-height: 132px;
 }
 /* Shimmer sweep on hover */
 .easy-btn::before {
@@ -3992,12 +4000,29 @@ window.printMilkTable = function() {
   const supId = $('milk-filter-supplier')?.value || '';
   const supName = supId ? (state.suppliers[supId]?.name || '') : 'جميع الموردين';
   
-  // حساب الإجماليات من العناصر المرئية
-  const totalQty = parseFloat($('milk-sum-qty')?.textContent) || 0;
-  const totalAmt = parseFloat($('milk-sum-amt')?.textContent) || 0;
-  const baqriInfo = $('milk-sum-baqri')?.textContent || '0';
-  const jammosiInfo = $('milk-sum-jammosi')?.textContent || '0';
-  const count = parseInt($('milk-sum-count')?.textContent) || 0;
+  // حساب الإجماليات مباشرة من البيانات الفعلية (وليس من نص العناصر
+  // المنسّق بأرقام عربية، لأن parseFloat لا يفهم الأرقام العربية ٠١٢٣
+  // وكان يرجّع دايماً 0 — وهو سبب ظهور "إجمالي القيمة" و"إجمالي الكمية" صفر)
+  const fromRaw = $('milk-from')?.value || '';
+  const toRaw   = $('milk-to')?.value || '';
+
+  const filteredRecords = Object.entries(state.milkRecords).filter(([, r]) => {
+    if (fromRaw && r.date < fromRaw) return false;
+    if (toRaw   && r.date > toRaw)   return false;
+    if (supId   && r.supplierId !== supId) return false;
+    return true;
+  });
+
+  const totalQty     = filteredRecords.reduce((s,[,r]) => s + Number(r.qty||0), 0);
+  const totalAmt     = filteredRecords.reduce((s,[,r]) => s + Number(r.total||0), 0);
+  const totalBaqri   = filteredRecords.reduce((s,[,r]) => s + Number(r.baqriQty||0), 0);
+  const totalJammosi = filteredRecords.reduce((s,[,r]) => s + Number(r.jammosiQty||0), 0);
+  const baqriAmt     = filteredRecords.reduce((s,[,r]) => s + Number(r.baqriTotal||0), 0);
+  const jammosiAmt   = filteredRecords.reduce((s,[,r]) => s + Number(r.jammosiTotal||0), 0);
+
+  const baqriInfo    = `🐄 ${fmt(totalBaqri,1)} كجم (${fmt(baqriAmt,0)} ج)`;
+  const jammosiInfo  = `🐃 ${fmt(totalJammosi,1)} كجم (${fmt(jammosiAmt,0)} ج)`;
+  const count = filteredRecords.length;
   
   const factoryName = state?.settings?.factoryName || 'نظام إدارة مصنع الألبان';
   const now = new Date().toLocaleString('ar-EG',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
@@ -7224,6 +7249,35 @@ window.updateEasyTicker = function() {
     }
   } catch(err) { /* silent */ }
 };
+
+// ══════════════════════════════════════════
+// EASY UI LIVE REFRESH — يحدّث الأرقام أول ما البيانات توصل من Firebase
+// (بدل ما تتحسب مرة واحدة بس وقت فتح الشاشة، ساعتها البيانات لسه
+//  مجتش من قاعدة البيانات، فتفضل الكروت عارضة "—" للأبد)
+// ══════════════════════════════════════════
+(function() {
+  let lastSnapshot = '';
+  setInterval(function() {
+    const easy = document.getElementById('easy-ui-screen');
+    if (!easy || easy.style.display === 'none' || !easy.style.display) return;
+    try {
+      const snapshot = JSON.stringify({
+        m: Object.keys(state.milkRecords || {}).length,
+        e: Object.keys(state.expenses || {}).length,
+        sa: Object.keys(state.sales || {}).length,
+        s: Object.keys(state.suppliers || {}).length,
+        b: Object.keys(state.buyers || {}).length,
+        w1: Object.keys(state.warehouse1 || {}).length,
+        w2: Object.keys(state.warehouse2 || {}).length,
+        ex: Object.keys(state.exports || {}).length
+      });
+      if (snapshot !== lastSnapshot) {
+        lastSnapshot = snapshot;
+        updateEasyTicker();
+      }
+    } catch (e) { /* silent */ }
+  }, 1200);
+})();
 
 // ══════════════════════════════════════════
 // Ctrl key → رجوع للواجهة السهلة
