@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <meta name="theme-color" content="#0A0C0F">
+  <meta name="theme-color" content="#05060A">
   <meta name="description" content="نظام إدارة مصنع الألبان - إدارة شاملة للموردين والإنتاج والمخازن">
   <title>🥛 نظام إدارة مصنع الألبان</title>
   <link rel="manifest" href="manifest.json">
@@ -3085,10 +3085,9 @@
         <div class="form-group">
           <label>العميل *</label>
           <div style="display:flex;gap:6px">
-            <input type="text" id="sale-client" placeholder="اسم العميل (أو اسم جديد)" list="buyers-datalist" style="flex:1" oninput="onSaleClientChange()">
+            <input type="text" id="sale-client" placeholder="اسم العميل" list="buyers-datalist" style="flex:1" oninput="onSaleClientChange()">
             <datalist id="buyers-datalist"></datalist>
           </div>
-          <div id="sale-new-client-hint" style="display:none;font-size:11px;margin-top:4px;padding:4px 8px;background:rgba(34,197,94,0.1);border-radius:6px"></div>
           <input type="hidden" id="sale-buyer-id" value="">
         </div>
         <div class="form-group"><label>المنتج *</label><input type="text" id="sale-product" placeholder="اسم المنتج"></div>
@@ -4104,33 +4103,6 @@ window.printMilkTable = function() {
       </thead>
       <tbody>${tableRows}</tbody>
     </table>
-    
-    <!-- ملخص الإجماليات الواضح -->
-    <div style="margin-top:20px;padding:16px;background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:12px;color:#fff;text-align:center">
-      <div style="font-size:14px;font-weight:bold;margin-bottom:12px;color:#fbbf24">📊 ملخص الإجماليات</div>
-      <div style="display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:15px;font-size:16px">
-        <div style="background:rgba(34,197,94,0.2);padding:10px 18px;border-radius:10px;border:2px solid #22c55e">
-          <div style="font-size:11px;color:#86efac">الحليب البقري</div>
-          <div style="font-weight:900;font-size:18px;color:#4ade80">${baqriInfo}</div>
-        </div>
-        <div style="font-size:24px;font-weight:bold;color:#fbbf24">+</div>
-        <div style="background:rgba(99,102,241,0.2);padding:10px 18px;border-radius:10px;border:2px solid #6366f1">
-          <div style="font-size:11px;color:#a5b4fc">الحليب الجاموسي</div>
-          <div style="font-weight:900;font-size:18px;color:#818cf8">${jammosiInfo}</div>
-        </div>
-        <div style="font-size:24px;font-weight:bold;color:#fbbf24">=</div>
-        <div style="background:rgba(245,158,11,0.2);padding:10px 18px;border-radius:10px;border:2px solid #f59e0b">
-          <div style="font-size:11px;color:#fcd34d">إجمالي الكمية</div>
-          <div style="font-weight:900;font-size:18px;color:#fbbf24">${totalQty.toLocaleString('ar-EG')} كجم</div>
-        </div>
-      </div>
-      <div style="margin-top:15px;padding-top:15px;border-top:1px solid rgba(255,255,255,0.2)">
-        <div style="background:rgba(239,68,68,0.2);display:inline-block;padding:12px 30px;border-radius:10px;border:2px solid #ef4444">
-          <div style="font-size:11px;color:#fca5a5">💰 إجمالي السعر</div>
-          <div style="font-weight:900;font-size:22px;color:#f87171">${totalAmt.toLocaleString('ar-EG',{maximumFractionDigits:0})} جنيه</div>
-        </div>
-      </div>
-    </div>
     
     <div class="footer">
       <span>${factoryName}</span>
@@ -5397,17 +5369,6 @@ window.onSaleClientChange = function() {
   const clientName = ($('sale-client')?.value || '').trim().toLowerCase();
   const match = Object.entries(state.buyers).find(([,b]) => b.name.trim().toLowerCase() === clientName);
   if ($('sale-buyer-id')) $('sale-buyer-id').value = match ? match[0] : '';
-  
-  // عرض مؤشر إذا كان العميل جديد (غير موجود في القائمة)
-  const hintEl = $('sale-new-client-hint');
-  if (hintEl) {
-    if (clientName && !match) {
-      hintEl.innerHTML = '✨ <span style="color:#22c55e">سيتم إضافة كعميل جديد</span>';
-      hintEl.style.display = '';
-    } else {
-      hintEl.style.display = 'none';
-    }
-  }
 };
 
 window.openSaleModal = function() {
@@ -5511,33 +5472,8 @@ window.saveSale = async function() {
   const paidNow = method === 'آجل' ? 0 : (method === 'جزئي' ? (parseFloat($('sale-paid-now')?.value) || 0) : total);
   const remaining = total - paidNow;
 
-  // البحث عن المشتري أو إنشاء جديد إذا لم يوجد
-  let buyerId = $('sale-buyer-id')?.value || '';
   const matchedBuyer = Object.entries(state.buyers).find(([,b]) => b.name.trim().toLowerCase() === client.toLowerCase());
-  
-  if (matchedBuyer) {
-    buyerId = matchedBuyer[0];
-  } else if (!buyerId) {
-    // إنشاء مشتري جديد تلقائياً
-    try {
-      const newBuyerData = { 
-        name: client, 
-        phone: '', 
-        area: '', 
-        status: 'active', 
-        notes: 'تم إنشاؤه تلقائياً من عملية بيع',
-        createdAt: new Date().toISOString()
-      };
-      buyerId = await dbPush('buyers', newBuyerData);
-      state.buyers[buyerId] = newBuyerData;
-      toast(`✨ تم إضافة "${client}" كعميل جديد`, 'success');
-      // تحديث قائمة المشترين
-      renderBuyers();
-    } catch(e) {
-      console.error('خطأ في إنشاء المشتري:', e);
-    }
-  }
-  
+  const buyerId = matchedBuyer ? matchedBuyer[0] : ($('sale-buyer-id')?.value || '');
   loading(true);
   try {
     const saleData = { date: $('sale-date').value, client, product, qty, price, total, paidNow, remaining, method, notes: sanitize($('sale-notes').value) };
@@ -8884,35 +8820,7 @@ window.saveSale = async function() {
   const total = qty * price;
   const paidNow = method === 'آجل' ? 0 : (method === 'جزئي' ? (parseFloat($('sale-paid-now')?.value) || 0) : total);
   const remaining = total - paidNow;
-  
-  // البحث عن المشتري أو إنشاء جديد إذا لم يوجد
-  let buyerId = $('sale-buyer-id')?.value || '';
-  const matchedBuyer = Object.entries(state.buyers).find(([,b]) => b.name.trim().toLowerCase() === client.toLowerCase());
-  
-  if (matchedBuyer) {
-    buyerId = matchedBuyer[0];
-  } else if (!buyerId && !$('sale-record-id')?.value) {
-    // إنشاء مشتري جديد تلقائياً (فقط عند إنشاء بيع جديد، ليس التعديل)
-    try {
-      const newBuyerData = { 
-        name: client, 
-        phone: '', 
-        area: '', 
-        status: 'active', 
-        notes: 'تم إنشاؤه تلقائياً من عملية بيع',
-        createdAt: new Date().toISOString()
-      };
-      buyerId = await dbPush('buyers', newBuyerData);
-      state.buyers[buyerId] = newBuyerData;
-      toast(`✨ تم إضافة "${client}" كعميل جديد`, 'success');
-      renderBuyers();
-    } catch(e) {
-      console.error('خطأ في إنشاء المشتري:', e);
-    }
-  }
-  
   const data = { date: $('sale-date').value, client, product, qty, price, total, paidNow, remaining, method, notes: sanitize($('sale-notes').value) };
-  if (buyerId) data.buyerId = buyerId;
   loading(true);
   try {
     const editId = $('sale-record-id').value;
@@ -10507,5 +10415,6 @@ if ('serviceWorker' in navigator) {
 
     
 </script>
+<script src="js/ui-enhance.js"></script>
 </body>
 </html>
