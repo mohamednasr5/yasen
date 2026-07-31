@@ -3932,7 +3932,7 @@ window.loadMilkRecords = function() {
       <td>${i+1}</td>
       <td>${r.date}</td>
       <td>${to12Hour(r.time||'')}<br><small style="color:var(--text-400)">${r.period||getPeriodLabel(r.time)||''}</small></td>
-      <td><strong class="supplier-name-clickable" onclick="event.stopPropagation();openSupplierMenu(event, '${r.supplierId}')">${sanitize(state.suppliers[r.supplierId]?.name || 'غير محدد')}</strong></td>
+      <td><strong class="supplier-name-clickable" data-supplier-id="${r.supplierId}">${sanitize(state.suppliers[r.supplierId]?.name || 'غير محدد')}</strong></td>
       <td>
         <div style="display:flex;flex-direction:column;gap:4px">
           ${hasBaqri ? `<span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600">🐄 ${fmt(r.baqriQty,1)} كجم</span>` : ''}
@@ -10823,6 +10823,33 @@ if ('serviceWorker' in navigator) {
         showAccountDetail(supplierId);
       }, 300);
     };
+
+    // ══════════════════════════════════════════════════════════
+    // Event Delegation - تفويض الأحداث لأسماء الموردين
+    // ══════════════════════════════════════════════════════════
+    
+    (function initSupplierClickHandler() {
+      document.addEventListener('click', function(e) {
+        var target = e.target.closest('.supplier-name-clickable');
+        if (target) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          var supplierId = target.getAttribute('data-supplier-id');
+          console.log('[Supplier Menu] Clicked supplier ID:', supplierId); // Debug log
+          
+          if (supplierId && typeof window.openSupplierMenu === 'function') {
+            window.openSupplierMenu(e, supplierId);
+          } else if (!supplierId) {
+            console.warn('[Supplier Menu] No supplier ID found on element');
+            toast('لم يتم تحديد المورد', 'warning');
+          } else {
+            console.warn('[Supplier Menu] openSupplierMenu not available');
+          }
+        }
+      });
+      console.log('[Supplier Menu] Event delegation initialized');
+    })();
 
 </script>
 <!-- القائمة العائمة لحساب المورد -->
