@@ -10468,80 +10468,99 @@ if ('serviceWorker' in navigator) {
     // ══════════════════════════════════════════════════════════
 
     
+    // تصدير state للاستخدام في الدوال الخارجية
+    window.appState = state;
+
     // ══════════════════════════════════════════════════════════
     // القائمة العائمة لحساب المورد - Supplier Floating Menu
     // ══════════════════════════════════════════════════════════
 
-    let currentMenuSupplierId = null;
+    var currentMenuSupplierId = null;
 
     // فتح القائمة العائمة عند الضغط على اسم المورد
     window.openSupplierMenu = function(event, supplierId) {
-      if (!supplierId || !state.suppliers[supplierId]) {
-        toast('لم يتم العثور على بيانات المورد', 'warning');
-        return;
+      try {
+        if (!supplierId) {
+          toast('لم يتم تحديد المورد', 'warning');
+          return;
+        }
+
+        // الوصول إلى state عبر النطاق العام
+        var suppliersObj = window.appState.suppliers || {};
+        var milkRecordsObj = window.appState.milkRecords || {};
+        var paymentsObj = window.appState.supplierPayments || {};
+        var advancesObj = window.appState.supplierAdvances || {};
+
+        if (!suppliersObj[supplierId]) {
+          toast('لم يتم العثور على بيانات المورد', 'warning');
+          return;
+        }
+
+        currentMenuSupplierId = supplierId;
+        var supplier = suppliersObj[supplierId];
+        var menu = document.getElementById('supplier-context-menu');
+        var backdrop = document.getElementById('supplier-menu-backdrop');
+
+        // تحديث معلومات المورد في القائمة
+        document.getElementById('menu-supplier-name').textContent = supplier.name || 'غير محدد';
+        
+        // حساب إحصائيات الحساب
+        var milkRecords = Object.values(milkRecordsObj).filter(function(r) { return r.supplierId === supplierId; });
+        var milkTotal = milkRecords.reduce(function(s, r) { return s + Number(r.total || 0); }, 0);
+        var milkQty = milkRecords.reduce(function(s, r) { return s + Number(r.qty || 0); }, 0);
+        var payments = Object.values(paymentsObj).filter(function(p) { return p.supplierId === supplierId; }).reduce(function(s, p) { return s + Number(p.amount || 0); }, 0);
+        var advances = Object.values(advancesObj).filter(function(a) { return a.supplierId === supplierId; }).reduce(function(s, a) { return s + Number(a.amount || 0); }, 0);
+        var balance = milkTotal - payments - advances;
+
+        // تحديث الإحصائيات في القائمة
+        document.getElementById('menu-milk-total').textContent = fmt(milkTotal, 0) + ' ج';
+        document.getElementById('menu-payments').textContent = fmt(payments, 0) + ' ج';
+        document.getElementById('menu-advances').textContent = fmt(advances, 0) + ' ج';
+        
+        var balanceEl = document.getElementById('menu-balance');
+        balanceEl.textContent = fmt(balance, 0) + ' ج';
+        balanceEl.className = 'supplier-stat-value ' + (balance > 0 ? 'positive' : balance < 0 ? 'negative' : 'info');
+
+        // تحديث المعلومات الإضافية
+        var phone = supplier.phone || '—';
+        var area = supplier.area || '—';
+        document.getElementById('menu-supplier-info').textContent = '📞 ' + phone + ' | 📍 ' + area;
+        document.getElementById('menu-record-count').textContent = milkRecords.length + ' سجل حليب | ' + fmt(milkQty, 1) + ' كجم إجمالي';
+
+        // تحديد موقع القائمة بالقرب من مكان النقر
+        var rect = event.target.getBoundingClientRect();
+        var top = rect.bottom + 8;
+        var left = rect.right - 350;
+        
+        // ضبط الحدود لتجنب خروج القائمة عن الشاشة
+        if (left + 420 > window.innerWidth) {
+          left = window.innerWidth - 420 - 16;
+        }
+        if (left < 16) {
+          left = 16;
+        }
+        if (top + 450 > window.innerHeight) {
+          top = rect.top - 450 - 8;
+        }
+        if (top < 16) {
+          top = 16;
+        }
+
+        menu.style.top = top + 'px';
+        menu.style.left = left + 'px';
+
+        // إظهار القائمة والخلفية المعتمة
+        backdrop.classList.add('open');
+        menu.classList.add('open');
+
+        // إضافة مستمع للضغط خارج القائمة لإغلاقها
+        setTimeout(function() {
+          document.addEventListener('click', handleOutsideClick);
+        }, 10);
+      } catch(err) {
+        console.error('Error in openSupplierMenu:', err);
+        toast('حدث خطأ: ' + err.message, 'error');
       }
-
-      currentMenuSupplierId = supplierId;
-      const supplier = state.suppliers[supplierId];
-      const menu = document.getElementById('supplier-context-menu');
-      const backdrop = document.getElementById('supplier-menu-backdrop');
-
-      // تحديث معلومات المورد في القائمة
-      document.getElementById('menu-supplier-name').textContent = supplier.name || 'غير محدد';
-      
-      // حساب إحصائيات الحساب
-      const milkRecords = Object.values(state.milkRecords).filter(r => r.supplierId === supplierId);
-      const milkTotal = milkRecords.reduce((s, r) => s + Number(r.total || 0), 0);
-      const milkQty = milkRecords.reduce((s, r) => s + Number(r.qty || 0), 0);
-      const payments = Object.values(state.supplierPayments).filter(p => p.supplierId === supplierId).reduce((s, p) => s + Number(p.amount || 0), 0);
-      const advances = Object.values(state.supplierAdvances).filter(a => a.supplierId === supplierId).reduce((s, a) => s + Number(a.amount || 0), 0);
-      const balance = milkTotal - payments - advances;
-
-      // تحديث الإحصائيات في القائمة
-      document.getElementById('menu-milk-total').textContent = fmt(milkTotal, 0) + ' ج';
-      document.getElementById('menu-payments').textContent = fmt(payments, 0) + ' ج';
-      document.getElementById('menu-advances').textContent = fmt(advances, 0) + ' ج';
-      
-      const balanceEl = document.getElementById('menu-balance');
-      balanceEl.textContent = fmt(balance, 0) + ' ج';
-      balanceEl.className = 'supplier-stat-value ' + (balance > 0 ? 'positive' : balance < 0 ? 'negative' : 'info');
-
-      // تحديث المعلومات الإضافية
-      const phone = supplier.phone || '—';
-      const area = supplier.area || '—';
-      document.getElementById('menu-supplier-info').textContent = '📞 ' + phone + ' | 📍 ' + area;
-      document.getElementById('menu-record-count').textContent = milkRecords.length + ' سجل حليب | ' + fmt(milkQty, 1) + ' كجم إجمالي';
-
-      // تحديد موقع القائمة بالقرب من مكان النقر
-      const rect = event.target.getBoundingClientRect();
-      let top = rect.bottom + 8;
-      let left = rect.right - 350;
-      
-      // ضبط الحدود لتجنب خروج القائمة عن الشاشة
-      if (left + 420 > window.innerWidth) {
-        left = window.innerWidth - 420 - 16;
-      }
-      if (left < 16) {
-        left = 16;
-      }
-      if (top + 450 > window.innerHeight) {
-        top = rect.top - 450 - 8;
-      }
-      if (top < 16) {
-        top = 16;
-      }
-
-      menu.style.top = top + 'px';
-      menu.style.left = left + 'px';
-
-      // إظهار القائمة والخلفية المعتمة
-      backdrop.classList.add('open');
-      menu.classList.add('open');
-
-      // إضافة مستمع للضغط خارج القائمة لإغلاقها
-      setTimeout(function() {
-        document.addEventListener('click', handleOutsideClick);
-      }, 10);
     };
 
     // التعامل مع الضغط خارج القائمة
@@ -10582,9 +10601,11 @@ if ('serviceWorker' in navigator) {
     window.exportSupplierToPDF = function() {
       if (!currentMenuSupplierId) return;
       
-      var supplierId = currentMenuSupplierId;
-      var supplier = state.suppliers[supplierId];
-      if (!supplier) return;
+      try {
+        var supplierId = currentMenuSupplierId;
+        var suppliersObj = window.appState.suppliers || {};
+        var supplier = suppliersObj[supplierId];
+        if (!supplier) return;
 
       closeSupplierMenu();
 
@@ -10594,15 +10615,15 @@ if ('serviceWorker' in navigator) {
           var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
           
           // جمع البيانات
-          var milkRecords = Object.entries(state.milkRecords)
+          var milkRecords = Object.entries(window.appState.milkRecords)
             .filter(function(arr) { return arr[1].supplierId === supplierId; })
             .sort(function(a, b) { return b[1].date.localeCompare(a[1].date); });
           
-          var payments = Object.entries(state.supplierPayments)
+          var payments = Object.entries(window.appState.supplierPayments)
             .filter(function(arr) { return arr[1].supplierId === supplierId; })
             .sort(function(a, b) { return b[1].date.localeCompare(a[1].date); });
           
-          var advances = Object.entries(state.supplierAdvances)
+          var advances = Object.entries(window.appState.supplierAdvances)
             .filter(function(arr) { return arr[1].supplierId === supplierId; });
 
           var milkTotal = milkRecords.reduce(function(s, arr) { return s + Number(arr[1].total || 0); }, 0);
@@ -10708,24 +10729,26 @@ if ('serviceWorker' in navigator) {
     window.exportSupplierToExcel = function() {
       if (!currentMenuSupplierId) return;
       
-      var supplierId = currentMenuSupplierId;
-      var supplier = state.suppliers[supplierId];
-      if (!supplier) return;
+      try {
+        var supplierId = currentMenuSupplierId;
+        var suppliersObj = window.appState.suppliers || {};
+        var supplier = suppliersObj[supplierId];
+        if (!supplier) return;
 
       closeSupplierMenu();
 
       setTimeout(function() {
         try {
           // جمع البيانات
-          var milkRecords = Object.entries(state.milkRecords)
+          var milkRecords = Object.entries(window.appState.milkRecords)
             .filter(function(arr) { return arr[1].supplierId === supplierId; })
             .sort(function(a, b) { return b[1].date.localeCompare(a[1].date); });
           
-          var payments = Object.entries(state.supplierPayments)
+          var payments = Object.entries(window.appState.supplierPayments)
             .filter(function(arr) { return arr[1].supplierId === supplierId; })
             .sort(function(a, b) { return b[1].date.localeCompare(a[1].date); });
           
-          var advances = Object.entries(state.supplierAdvances)
+          var advances = Object.entries(window.appState.supplierAdvances)
             .filter(function(arr) { return arr[1].supplierId === supplierId; });
 
           // إنشاء محتوى CSV
@@ -10792,8 +10815,9 @@ if ('serviceWorker' in navigator) {
     window.viewFullAccountDetail = function() {
       if (!currentMenuSupplierId) return;
       
-      var supplierId = currentMenuSupplierId;
-      closeSupplierMenu();
+      try {
+        var supplierId = currentMenuSupplierId;
+        closeSupplierMenu();
       
       setTimeout(function() {
         showAccountDetail(supplierId);
