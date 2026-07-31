@@ -216,7 +216,7 @@
 <div id="toast-container"></div>
 
 <!-- ═══════════════ LOGIN SCREEN ═══════════════ -->
-<div id="login-screen" style="position:fixed;inset:0;background:var(--bg-900);z-index:9999;display:flex;align-items:center;justify-content:center">
+<div id="login-screen" style="position:fixed;inset:0;background:var(--bg-900);z-index:9999;display:none;align-items:center;justify-content:center">
   <div style="width:100%;max-width:360px;padding:24px;text-align:center">
     <div style="font-size:56px;margin-bottom:16px">🥛</div>
     <div style="font-size:20px;font-weight:800;color:var(--gold);margin-bottom:4px">نظام إدارة مصنع الألبان</div>
@@ -1134,6 +1134,160 @@
   0%, 100% { transform: scale(1); opacity: 0.5; }
   50% { transform: scale(1.3); opacity: 1; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   القائمة العائمة لحساب المورد - Supplier Context Menu
+   ═══════════════════════════════════════════════════════════════ */
+.supplier-name-clickable {
+  cursor: pointer;
+  position: relative;
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  color: var(--gold) !important;
+}
+.supplier-name-clickable:hover {
+  background: rgba(245, 158, 11, 0.15);
+  transform: scale(1.02);
+}
+.supplier-context-menu {
+  position: fixed;
+  z-index: 15000;
+  background: linear-gradient(145deg, var(--bg-700), var(--bg-800));
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(245,158,11,0.1);
+  min-width: 320px;
+  max-width: 380px;
+  display: none;
+  animation: ctxMenuIn 0.2s ease-out;
+  overflow: hidden;
+}
+@keyframes ctxMenuIn {
+  from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.supplier-context-menu.active {
+  display: block;
+}
+.ctx-menu-header {
+  background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(16,185,129,0.08));
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+.ctx-menu-header .ctx-supplier-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+.ctx-menu-header .ctx-supplier-phone {
+  font-size: 12px;
+  color: var(--text-400);
+}
+.ctx-menu-body {
+  padding: 12px;
+}
+.ctx-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.ctx-stat-item {
+  background: var(--bg-600);
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+  border: 1px solid var(--border-soft);
+}
+.ctx-stat-item .ctx-val {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-100);
+  display: block;
+}
+.ctx-stat-item .ctx-lbl {
+  font-size: 11px;
+  color: var(--text-400);
+  margin-top: 2px;
+}
+.ctx-balance-item {
+  grid-column: span 2;
+  background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08));
+  border-color: #6366f1;
+}
+.ctx-balance-item .ctx-val {
+  color: #8b5cf6 !important;
+}
+.ctx-menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-750);
+}
+.ctx-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  width: 100%;
+  font-family: inherit;
+}
+.ctx-action-btn:hover {
+  transform: translateX(-3px);
+}
+.ctx-btn-print {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+.ctx-btn-print:hover {
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  box-shadow: 0 4px 15px rgba(59,130,246,0.35);
+}
+.ctx-btn-export {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+}
+.ctx-btn-export:hover {
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  box-shadow: 0 4px 15px rgba(34,197,94,0.35);
+}
+.ctx-btn-detail {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
+.ctx-btn-detail:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  box-shadow: 0 4px 15px rgba(245,158,11,0.35);
+}
+.ctx-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 14999;
+  background: transparent;
+  display: none;
+}
+.ctx-menu-backdrop.active {
+  display: block;
+}
+
+/* طباعة - إخفاء القائمة العائمة */
+@media print {
+  .supplier-context-menu,
+  .ctx-menu-backdrop { display: none !important; }
+}
 </style>
 
 <!-- ═══════════════ PIN CONFIRM MODAL ═══════════════ -->
@@ -1158,6 +1312,50 @@
   <div style="text-align:center">
     <div class="spinner"></div>
     <p style="margin-top:12px;color:var(--gold);font-size:13px" id="loading-text">جارٍ التحميل...</p>
+  </div>
+</div>
+
+<!-- ═══════════════ SUPPLIER CONTEXT MENU ═══════════════ -->
+<div class="ctx-menu-backdrop" id="ctx-menu-backdrop" onclick="closeSupplierContextMenu()"></div>
+<div class="supplier-context-menu" id="supplier-context-menu">
+  <div class="ctx-menu-header">
+    <div class="ctx-supplier-name" id="ctx-supplier-name">—</div>
+    <div class="ctx-supplier-phone" id="ctx-supplier-phone"></div>
+  </div>
+  <div class="ctx-menu-body">
+    <div class="ctx-stats-grid">
+      <div class="ctx-stat-item">
+        <span class="ctx-val" id="ctx-milk-qty">0 كجم</span>
+        <span class="ctx-lbl">🥛 الكمية</span>
+      </div>
+      <div class="ctx-stat-item">
+        <span class="ctx-val" id="ctx-milk-amt">0 ج</span>
+        <span class="ctx-lbl">💰 إجمالي الحليب</span>
+      </div>
+      <div class="ctx-stat-item">
+        <span class="ctx-val" style="color:var(--danger)" id="ctx-payments">0 ج</span>
+        <span class="ctx-lbl">💳 المدفوعات</span>
+      </div>
+      <div class="ctx-stat-item">
+        <span class="ctx-val" style="color:var(--warning)" id="ctx-advances">0 ج</span>
+        <span class="ctx-lbl">📋 السلف</span>
+      </div>
+      <div class="ctx-stat-item ctx-balance-item">
+        <span class="ctx-val" id="ctx-balance">0 ج</span>
+        <span class="ctx-lbl">📊 الرصيد المستحق</span>
+      </div>
+    </div>
+  </div>
+  <div class="ctx-menu-actions">
+    <button class="ctx-action-btn ctx-btn-detail" onclick="viewSupplierDetailFromCtx()">
+      📋 عرض الكشف التفصيلي
+    </button>
+    <button class="ctx-action-btn ctx-btn-print" onclick="printSupplierAccountFromCtx()">
+      🖨️ طباعة كشف الحساب
+    </button>
+    <button class="ctx-action-btn ctx-btn-export" onclick="exportSupplierAccountFromCtx()">
+      📥 تصدير PDF
+    </button>
   </div>
 </div>
 
@@ -3878,6 +4076,248 @@ ${dayLines || '  لا توجد سجلات هذا الأسبوع'}
 };
 
 // ══════════════════════════════════════════════════════════════════
+// SUPPLIER CONTEXT MENU - القائمة العائمة للمورد
+// ══════════════════════════════════════════════════════════════════
+let _ctxCurrentSupplierId = null;
+
+window.openSupplierContextMenu = function(event, supplierId) {
+  const s = state.suppliers[supplierId];
+  if (!s) return;
+  
+  _ctxCurrentSupplierId = supplierId;
+  
+  // حساب بيانات المورد
+  const milkRecords = Object.values(state.milkRecords).filter(r => r.supplierId === supplierId);
+  const payments    = Object.values(state.supplierPayments).filter(p => p.supplierId === supplierId);
+  const advances    = Object.values(state.supplierAdvances).filter(a => a.supplierId === supplierId);
+  
+  const milkQtyKg = milkRecords.reduce((sum, r) => sum + Number(r.qty || 0), 0);
+  const milkSum   = milkRecords.reduce((sum, r) => sum + Number(r.total || 0), 0);
+  const paySum    = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const advSum    = advances.reduce((sum, a) => sum + Number(a.amount || 0), 0);
+  const balance   = calcSupplierBalance(supplierId);
+  
+  // تحديث محتوى القائمة
+  $('ctx-supplier-name').textContent = s.name;
+  $('ctx-supplier-phone').textContent = s.phone ? `📱 ${s.phone}` : '';
+  $('ctx-milk-qty').textContent = `${fmt(milkQtyKg, 1)} كجم`;
+  $('ctx-milk-amt').textContent = `${fmt(roundSmart(milkSum), 0)} ج`;
+  $('ctx-payments').textContent = `${fmt(roundSmart(paySum), 0)} ج`;
+  $('ctx-advances').textContent = `${fmt(roundSmart(advSum), 0)} ج`;
+  $('ctx-balance').textContent = `${fmt(roundSmart(balance), 0)} ج`;
+  $('ctx-balance').style.color = balance > 0 ? '#22c55e' : (balance < 0 ? '#ef4444' : 'var(--text-100)');
+  
+  // تحديد موقع القائمة
+  const menu = $('supplier-context-menu');
+  const backdrop = $('ctx-menu-backdrop');
+  
+  // حساب الموقع بالنسبة للشاشة
+  const rect = event.target.getBoundingClientRect();
+  let left = rect.left;
+  let top = rect.bottom + 8;
+  
+  // تعديل الموقع إذا كانت القائمة خارج الشاشة
+  if (left + 380 > window.innerWidth) {
+    left = window.innerWidth - 390;
+  }
+  if (left < 10) left = 10;
+  if (top + 450 > window.innerHeight) {
+    top = rect.top - 450;
+  }
+  
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
+  
+  // إظهار القائمة
+  menu.classList.add('active');
+  backdrop.classList.add('active');
+};
+
+window.closeSupplierContextMenu = function() {
+  const menu = $('supplier-context-menu');
+  const backdrop = $('ctx-menu-backdrop');
+  menu.classList.remove('active');
+  backdrop.classList.remove('active');
+  _ctxCurrentSupplierId = null;
+};
+
+window.viewSupplierDetailFromCtx = function() {
+  if (!_ctxCurrentSupplierId) return;
+  closeSupplierContextMenu();
+  setTimeout(() => showAccountDetail(_ctxCurrentSupplierId), 100);
+};
+
+window.printSupplierAccountFromCtx = function() {
+  if (!_ctxCurrentSupplierId) return;
+  closeSupplierContextMenu();
+  
+  const s = state.suppliers[_ctxCurrentSupplierId];
+  if (!s) return;
+  
+  const milkRecords = Object.entries(state.milkRecords)
+    .filter(([,r]) => r.supplierId === _ctxCurrentSupplierId)
+    .sort((a,b) => a[1].date > b[1].date ? -1 : 1);
+  const payments = Object.entries(state.supplierPayments)
+    .filter(([,p]) => p.supplierId === _ctxCurrentSupplierId)
+    .sort((a,b) => a[1].date > b[1].date ? -1 : 1);
+  
+  const milkQty = milkRecords.reduce((s,[,r]) => s + Number(r.qty||0), 0);
+  const milkAmt = milkRecords.reduce((s,[,r]) => s + Number(r.total||0), 0);
+  const payAmt  = payments.reduce((s,[,p]) => s + Number(p.amount||0), 0);
+  const balance = calcSupplierBalance(_ctxCurrentSupplierId);
+  
+  const CSS = `
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;padding:20px;color:#000;background:#fff}
+    h1{text-align:center;font-size:22px;margin-bottom:5px;color:#1a1a2e}
+    .sub{text-align:center;font-size:13px;color:#555;margin-bottom:20px}
+    table{width:100%;border-collapse:collapse;margin:15px 0;font-size:12px}
+    th{background:#1a1a2e;color:#fff;padding:10px 8px;text-align:right}
+    td{padding:8px;border:1px solid #ddd;text-align:right}
+    tr:nth-child(even){background:#f8f9fa}
+    .summary{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:20px 0}
+    .summary-item{background:#f0f4ff;border:2px solid #3b82f6;border-radius:12px;padding:15px 25px;text-align:center;min-width:140px}
+    .summary-val{font-size:24px;font-weight:800;color:#1a1a2e}
+    .summary-lbl{font-size:12px;color:#666;margin-top:4px}
+    .highlight{background:#fffbeb;border-color:#f59e0b}
+    .highlight .summary-val{color:#b45309}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`;
+  
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>كشف حساب مورد</title><style>${CSS}</style></head><body>
+    <div><h1>${(state.settings?.factoryName||'مصنع ألبان')}</h1><div class="sub">📋 كشف حساب المورد - ${sanitize(s.name)}</div></div>
+    
+    <div class="summary">
+      <div class="summary-item"><div class="summary-val">${fmt(milkQty,1)} كجم</div><div class="summary-lbl">🥛 إجمالي الكمية</div></div>
+      <div class="summary-item"><div class="summary-val">${fmt(milkAmt,0)} ج</div><div class="summary-lbl">💰 إجمالي الحليب</div></div>
+      <div class="summary-item" style="border-color:#ef4444"><div class="summary-val" style="color:#dc2626">${fmt(payAmt,0)} ج</div><div class="summary-lbl">💳 المدفوعات</div></div>
+      <div class="summary-item highlight"><div class="summary-val">${fmt(balance,0)} ج</div><div class="summary-lbl">📊 الرصيد المستحق</div></div>
+    </div>
+    
+    <h3 style="margin:15px 0 10px;color:#1a1a2e">🥛 سجل استلام الحليب (${milkRecords.length} سجل)</h3>
+    <table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الكمية (كجم)</th><th>السعر</th><th>الإجمالي</th></tr></thead>
+    <tbody>${milkRecords.map(([id,r],i) => `<tr><td>${i+1}</td><td>${r.date}</td><td>${r.time||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center">لا توجد سجلات</td></tr>'}</tbody></table>
+    
+    <h3 style="margin:15px 0 10px;color:#1a1a2e">💳 سجل المدفوعات (${payments.length} عملية)</h3>
+    <table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>طريقة الدفع</th><th>ملاحظات</th></tr></thead>
+    <tbody>${payments.map(([id,p],i) => `<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${p.method||'—'}</td><td>${p.notes||'—'}</td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center">لا توجد مدفوعات</td></tr>'}</tbody></table>
+    
+    <div style="text-align:center;margin-top:30px;font-size:11px;color:#999">
+      تاريخ الطباعة: ${new Date().toLocaleDateString('ar-EG')} | نظام إدارة مصنع الألبان
+    </div>
+    </body></html>`);
+  printWindow.document.close();
+  setTimeout(() => { printWindow.print(); }, 300);
+};
+
+window.exportSupplierAccountFromCtx = function() {
+  if (!_ctxCurrentSupplierId) return;
+  closeSupplierContextMenu();
+  
+  const s = state.suppliers[_ctxCurrentSupplierId];
+  if (!s) return;
+  
+  const milkRecords = Object.entries(state.milkRecords)
+    .filter(([,r]) => r.supplierId === _ctxCurrentSupplierId)
+    .sort((a,b) => a[1].date > b[1].date ? -1 : 1);
+  const payments = Object.entries(state.supplierPayments)
+    .filter(([,p]) => p.supplierId === _ctxCurrentSupplierId)
+    .sort((a,b) => a[1].date > b[1].date ? -1 : 1);
+  
+  const milkQty = milkRecords.reduce((s,[,r]) => s + Number(r.qty||0), 0);
+  const milkAmt = milkRecords.reduce((s,[,r]) => s + Number(r.total||0), 0);
+  const payAmt  = payments.reduce((s,[,p]) => s + Number(p.amount||0), 0);
+  const balance = calcSupplierBalance(_ctxCurrentSupplierId);
+  
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  
+  let y = 20;
+  const pageW = doc.internal.pageSize.getWidth();
+  const margin = 15;
+  
+  // العنوان
+  doc.setFontSize(18);
+  doc.setTextColor(26, 26, 46);
+  doc.text(state.settings?.factoryName || 'مصنع ألبان', pageW/2, y, { align: 'center' });
+  y += 10;
+  
+  doc.setFontSize(14);
+  doc.setTextColor(245, 158, 11);
+  doc.text(`كشف حساب المورد: ${s.name}`, pageW/2, y, { align: 'center' });
+  y += 12;
+  
+  // الملخص
+  doc.setFillColor(240, 244, 255);
+  doc.roundedRect(margin, y, pageW - 2*margin, 25, 3, 3, 'F');
+  y += 8;
+  
+  doc.setFontSize(11);
+  doc.setTextColor(26, 26, 46);
+  doc.text(`إجمالي الكمية: ${fmt(milkQty,1)} كجم`, margin + 10, y);
+  doc.text(`إجمالي الحليب: ${fmt(milkAmt,0)} ج`, pageW/2, y, { align: 'center' });
+  doc.text(`المدفوعات: ${fmt(payAmt,0)} ج`, pageW - margin - 10, y, { align: 'right' });
+  y += 10;
+  
+  doc.setFontSize(13);
+  doc.setTextColor(balance >= 0 ? 34, 197, 94 : 239, 68, 68);
+  doc.text(`الرصيد المستحق: ${fmt(balance,0)} ج`, pageW/2, y, { align: 'center' });
+  y += 15;
+  
+  // جدول الحليب
+  if (milkRecords.length > 0 && y < 250) {
+    doc.setFontSize(12);
+    doc.setTextColor(26, 26, 46);
+    doc.text('سجل استلام الحليب:', margin, y);
+    y += 8;
+    
+    doc.setFillColor(26, 26, 46);
+    doc.rect(margin, y, pageW - 2*margin, 7, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.text('#', margin + 3, y + 5);
+    doc.text('التاريخ', margin + 15, y + 5);
+    doc.text('الكمية', margin + 50, y + 5);
+    doc.text('السعر', margin + 80, y + 5);
+    doc.text('الإجمالي', pageW - margin - 20, y + 5);
+    y += 7;
+    
+    doc.setTextColor(0, 0, 0);
+    const maxRows = Math.min(milkRecords.length, 18);
+    for (let i = 0; i < maxRows; i++) {
+      const [,r] = milkRecords[i];
+      if (y > 275) break;
+      doc.setFontSize(8);
+      doc.text(`${i+1}`, margin + 3, y + 5);
+      doc.text(`${r.date}`, margin + 15, y + 5);
+      doc.text(`${fmt(r.qty,1)}`, margin + 50, y + 5);
+      doc.text(`${fmt(r.price,2)}`, margin + 80, y + 5);
+      doc.text(`${fmt(r.total,2)}`, pageW - margin - 20, y + 5);
+      y += 6;
+    }
+    y += 5;
+  }
+  
+  // التذييل
+  doc.setFontSize(8);
+  doc.setTextColor(150, 150, 150);
+  doc.text(`تاريخ التصدير: ${new Date().toLocaleDateString('ar-EG')} | نظام إدارة مصنع الألبان`, pageW/2, 285, { align: 'center' });
+  
+  doc.save(`كشف_حساب_${s.name.replace(/\s+/g, '_')}.pdf`);
+  toast('تم تصدير كشف الحساب بنجاح', 'success');
+};
+
+// إغلاق القائمة عند الضغط خارجها
+document.addEventListener('click', function(e) {
+  const menu = $('supplier-context-menu');
+  if (menu && menu.classList.contains('active')) {
+    if (!menu.contains(e.target) && !e.target.closest('.supplier-name-clickable')) {
+      closeSupplierContextMenu();
+    }
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════
 // MILK RECEIVING
 // ══════════════════════════════════════════════════════════════════
 function initMilkPage() {
@@ -3932,7 +4372,7 @@ window.loadMilkRecords = function() {
       <td>${i+1}</td>
       <td>${r.date}</td>
       <td>${to12Hour(r.time||'')}<br><small style="color:var(--text-400)">${r.period||getPeriodLabel(r.time)||''}</small></td>
-      <td><strong>${sanitize(state.suppliers[r.supplierId]?.name || 'غير محدد')}</strong></td>
+      <td><strong class="supplier-name-clickable" onclick="event.stopPropagation();openSupplierContextMenu(event,'${r.supplierId}')">${sanitize(state.suppliers[r.supplierId]?.name || 'غير محدد')}</strong></td>
       <td>
         <div style="display:flex;flex-direction:column;gap:4px">
           ${hasBaqri ? `<span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600">🐄 ${fmt(r.baqriQty,1)} كجم</span>` : ''}
@@ -6951,18 +7391,12 @@ const USER_KEY = 'yasen_user';
 let currentUserRole = null;
 
 function isAuthenticated() {
-  const auth = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
-  currentUserRole = sessionStorage.getItem(ROLE_KEY) || localStorage.getItem(ROLE_KEY);
-  // migrate old localStorage sessions to sessionStorage (one-time)
-  if (localStorage.getItem(SESSION_KEY) === '1') {
-    sessionStorage.setItem(SESSION_KEY, '1');
-    sessionStorage.setItem(ROLE_KEY, localStorage.getItem(ROLE_KEY)||'');
-    sessionStorage.setItem(USER_KEY, localStorage.getItem(USER_KEY)||'');
-    localStorage.removeItem(SESSION_KEY);
-    localStorage.removeItem(ROLE_KEY);
-    localStorage.removeItem(USER_KEY);
-  }
-  return auth === '1';
+  // تم تعطيل تسجيل الدخول - الدخول تلقائي
+  currentUserRole = 'admin';
+  sessionStorage.setItem(SESSION_KEY, '1');
+  sessionStorage.setItem(ROLE_KEY, 'admin');
+  sessionStorage.setItem(USER_KEY, 'auto_login');
+  return true;
 }
 
 function isViewerMode() {
@@ -7319,34 +7753,9 @@ window.updateEasyTicker = function() {
 })();
 
 window.logout = function() {
-  if (!confirm('هل تريد تسجيل الخروج؟')) return;
-  localStorage.removeItem(SESSION_KEY);
-  localStorage.removeItem(ROLE_KEY);
-  localStorage.removeItem(USER_KEY);
-  sessionStorage.removeItem(SESSION_KEY);
-  sessionStorage.removeItem(ROLE_KEY);
-  sessionStorage.removeItem(USER_KEY);
-  currentUserRole = null;
-  // Hide easy UI and selection screen if visible
-  const easyUI = document.getElementById('easy-ui-screen');
-  const selScreen = document.getElementById('interface-select-screen');
-  if (easyUI) easyUI.style.display = 'none';
-  if (selScreen) selScreen.style.display = 'none';
-  const screen = $('login-screen');
-  screen.style.opacity = '0';
-  screen.style.display = 'flex';
-  $('login-pin').value = '';
-  $('secret-answer').value = '';
-  $('login-error').textContent = '';
-  $('login-pin').style.borderColor = 'var(--border)';
-  $('secret-answer').style.opacity = '0.5';
-  $('secret-answer').style.pointerEvents = 'none';
-  $('secret-answer').style.cursor = 'not-allowed';
-  requestAnimationFrame(() => {
-    screen.style.transition = 'opacity 0.3s ease';
-    screen.style.opacity = '1';
-    setTimeout(() => $('login-pin').focus(), 300);
-  });
+  // تم تعطيل تسجيل الخروج - الجلسة دائمة
+  toast('تم تعطيل تسجيل الخروج', 'info');
+  return;
 };
 
 // PASSWORD MANAGEMENT
@@ -7414,18 +7823,15 @@ window.changeOwnPwd = function() {
   }
 };
 
-// Check session on load
-if (isAuthenticated()) {
-  $('login-screen').style.display = 'none';
-  const savedUI = localStorage.getItem('yasen_ui_mode');
-  if (!isMobilePhone() && savedUI === 'easy') {
-    const easy = document.getElementById('easy-ui-screen');
-    if (easy) { easy.style.display = 'flex'; easy.style.opacity = '1'; }
-  } else {
-    updateUIForRole();
-  }
+// Check session on load - تم تعطيل تسجيل الدخول
+// الدخول التلقائي بدون كلمة مرور
+$('login-screen').style.display = 'none';
+const savedUI = localStorage.getItem('yasen_ui_mode');
+if (!isMobilePhone() && savedUI === 'easy') {
+  const easy = document.getElementById('easy-ui-screen');
+  if (easy) { easy.style.display = 'flex'; easy.style.opacity = '1'; }
 } else {
-  setTimeout(() => $('login-pin').focus(), 100);
+  updateUIForRole();
 }
 
 // ── requirePin: wraps any delete/edit action ────────────────────
