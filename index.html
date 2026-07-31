@@ -10501,49 +10501,172 @@ if ('serviceWorker' in navigator) {
         var menu = document.getElementById('supplier-context-menu');
         var backdrop = document.getElementById('supplier-menu-backdrop');
 
-        // تحديث معلومات المورد في القائمة
+        // ═══════════════════════════════════════════════════
+        // 1. معلومات المورد الأساسية
+        // ═══════════════════════════════════════════════════
         document.getElementById('menu-supplier-name').textContent = supplier.name || 'غير محدد';
         
-        // حساب إحصائيات الحساب
-        var milkRecords = Object.values(milkRecordsObj).filter(function(r) { return r.supplierId === supplierId; });
-        var milkTotal = milkRecords.reduce(function(s, r) { return s + Number(r.total || 0); }, 0);
-        var milkQty = milkRecords.reduce(function(s, r) { return s + Number(r.qty || 0); }, 0);
-        var payments = Object.values(paymentsObj).filter(function(p) { return p.supplierId === supplierId; }).reduce(function(s, p) { return s + Number(p.amount || 0); }, 0);
-        var advances = Object.values(advancesObj).filter(function(a) { return a.supplierId === supplierId; }).reduce(function(s, a) { return s + Number(a.amount || 0); }, 0);
-        var balance = milkTotal - payments - advances;
-
-        // تحديث الإحصائيات في القائمة
-        document.getElementById('menu-milk-total').textContent = fmt(milkTotal, 0) + ' ج';
-        document.getElementById('menu-payments').textContent = fmt(payments, 0) + ' ج';
-        document.getElementById('menu-advances').textContent = fmt(advances, 0) + ' ج';
-        
-        var balanceEl = document.getElementById('menu-balance');
-        balanceEl.textContent = fmt(balance, 0) + ' ج';
-        balanceEl.className = 'supplier-stat-value ' + (balance > 0 ? 'positive' : balance < 0 ? 'negative' : 'info');
-
-        // تحديث المعلومات الإضافية
         var phone = supplier.phone || '—';
         var area = supplier.area || '—';
-        document.getElementById('menu-supplier-info').textContent = '📞 ' + phone + ' | 📍 ' + area;
-        document.getElementById('menu-record-count').textContent = milkRecords.length + ' سجل حليب | ' + fmt(milkQty, 1) + ' كجم إجمالي';
+        var supplierPrice = supplier.price || 0;
+        document.getElementById('menu-supplier-info').textContent = '📞 ' + phone + ' | 📍 ' + area + ' | 💰 سعر الكيلو: ' + fmt(supplierPrice, 2) + ' ج';
 
-        // تحديد موقع القائمة بالقرب من مكان النقر
+        // ═══════════════════════════════════════════════════
+        // 2. حساب إحصائيات الحليب التفصيلية
+        // ═══════════════════════════════════════════════════
+        // جمع سجلات الحليب لهذا المورد وترتيبها من الأحدث للأقدم
+        var allMilkRecords = Object.entries(milkRecordsObj).filter(function(arr) { 
+          return arr[1].supplierId === supplierId; 
+        });
+        
+        // ترتيب حسب التاريخ (الأحدث أولاً)
+        allMilkRecords.sort(function(a, b) { 
+          if (b[1].date !== a[1].date) return b[1].date.localeCompare(a[1].date);
+          return (b[1].time || '').localeCompare(a[1].time || '');
+        });
+
+        var milkRecords = allMilkRecords.map(function(arr) { return arr[1]; });
+        
+        // حساب الكميات والإجماليات
+        var milkQty = milkRecords.reduce(function(s, r) { return s + Number(r.qty || 0); }, 0);
+        var milkTotal = milkRecords.reduce(function(s, r) { return s + Number(r.total || 0); }, 0);
+        
+        // حساب متوسط السعر للكيلو
+        var avgPrice = milkQty > 0 ? (milkTotal / milkQty) : 0;
+
+        // ═══════════════════════════════════════════════════
+        // 3. حساب المدفوعات والسلف
+        // ═══════════════════════════════════════════════════
+        var paymentsList = Object.entries(paymentsObj).filter(function(arr) { 
+          return arr[1].supplierId === supplierId; 
+        }).map(function(arr) { return arr[1]; });
+        
+        var payments = paymentsList.reduce(function(s, p) { return s + Number(p.amount || 0); }, 0);
+
+        // السلف - تفصيل كل سلفة
+        var advancesList = Object.entries(advancesObj).filter(function(arr) { 
+          return arr[1].supplierId === supplierId; 
+        }).map(function(arr) { return arr[1]; });
+        
+        var advances = advancesList.reduce(function(s, a) { return s + Number(a.amount || 0); }, 0);
+
+        // الرصيد المستحق
+        var balance = milkTotal - payments - advances;
+
+        // ═══════════════════════════════════════════════════
+        // 4. تحديث ملخص الإحصائيات في القائمة
+        // ═══════════════════════════════════════════════════
+        document.getElementById('menu-milk-qty').textContent = fmt(milkQty, 1) + ' كجم';
+        document.getElementById('menu-avg-price').textContent = fmt(avgPrice, 2) + ' ج';
+        document.getElementById('menu-milk-total').textContent = fmt(milkTotal, 0) + ' ج';
+        document.getElementById('menu-payments').textContent = fmt(payments, 0) + ' ج';
+
+        // ═══════════════════════════════════════════════════
+        // 5. تحديث قسم السلف بالتفصيل
+        // ═══════════════════════════════════════════════════
+        var advancesBadge = document.getElementById('menu-advances-badge');
+        var advancesDetails = document.getElementById('menu-advances-details');
+
+        if (advancesList.length > 0) {
+          advancesBadge.textContent = 'يوجد سلف (' + advancesList.length + ')';
+          advancesBadge.className = 'advances-badge has-advances';
+          
+          // عرض تفاصيل كل سلفة
+          var advancesHTML = '';
+          advancesList.forEach(function(adv) {
+            var statusText = adv.status === 'deducted' ? 'تم الخصم' : 'معلقة';
+            var statusClass = adv.status === 'deducted' ? 'deducted' : 'pending';
+            advancesHTML += '<div class="advance-item">' +
+              '<span>' + (adv.date || '—') + ' | ' + sanitize(adv.reason || 'بدون سبب') + '</span>' +
+              '<span>' +
+                '<span class="advance-amount">' + fmt(Number(adv.amount || 0), 0) + ' ج</span> ' +
+                '<span class="advance-status ' + statusClass + '">' + statusText + '</span>' +
+              '</span>' +
+            '</div>';
+          });
+          
+          // إجمالي السلف
+          advancesHTML += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border-soft);display:flex;justify-content:space-between;font-weight:700;color:var(--warning)">' +
+            '<span>إجمالي السلف:</span>' +
+            '<span>' + fmt(advances, 0) + ' جنيه</span>' +
+          '</div>';
+          
+          advancesDetails.innerHTML = advancesHTML;
+        } else {
+          advancesBadge.textContent = 'لا توجد سلف ✅';
+          advancesBadge.className = 'advances-badge';
+          advancesDetails.innerHTML = '<div style="color:var(--success);text-align:center;padding:8px">🎉 هذا المورد لم يأخذ أي سلف</div>';
+        }
+
+        // ═══════════════════════════════════════════════════
+        // 6. تحديث جدول آخر التسليمات (آخر 10 سجلات)
+        // ═══════════════════════════════════════════════════
+        var recentRecords = milkRecords.slice(0, 10); // آخر 10 تسليمات
+        var recentTableBody = document.getElementById('menu-recent-records');
+        
+        document.getElementById('menu-record-count').textContent = milkRecords.length + ' سجل';
+
+        if (recentRecords.length > 0) {
+          var tableHTML = '';
+          recentRecords.forEach(function(r) {
+            var recordQty = Number(r.qty || 0);
+            var recordPrice = Number(r.price || 0);
+            var recordTotal = Number(r.total || 0);
+            
+            // تفاصيل البقري/الجاموسي إن وجدت
+            var qtyDetail = fmt(recordQty, 1) + ' كجم';
+            if ((r.baqriQty || 0) > 0 && (r.jammosiQty || 0) > 0) {
+              qtyDetail = '🐄 ' + fmt(r.baqriQty, 1) + ' | 🐃 ' + fmt(r.jammosiQty, 1);
+            } else if (r.baqriQty > 0) {
+              qtyDetail = '🐄 ' + fmt(r.baqriQty, 1) + ' كجم';
+            } else if (r.jammosiQty > 0) {
+              qtyDetail = '🐃 ' + fmt(r.jammosiQty, 1) + ' كجم';
+            }
+            
+            tableHTML += '<tr>' +
+              '<td style="font-weight:600">' + (r.date || '—') + '</td>' +
+              '<td>' + qtyDetail + '</td>' +
+              '<td>' + fmt(recordPrice, 2) + ' ج</td>' +
+              '<td style="color:var(--gold);font-weight:700">' + fmt(recordTotal, 0) + ' ج</td>' +
+            '</tr>';
+          });
+          recentTableBody.innerHTML = tableHTML;
+        } else {
+          recentTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-400);padding:16px">لا توجد سجلات تسليم</td></tr>';
+        }
+
+        // ═══════════════════════════════════════════════════
+        // 7. تحديث الرصيد النهائي
+        // ═══════════════════════════════════════════════════
+        var balanceEl = document.getElementById('menu-balance');
+        balanceEl.textContent = fmt(Math.abs(balance), 0) + ' جنيه ' + (balance >= 0 ? '(لصالح المصنع)' : '(لصالح المورد)');
+        balanceEl.className = 'balance-value ' + (balance > 0 ? 'positive' : balance < 0 ? 'negative' : '');
+
+        // ═══════════════════════════════════════════════════
+        // 8. تحديد موقع القائمة بالقرب من مكان النقر
+        // ═══════════════════════════════════════════════════
         var rect = event.target.getBoundingClientRect();
         var top = rect.bottom + 8;
-        var left = rect.right - 350;
+        var left = rect.right - 520; // زيادة العرض للقائمة الجديدة
         
         // ضبط الحدود لتجنب خروج القائمة عن الشاشة
-        if (left + 420 > window.innerWidth) {
-          left = window.innerWidth - 420 - 16;
+        if (left + 540 > window.innerWidth) {
+          left = window.innerWidth - 540 - 16;
         }
         if (left < 16) {
           left = 16;
         }
-        if (top + 450 > window.innerHeight) {
-          top = rect.top - 450 - 8;
+        // حساب ارتفاع القائمة تقريباً
+        var estimatedHeight = 550;
+        if (top + estimatedHeight > window.innerHeight) {
+          top = rect.top - estimatedHeight - 8;
         }
         if (top < 16) {
           top = 16;
+        }
+        // إذا كان لا يزال خارج الشاشة، استخدم التمرير
+        if (top + estimatedHeight > window.innerHeight) {
+          top = Math.max(16, window.innerHeight - estimatedHeight - 16);
         }
 
         menu.style.top = top + 'px';
@@ -10552,6 +10675,8 @@ if ('serviceWorker' in navigator) {
         // إظهار القائمة والخلفية المعتمة
         backdrop.classList.add('open');
         menu.classList.add('open');
+
+        console.log('[Supplier Menu] Opened for:', supplier.name, '| Qty:', milkQty, 'kg | Total:', milkTotal, 'EGP | Advances:', advances, 'EGP | Balance:', balance, 'EGP');
 
         // إضافة مستمع للضغط خارج القائمة لإغلاقها
         setTimeout(function() {
@@ -10857,7 +10982,8 @@ if ('serviceWorker' in navigator) {
 </script>
 <!-- القائمة العائمة لحساب المورد -->
 <div class="supplier-menu-backdrop" id="supplier-menu-backdrop" onclick="closeSupplierMenu()"></div>
-<div class="supplier-context-menu" id="supplier-context-menu">
+<div class="supplier-context-menu" id="supplier-context-menu" style="max-width:520px;">
+  <!-- رأس القائمة -->
   <div class="supplier-menu-header">
     <div class="supplier-menu-icon">👤</div>
     <div class="supplier-menu-title">
@@ -10866,24 +10992,70 @@ if ('serviceWorker' in navigator) {
     </div>
     <button class="supplier-menu-close" onclick="closeSupplierMenu()" title="إغلاق">✕</button>
   </div>
+
+  <!-- ملخص الحساب الرئيسي -->
   <div class="supplier-menu-summary" id="supplier-menu-summary">
     <div class="supplier-stat-item">
-      <span class="supplier-stat-value positive" id="menu-milk-total">0 ج</span>
-      <span class="supplier-stat-label">🥛 إجمالي الحليب</span>
+      <span class="supplier-stat-value positive" id="menu-milk-qty">0 كجم</span>
+      <span class="supplier-stat-label">🥛 إجمالي الكمية</span>
     </div>
     <div class="supplier-stat-item">
+      <span class="supplier-stat-value info" id="menu-avg-price">0 ج</span>
+      <span class="supplier-stat-label">💰 متوسط السعر/كجم</span>
+    </div>
+    <div class="supplier-stat-item">
+      <span class="supplier-stat-value positive" id="menu-milk-total">0 ج</span>
+      <span class="supplier-stat-label">📈 إجمالي المستحق</span>
+    </div>
+    <div class="supplier-stat-item" style="background: linear-gradient(135deg, rgba(255,92,77,0.15), rgba(255,92,77,0.08)); border-color: rgba(255,92,77,0.3);">
       <span class="supplier-stat-value negative" id="menu-payments">0 ج</span>
       <span class="supplier-stat-label">💳 المدفوعات</span>
     </div>
-    <div class="supplier-stat-item">
-      <span class="supplier-stat-value warning" id="menu-advances">0 ج</span>
-      <span class="supplier-stat-label">💵 السلف</span>
+  </div>
+
+  <!-- قسم السلف -->
+  <div class="supplier-advances-section" id="supplier-advances-section">
+    <div class="advances-header">
+      <span>💵 حالة السلف</span>
+      <span class="advances-badge" id="menu-advances-badge">لا توجد سلف</span>
     </div>
-    <div class="supplier-stat-item" style="background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.08)); border-color: rgba(99,102,241,0.3);">
-      <span class="supplier-stat-value info" id="menu-balance">0 ج</span>
-      <span class="supplier-stat-label">📊 الرصيد المستحق</span>
+    <div class="advances-details" id="menu-advances-details">
+      <!-- سيتم ملؤها ديناميكياً -->
     </div>
   </div>
+
+  <!-- جدول آخر 5 تسليمات -->
+  <div class="supplier-recent-table">
+    <div class="recent-header">
+      <span>📋 آخر التسليمات</span>
+      <span id="menu-record-count">0 سجل</span>
+    </div>
+    <div class="table-wrapper" style="max-height:180px;overflow-y:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>التاريخ</th>
+            <th>الكمية</th>
+            <th>السعر</th>
+            <th>الإجمالي</th>
+          </tr>
+        </thead>
+        <tbody id="menu-recent-records">
+          <tr><td colspan="4" style="text-align:center;color:var(--text-400);padding:16px">لا توجد سجلات</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- الرصيد النهائي -->
+  <div class="supplier-balance-footer" id="supplier-balance-footer">
+    <div class="balance-row">
+      <span class="balance-label">📊 الرصيد المستحق للصرف:</span>
+      <span class="balance-value" id="menu-balance">0 جنيه</span>
+    </div>
+  </div>
+
+  <!-- أزرار الإجراءات -->
   <div class="supplier-menu-actions">
     <button class="supplier-action-btn btn-print" onclick="printSupplierFromMenu()">
       <span class="supplier-action-icon">🖨️</span>
@@ -10895,20 +11067,11 @@ if ('serviceWorker' in navigator) {
       <span>تصدير PDF</span>
       <span class="supplier-action-arrow">←</span>
     </button>
-    <button class="supplier-action-btn btn-export" onclick="exportSupplierToExcel()">
-      <span class="supplier-action-icon">📊</span>
-      <span>تصدير Excel</span>
-      <span class="supplier-action-arrow">←</span>
-    </button>
     <button class="supplier-action-btn btn-detail" onclick="viewFullAccountDetail()">
       <span class="supplier-action-icon">📋</span>
-      <span>عرض الكشف التفصيلي</span>
+      <span>عرض الكشف التفصيلي الكامل</span>
       <span class="supplier-action-arrow">←</span>
     </button>
-  </div>
-  <div class="supplier-menu-details">
-    <span id="menu-record-count">0 سجل</span>
-    <span style="color: var(--gold);">اضغط خارج القائمة للإغلاق</span>
   </div>
 </div>
 <script src="js/ui-enhance.js"></script>
