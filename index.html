@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <meta name="theme-color" content="#05060A">
+  <meta name="theme-color" content="#0A0C0F">
   <meta name="description" content="نظام إدارة مصنع الألبان - إدارة شاملة للموردين والإنتاج والمخازن">
   <title>🥛 نظام إدارة مصنع الألبان</title>
   <link rel="manifest" href="manifest.json">
@@ -216,7 +216,7 @@
 <div id="toast-container"></div>
 
 <!-- ═══════════════ LOGIN SCREEN ═══════════════ -->
-<div id="login-screen" style="position:fixed;inset:0;background:var(--bg-900);z-index:9999;display:none;align-items:center;justify-content:center">
+<div id="login-screen" style="position:fixed;inset:0;background:var(--bg-900);z-index:9999;display:flex;align-items:center;justify-content:center">
   <div style="width:100%;max-width:360px;padding:24px;text-align:center">
     <div style="font-size:56px;margin-bottom:16px">🥛</div>
     <div style="font-size:20px;font-weight:800;color:var(--gold);margin-bottom:4px">نظام إدارة مصنع الألبان</div>
@@ -387,19 +387,25 @@
 <div id="easy-ui-screen" style="position:fixed;inset:0;z-index:9997;display:none;flex-direction:column;overflow-y:auto;background:linear-gradient(135deg,#0A0C0F 0%,#111820 100%)">
   
   <!-- Easy UI Header -->
-  <div style="background:rgba(15,19,26,0.85);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10">
-    <div style="display:flex;align-items:center;gap:14px">
-      <div style="width:46px;height:46px;border-radius:16px;background:linear-gradient(135deg,var(--gold-light),var(--gold) 45%,var(--gold-deep));display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:var(--glow-gold),inset 0 2px 4px rgba(255,255,255,.35)">🥛</div>
+  <div style="background:linear-gradient(135deg,#111820,#1a2030);border-bottom:2px solid rgba(212,168,67,0.3);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;backdrop-filter:blur(10px)">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="font-size:28px">🥛</div>
       <div>
-        <div style="font-size:16px;font-weight:800;color:var(--gold-light)">نظام مصنع الألبان</div>
-        <div style="font-size:11px;color:var(--text-400)">الواجهة السهلة</div>
+        <div style="font-size:16px;font-weight:800;color:#D4A843">نظام مصنع الألبان</div>
+        <div style="font-size:11px;color:#667788">الواجهة السهلة</div>
       </div>
     </div>
-    <div style="display:flex;gap:10px;align-items:center">
-      <div id="easy-date-bar" style="font-size:11px;color:var(--text-400);display:none"></div>
-      <button onclick="easyGoSettings()" class="easy-hdr-btn easy-hdr-btn--neutral">⚙️ الإعدادات</button>
-      <button onclick="switchToNormalUI()" class="easy-hdr-btn easy-hdr-btn--info">📊 الواجهة الكاملة</button>
-      <button onclick="logout()" class="easy-hdr-btn easy-hdr-btn--danger">🔒 خروج</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div id="easy-date-bar" style="font-size:11px;color:#4a6a88;display:none"></div>
+      <button onclick="easyGoSettings()" style="background:#1a2030;border:1px solid #556677;color:#8899aa;padding:7px 14px;border-radius:20px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:600;transition:all 0.2s"
+              onmouseover="this.style.borderColor='#D4A843';this.style.color='#D4A843'"
+              onmouseout="this.style.borderColor='#556677';this.style.color='#8899aa'">⚙️ الإعدادات</button>
+      <button onclick="switchToNormalUI()" style="background:#1e3a5a;border:1px solid #4a9eff;color:#4a9eff;padding:7px 14px;border-radius:20px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:600;transition:all 0.2s"
+              onmouseover="this.style.background='#4a9eff';this.style.color='#fff'"
+              onmouseout="this.style.background='#1e3a5a';this.style.color='#4a9eff'">📊 الواجهة الكاملة</button>
+      <button onclick="logout()" style="background:#2a1520;border:1px solid #dc2626;color:#dc2626;padding:7px 14px;border-radius:20px;cursor:pointer;font-size:11px;font-family:inherit;font-weight:600;transition:all 0.2s"
+              onmouseover="this.style.background='#dc2626';this.style.color='#fff'"
+              onmouseout="this.style.background='#2a1520';this.style.color='#dc2626'">🔒 خروج</button>
     </div>
   </div>
 
@@ -632,19 +638,6 @@
   </div><!-- /easy-stats-section -->
 
   <style>
-  /* ── Header buttons ── */
-  .easy-hdr-btn {
-    padding: 8px 16px; border-radius: 20px; cursor: pointer;
-    font-size: 11px; font-family: inherit; font-weight: 700;
-    transition: all 0.25s var(--ease); border: 1px solid;
-  }
-  .easy-hdr-btn--neutral { background: var(--bg-600); border-color: var(--border-soft); color: var(--text-300); }
-  .easy-hdr-btn--neutral:hover { border-color: var(--gold); color: var(--gold-light); }
-  .easy-hdr-btn--info { background: rgba(75,163,255,0.12); border-color: rgba(75,163,255,0.4); color: var(--info); }
-  .easy-hdr-btn--info:hover { background: var(--info); color: #fff; transform: translateY(-1px); }
-  .easy-hdr-btn--danger { background: rgba(255,92,77,0.12); border-color: rgba(255,92,77,0.4); color: var(--danger); }
-  .easy-hdr-btn--danger:hover { background: var(--danger); color: #fff; transform: translateY(-1px); }
-
   /* ── Stat card ── */
   .esc {
     display: flex;
@@ -652,19 +645,19 @@
     gap: 10px;
     background: var(--bg, #111820);
     border: 1.5px solid color-mix(in srgb, var(--c) 22%, transparent);
-    border-radius: var(--radius-lg, 16px);
-    padding: 12px 16px;
+    border-radius: 14px;
+    padding: 10px 14px;
     min-width: 160px;
     flex-shrink: 0;
     position: relative;
     overflow: hidden;
-    transition: border-color .3s var(--ease, ease), transform .3s var(--ease, ease), box-shadow .3s var(--ease, ease);
+    transition: border-color .25s, transform .22s, box-shadow .25s;
     cursor: default;
   }
   .esc:hover {
     border-color: var(--c);
-    transform: translateY(-4px);
-    box-shadow: 0 10px 28px color-mix(in srgb, var(--c) 24%, transparent);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--c) 22%, transparent);
   }
   .esc-glow {
     position: absolute;
@@ -713,15 +706,14 @@
     100% { transform: scale(1.1); }
   }
   .esc-body { flex: 1; min-width: 0; }
-  .esc-lbl  { font-size:10.5px; color:var(--text-400, #5a6a7a); font-weight:700; white-space:nowrap; margin-bottom:3px; letter-spacing:.2px; }
+  .esc-lbl  { font-size:10px; color:#5a6a7a; font-weight:600; white-space:nowrap; margin-bottom:2px; }
   .esc-val  {
-    font-size: 19px; font-weight: 900; color: var(--text-100, #fff);
-    text-shadow: 0 0 14px var(--c);
+    font-size: 18px; font-weight: 900; color: #fff;
+    text-shadow: 0 0 12px var(--c);
     white-space: nowrap;
-    transition: transform .35s var(--ease, ease), color .35s var(--ease, ease);
-    font-family: 'Cairo', sans-serif;
+    transition: transform .35s, color .35s;
   }
-  .esc-sub  { font-size:9.5px; color:var(--text-400, #3a4a5a); margin-top:3px; white-space:nowrap; }
+  .esc-sub  { font-size:9px; color:#3a4a5a; margin-top:2px; white-space:nowrap; }
 
   /* ── Ticker ── */
   @keyframes easyTickerScroll {
@@ -1045,16 +1037,16 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 26px 12px 22px;
-  background: linear-gradient(160deg, var(--btn-bg, #1a2030), color-mix(in srgb, var(--btn-bg, #1a2030) 70%, black));
-  border: 1.5px solid color-mix(in srgb, var(--btn-color) 28%, transparent);
-  border-radius: var(--radius-lg, 20px);
+  padding: 24px 12px 20px;
+  background: var(--btn-bg, #1a2030);
+  border: 2px solid color-mix(in srgb, var(--btn-color) 30%, transparent);
+  border-radius: 18px;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.3s var(--ease-spring, cubic-bezier(.34,1.56,.64,1));
+  transition: all 0.28s cubic-bezier(.34,1.56,.64,1);
   position: relative;
   overflow: hidden;
-  min-height: 132px;
+  min-height: 130px;
 }
 /* Shimmer sweep on hover */
 .easy-btn::before {
@@ -1134,160 +1126,6 @@
   0%, 100% { transform: scale(1); opacity: 0.5; }
   50% { transform: scale(1.3); opacity: 1; }
 }
-
-/* ═══════════════════════════════════════════════════════════════
-   القائمة العائمة لحساب المورد - Supplier Context Menu
-   ═══════════════════════════════════════════════════════════════ */
-.supplier-name-clickable {
-  cursor: pointer;
-  position: relative;
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  color: var(--gold) !important;
-}
-.supplier-name-clickable:hover {
-  background: rgba(245, 158, 11, 0.15);
-  transform: scale(1.02);
-}
-.supplier-context-menu {
-  position: fixed;
-  z-index: 15000;
-  background: linear-gradient(145deg, var(--bg-700), var(--bg-800));
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(245,158,11,0.1);
-  min-width: 320px;
-  max-width: 380px;
-  display: none;
-  animation: ctxMenuIn 0.2s ease-out;
-  overflow: hidden;
-}
-@keyframes ctxMenuIn {
-  from { opacity: 0; transform: translateY(-10px) scale(0.95); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-.supplier-context-menu.active {
-  display: block;
-}
-.ctx-menu-header {
-  background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(16,185,129,0.08));
-  padding: 16px;
-  border-bottom: 1px solid var(--border);
-  text-align: center;
-}
-.ctx-menu-header .ctx-supplier-name {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--gold);
-  margin-bottom: 4px;
-}
-.ctx-menu-header .ctx-supplier-phone {
-  font-size: 12px;
-  color: var(--text-400);
-}
-.ctx-menu-body {
-  padding: 12px;
-}
-.ctx-stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.ctx-stat-item {
-  background: var(--bg-600);
-  border-radius: 10px;
-  padding: 10px 8px;
-  text-align: center;
-  border: 1px solid var(--border-soft);
-}
-.ctx-stat-item .ctx-val {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--text-100);
-  display: block;
-}
-.ctx-stat-item .ctx-lbl {
-  font-size: 11px;
-  color: var(--text-400);
-  margin-top: 2px;
-}
-.ctx-balance-item {
-  grid-column: span 2;
-  background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08));
-  border-color: #6366f1;
-}
-.ctx-balance-item .ctx-val {
-  color: #8b5cf6 !important;
-}
-.ctx-menu-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px;
-  border-top: 1px solid var(--border);
-  background: var(--bg-750);
-}
-.ctx-action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-  width: 100%;
-  font-family: inherit;
-}
-.ctx-action-btn:hover {
-  transform: translateX(-3px);
-}
-.ctx-btn-print {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: white;
-}
-.ctx-btn-print:hover {
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
-  box-shadow: 0 4px 15px rgba(59,130,246,0.35);
-}
-.ctx-btn-export {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: white;
-}
-.ctx-btn-export:hover {
-  background: linear-gradient(135deg, #4ade80, #22c55e);
-  box-shadow: 0 4px 15px rgba(34,197,94,0.35);
-}
-.ctx-btn-detail {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
-}
-.ctx-btn-detail:hover {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  box-shadow: 0 4px 15px rgba(245,158,11,0.35);
-}
-.ctx-menu-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 14999;
-  background: transparent;
-  display: none;
-}
-.ctx-menu-backdrop.active {
-  display: block;
-}
-
-/* طباعة - إخفاء القائمة العائمة */
-@media print {
-  .supplier-context-menu,
-  .ctx-menu-backdrop { display: none !important; }
-}
 </style>
 
 <!-- ═══════════════ PIN CONFIRM MODAL ═══════════════ -->
@@ -1312,50 +1150,6 @@
   <div style="text-align:center">
     <div class="spinner"></div>
     <p style="margin-top:12px;color:var(--gold);font-size:13px" id="loading-text">جارٍ التحميل...</p>
-  </div>
-</div>
-
-<!-- ═══════════════ SUPPLIER CONTEXT MENU ═══════════════ -->
-<div class="ctx-menu-backdrop" id="ctx-menu-backdrop" onclick="closeSupplierContextMenu()"></div>
-<div class="supplier-context-menu" id="supplier-context-menu">
-  <div class="ctx-menu-header">
-    <div class="ctx-supplier-name" id="ctx-supplier-name">—</div>
-    <div class="ctx-supplier-phone" id="ctx-supplier-phone"></div>
-  </div>
-  <div class="ctx-menu-body">
-    <div class="ctx-stats-grid">
-      <div class="ctx-stat-item">
-        <span class="ctx-val" id="ctx-milk-qty">0 كجم</span>
-        <span class="ctx-lbl">🥛 الكمية</span>
-      </div>
-      <div class="ctx-stat-item">
-        <span class="ctx-val" id="ctx-milk-amt">0 ج</span>
-        <span class="ctx-lbl">💰 إجمالي الحليب</span>
-      </div>
-      <div class="ctx-stat-item">
-        <span class="ctx-val" style="color:var(--danger)" id="ctx-payments">0 ج</span>
-        <span class="ctx-lbl">💳 المدفوعات</span>
-      </div>
-      <div class="ctx-stat-item">
-        <span class="ctx-val" style="color:var(--warning)" id="ctx-advances">0 ج</span>
-        <span class="ctx-lbl">📋 السلف</span>
-      </div>
-      <div class="ctx-stat-item ctx-balance-item">
-        <span class="ctx-val" id="ctx-balance">0 ج</span>
-        <span class="ctx-lbl">📊 الرصيد المستحق</span>
-      </div>
-    </div>
-  </div>
-  <div class="ctx-menu-actions">
-    <button class="ctx-action-btn ctx-btn-detail" onclick="viewSupplierDetailFromCtx()">
-      📋 عرض الكشف التفصيلي
-    </button>
-    <button class="ctx-action-btn ctx-btn-print" onclick="printSupplierAccountFromCtx()">
-      🖨️ طباعة كشف الحساب
-    </button>
-    <button class="ctx-action-btn ctx-btn-export" onclick="exportSupplierAccountFromCtx()">
-      📥 تصدير PDF
-    </button>
   </div>
 </div>
 
@@ -1626,8 +1420,8 @@
         <button class="btn btn-primary" onclick="openMilkModal()">➕ تسجيل استلام</button>
       
         <div style="display:flex;gap:6px">
-          <button class="btn btn-secondary btn-sm" onclick="printMilkTable()" title="طباعة مع تفاصيل الحليب">🖨️</button>
-          <button class="btn btn-secondary btn-sm" onclick="exportMilkToPDF()" title="تصدير PDF مع تفاصيل الحليب">📄</button>
+          <button class="btn btn-secondary btn-sm" onclick="printTable('#milk-tbody')" title="طباعة">🖨️</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportTableToPDF('#milk-tbody', 'استلام-الحليب.pdf')" title="تصدير PDF">📄</button>
         </div>
       </div>
 
@@ -1636,20 +1430,18 @@
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
             <div class="form-group" style="min-width:160px">
               <label>من تاريخ</label>
-              <input type="date" id="milk-from">
+              <input type="date" id="milk-from" onchange="loadMilkRecords()">
             </div>
             <div class="form-group" style="min-width:160px">
               <label>إلى تاريخ</label>
-              <input type="date" id="milk-to">
+              <input type="date" id="milk-to" onchange="loadMilkRecords()">
             </div>
-            <button class="btn btn-primary btn-sm" style="margin-top:22px;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;font-weight:700;padding:8px 20px" onclick="applyMilkDateFilter()" title="تطبيق الفلتر وعرض بيانات الفترة المحددة فقط">✓ تطبيق</button>
             <div class="form-group" style="min-width:180px">
               <label>المورد</label>
-              <select id="milk-filter-supplier">
+              <select id="milk-filter-supplier" onchange="loadMilkRecords()">
                 <option value="">جميع الموردين</option>
               </select>
             </div>
-            <button class="btn btn-secondary btn-sm" style="margin-top:22px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white" onclick="setMilkLast7Days()" title="آخر 7 أيام">📅 آخر 7 أيام</button>
             <button class="btn btn-secondary" style="margin-top:22px" onclick="clearMilkFilter()">🗑️ مسح</button>
           </div>
         </div>
@@ -1694,7 +1486,6 @@
         <div style="display:flex;gap:8px">
           <button class="btn btn-primary" onclick="openPaymentModal()">💳 تسجيل دفعة</button>
           <button class="btn btn-secondary" onclick="openAdvanceModal()">💵 سلفة</button>
-          <button class="btn btn-secondary" onclick="openDepositModal()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white">🏦 وديعة/رصيد</button>
           <button class="btn btn-secondary" onclick="printTable('#accounts-tbody')">🖨️ طباعة</button>
           <button class="btn btn-secondary" onclick="exportTableToPDF('#accounts-tbody', 'حسابات_الموردين.pdf')">📥 PDF</button>
       
@@ -1708,11 +1499,10 @@
       <!-- Date Filter -->
       <div class="card" style="margin-bottom:16px"><div class="card-body">
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-          <div class="form-group" style="min-width:160px;margin:0"><label>من تاريخ</label><input type="date" id="acct-from"></div>
-          <div class="form-group" style="min-width:160px;margin:0"><label>إلى تاريخ</label><input type="date" id="acct-to"></div>
-          <button class="btn btn-primary btn-sm" style="margin-top:22px;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;font-weight:700;padding:8px 20px" onclick="applyAccountsDateFilter()" title="تطبيق الفلتر وعرض بيانات الفترة المحددة فقط">✓ تطبيق</button>
+          <div class="form-group" style="min-width:160px;margin:0"><label>من تاريخ</label><input type="date" id="acct-from" onchange="renderAccounts()"></div>
+          <div class="form-group" style="min-width:160px;margin:0"><label>إلى تاريخ</label><input type="date" id="acct-to" onchange="renderAccounts()"></div>
           <button class="btn btn-primary btn-sm" style="margin-top:22px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white" onclick="setLast7Days()" title="آخر 7 أيام (الأسبوع الأخير)">📅 آخر 7 أيام</button>
-          <button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="clearAccountsDateFilter()">الكل</button>
+          <button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="document.getElementById('acct-from').value='';document.getElementById('acct-to').value='';renderAccounts()">الكل</button>
         </div>
       </div></div>
 
@@ -1720,7 +1510,6 @@
         <div class="tab active" onclick="switchAccountTab('balances')">أرصدة الموردين</div>
         <div class="tab" onclick="switchAccountTab('payments')">سجل المدفوعات</div>
         <div class="tab" onclick="switchAccountTab('advances')">السلف</div>
-        <div class="tab" onclick="switchAccountTab('deposits')" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white">🏦 الودائع</div>
       </div>
 
       <!-- Balances Tab -->
@@ -1782,48 +1571,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Deposits Tab -->
-      <div id="tab-deposits" style="display:none">
-        <div class="card" style="margin-bottom:16px">
-          <div class="card-body" style="background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.08));border:1px solid #6366f1;border-radius:10px;padding:14px">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-              <div>
-                <h4 style="margin:0 0 4px;color:#4f46e5;font-size:15px">🏦 إجمالي الودائع النشطة</h4>
-                <p style="margin:0;font-size:12px;color:#6366f1">المبالغ المتاحة للاستخدام من قبل الموردين والعملاء</p>
-              </div>
-              <div style="text-align:left">
-                <div id="total-active-deposits" style="font-size:24px;font-weight:900;color:#4f46e5">0 ج</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <h4 style="margin:0;color:#6366f1">📋 سجل الودائع والأرصدة</h4>
-            <button class="btn btn-primary btn-sm" onclick="openDepositModal()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">➕ إضافة وديعة</button>
-          </div>
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>التاريخ</th>
-                  <th>النوع</th>
-                  <th>الشخص</th>
-                  <th>نوع العملية</th>
-                  <th>المبلغ (ج)</th>
-                  <th>طريقة الدفع</th>
-                  <th>الحالة</th>
-                  <th>ملاحظات</th>
-                  <th>إجراءات</th>
-                </tr>
-              </thead>
-              <tbody id="deposits-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- ════ PAGE: WAREHOUSE 1 ════ -->
@@ -1844,14 +1591,13 @@
       <div class="card" style="margin-bottom:20px">
         <div class="card-body">
           <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-            <div class="form-group" style="min-width:160px"><label>من تاريخ</label><input type="date" id="fo-from"></div>
-            <div class="form-group" style="min-width:160px"><label>إلى تاريخ</label><input type="date" id="fo-to"></div>
-            <button class="btn btn-primary btn-sm" style="margin-top:22px;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;font-weight:700;padding:8px 16px" onclick="applyFODateFilter()" title="تطبيق الفلتر">✓ تطبيق</button>
+            <div class="form-group" style="min-width:160px"><label>من تاريخ</label><input type="date" id="fo-from" onchange="loadFactoryOut()"></div>
+            <div class="form-group" style="min-width:160px"><label>إلى تاريخ</label><input type="date" id="fo-to" onchange="loadFactoryOut()"></div>
             <div class="form-group" style="min-width:180px"><label>بحث بالمنتج</label>
-              <input type="text" id="fo-search" placeholder="اسم المنتج...">
+              <input type="text" id="fo-search" placeholder="اسم المنتج..." oninput="loadFactoryOut()">
             </div>
             <div class="form-group" style="min-width:150px"><label>نوع المنتج</label>
-              <select id="fo-type-filter">
+              <select id="fo-type-filter" onchange="loadFactoryOut()">
                 <option value="">الكل</option>
                 <option value="رومي">رومي</option>
                 <option value="قشطة">قشطة</option>
@@ -1860,7 +1606,7 @@
             </div>
             <button class="btn btn-primary btn-sm" style="margin-top:22px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white" onclick="setFOLast7Days()" title="آخر 7 أيام">📅 آخر 7 أيام</button>
             <button class="btn btn-secondary" style="margin-top:22px"
-              onclick="clearFOFilter()">
+              onclick="['fo-from','fo-to','fo-search'].forEach(id=>{document.getElementById(id).value='';});loadFactoryOut()">
               🔄 مسح
             </button>
           </div>
@@ -1924,12 +1670,11 @@
       </div>
       <div class="card" style="margin-bottom:16px"><div class="card-body">
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-          <div class="form-group" style="min-width:160px;margin:0"><label>من تاريخ</label><input type="date" id="wh1-from"></div>
-          <div class="form-group" style="min-width:160px;margin:0"><label>إلى تاريخ</label><input type="date" id="wh1-to"></div>
-          <button class="btn btn-primary btn-sm" style="margin-top:22px;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;font-weight:700;padding:8px 16px" onclick="applyWHDateFilter('warehouse1')" title="تطبيق الفلتر">✓ تطبيق</button>
+          <div class="form-group" style="min-width:160px;margin:0"><label>من تاريخ</label><input type="date" id="wh1-from" onchange="renderWarehouse('warehouse1')"></div>
+          <div class="form-group" style="min-width:160px;margin:0"><label>إلى تاريخ</label><input type="date" id="wh1-to" onchange="renderWarehouse('warehouse1')"></div>
           <button class="btn btn-primary btn-sm" style="margin-top:22px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white" onclick="setWHLast7Days('warehouse1')" title="آخر 7 أيام">📅 آخر 7 أيام</button>
           <div class="form-group" style="min-width:150px;margin:0"><label>فلتر حسب النوع</label>
-            <select id="wh1-type-filter">
+            <select id="wh1-type-filter" onchange="renderWarehouse('warehouse1')">
               <option value="">الكل</option>
               <option value="رومي">رومي</option>
               <option value="قشطة">قشطة</option>
@@ -1986,12 +1731,11 @@
       </div>
       <div class="card" style="margin-bottom:16px"><div class="card-body">
         <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-          <div class="form-group" style="min-width:160px;margin:0"><label>من تاريخ</label><input type="date" id="wh2-from"></div>
-          <div class="form-group" style="min-width:160px;margin:0"><label>إلى تاريخ</label><input type="date" id="wh2-to"></div>
-          <button class="btn btn-primary btn-sm" style="margin-top:22px;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;font-weight:700;padding:8px 16px" onclick="applyWHDateFilter('warehouse2')" title="تطبيق الفلتر">✓ تطبيق</button>
+          <div class="form-group" style="min-width:160px;margin:0"><label>من تاريخ</label><input type="date" id="wh2-from" onchange="renderWarehouse('warehouse2')"></div>
+          <div class="form-group" style="min-width:160px;margin:0"><label>إلى تاريخ</label><input type="date" id="wh2-to" onchange="renderWarehouse('warehouse2')"></div>
           <button class="btn btn-primary btn-sm" style="margin-top:22px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white" onclick="setWHLast7Days('warehouse2')" title="آخر 7 أيام">📅 آخر 7 أيام</button>
           <div class="form-group" style="min-width:150px;margin:0"><label>فلتر حسب النوع</label>
-            <select id="wh2-type-filter">
+            <select id="wh2-type-filter" onchange="renderWarehouse('warehouse2')">
               <option value="">الكل</option>
               <option value="رومي">رومي</option>
               <option value="قشطة">قشطة</option>
@@ -3040,64 +2784,6 @@
   </div>
 </div>
 
-<!-- Deposit/Credit Modal - ودائع وأرصدة -->
-<div class="modal-backdrop" id="modal-deposit">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-header">
-      <span style="font-size:22px">🏦</span>
-      <h3 id="deposit-modal-title">تسجيل وديعة / رصيد</h3>
-      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-deposit')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="alert" style="background:linear-gradient(135deg,rgba(99,102,241,0.1),rgba(139,92,246,0.1));border:1px solid #6366f1;border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;color:#4f46e5">
-        💡 <strong>نظام الودائع:</strong> يسجل هنا المبالغ التي يقدمها الموردون أو العملاء كوديعة أو رصيد مسبق، يمكن استخدامها لاحقاً في شراء البضائن أو تسوية الحسابات.
-      </div>
-      <div class="form-grid">
-        <div class="form-group"><label>نوع الشخص *</label>
-          <select id="dep-person-type" onchange="onDepositPersonTypeChange()">
-            <option value="supplier">🚛 مورد (حليب)</option>
-            <option value="buyer">🛒 مشتري/عميل</option>
-            <option value="customer">👤 عميل عادي</option>
-          </select>
-        </div>
-        <div class="form-group"><label>الشخص *</label><select id="dep-person"><option value="">اختر أولاً النوع...</option></select></div>
-        <div class="form-group"><label>التاريخ *</label><input type="date" id="dep-date"></div>
-        <div class="form-group"><label>المبلغ (جنيه) *</label><input type="number" id="dep-amount" placeholder="0" min="0.01" step="0.01" style="font-size:18px;font-weight:700;color:var(--success)"></div>
-        <input type="hidden" id="dep-edit-id" value="">
-        <div class="form-group"><label>نوع العملية *</label>
-          <select id="dep-operation-type">
-            <option value="deposit">📥 وديعة (أعطاني مال)</option>
-            <option value="withdrawal">📤 سحب من الرصيد</option>
-            <option value="purchase_use">🛒 استخدام في مشتريات</option>
-            <option value="adjustment">⚙️ تعديل/تسوية</option>
-          </select>
-        </div>
-        <div class="form-group"><label>وصف / ملاحظات</label><input type="text" id="desc-notes" placeholder="مثال: وديعة لشراء ألبان..."></div>
-        <div class="form-group"><label>طريقة الدفع</label>
-          <select id="dep-method">
-            <option value="cash">💵 نقدي</option>
-            <option value="bank">🏦 تحويل بنكي</option>
-            <option value="vodafone">📱 فودافون كاش</option>
-            <option value="instapay">💳 إنستا باي</option>
-            <option value="other">📋 أخرى</option>
-          </select>
-        </div>
-        <div class="form-group"><label>الحالة</label>
-          <select id="dep-status">
-            <option value="active">✅ نشط (متاح للاستخدام)</option>
-            <option value="frozen">❄️ مجمد (موقوف مؤقتاً)</option>
-            <option value="used">✅ تم الاستخدام</option>
-          </select>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('modal-deposit')">إلغاء</button>
-      <button class="btn btn-primary" onclick="saveDeposit()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">🏦 حفظ الوديعة</button>
-    </div>
-  </div>
-</div>
-
 <!-- Warehouse Modal (shared for WH1 & WH2) -->
 <div class="modal-backdrop" id="modal-warehouse">
   <div class="modal" style="max-width:500px">
@@ -3526,9 +3212,7 @@ const state = {
   labPurchases: {},
   workers: {},
   workerAttendance: {},
-  workerPayments: {},
-  deposits: {},        // الودائع والأرصدة
-  customers: {}        // العملاء العاديين
+  workerPayments: {}
 };
 
 // ── Utils ──────────────────────────────────────────────────────────
@@ -3679,8 +3363,6 @@ dbListen('workerAdvances', v => { state.workerAdvances = v || {}; });
 dbListen('workerPurchases', v => { state.workerPurchases = v || {}; });
 dbListen('supplierPurchases', v => { state.supplierPurchases = v || {}; });
 dbListen('buyerPurchases', v => { state.buyerPurchases = v || {}; });
-dbListen('deposits', v => { state.deposits = v || {}; });
-dbListen('customers', v => { state.customers = v || {}; });
 
 // ══════════════════════════════════════════════════════════════════
 // DASHBOARD
@@ -3968,10 +3650,6 @@ window.showAccountDetail = function(supplierId) {
   const milkRecords = Object.entries(state.milkRecords).filter(([,r]) => r.supplierId === supplierId).sort((a,b) => a[1].date > b[1].date ? -1 : 1);
   const payments    = Object.entries(state.supplierPayments).filter(([,p]) => p.supplierId === supplierId).sort((a,b) => a[1].date > b[1].date ? -1 : 1);
   const advances    = Object.entries(state.supplierAdvances).filter(([,a]) => a.supplierId === supplierId);
-  // حساب رصيد الودائع لهذا المورد
-  const depositBalance = getPersonDepositBalance(supplierId, 'supplier');
-  const deposits     = Object.entries(state.deposits || {}).filter(([,d]) => d.personId === supplierId && d.personType === 'supplier');
-  
   const balance     = calcSupplierBalance(supplierId);
   const milkQtyKg   = milkRecords.reduce((s,[,r]) => s + Number(r.qty||0), 0);
   const milkSum     = milkRecords.reduce((s,[,r]) => s + Number(r.total||0), 0);
@@ -3982,7 +3660,6 @@ window.showAccountDetail = function(supplierId) {
   const rMilkSum = roundSmart(milkSum);
   const rPaySum = roundSmart(paySum);
   const rAdvSum = roundSmart(advSum);
-  const rDepositBal = roundSmart(depositBalance);
   const rBalance = roundSmart(balance);
 
   // Get current week records
@@ -4000,15 +3677,10 @@ window.showAccountDetail = function(supplierId) {
   $('account-detail-body').innerHTML = `
     <div class="summary-bar" style="margin-bottom:20px">
       <div class="summary-item"><div class="val" style="color:var(--success)">${fmt(milkQtyKg,1)} كجم</div><div class="lbl">الكمية (كجم)</div></div>
-      <div class="summary-item"><div class="val">${fmt(rMilkSum,0)}</div><div class="lbl">الحليب (ج)</div></div>
+      <div class="summary-item"><div class="val">${fmt(rMilkSum,0)}</div><div class="lbl">الكمية (ج)</div></div>
       <div class="summary-item"><div class="val" style="color:var(--danger)">${fmt(rPaySum,0)}</div><div class="lbl">المدفوعات (ج)</div></div>
       <div class="summary-item"><div class="val" style="color:var(--warning)">${fmt(rAdvSum,0)}</div><div class="lbl">السلف (ج)</div></div>
-      <div class="summary-item" style="background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.1));border-radius:8px;border:1px solid #6366f1">
-        <div class="val" style="color:#4f46e5;font-weight:900">${fmt(rDepositBal,0)}</div>
-        <div class="lbl" style="color:#6366f1">🏦 رصيد الوديعة</div>
-      </div>
       <div class="summary-item"><div class="val" style="color:${balance>0?'var(--success)':'var(--danger)'}">${fmt(rBalance,0)}</div><div class="lbl">الرصيد المستحق (ج)</div></div>
-      <button class="btn btn-primary btn-sm" onclick="openDepositModal('${supplierId}','supplier')" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);margin-top:8px">🏦 إضافة وديعة</button>
     </div>
     <div style="background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(16,185,129,0.05));border:1px solid var(--border-soft);border-radius:10px;padding:14px;margin-bottom:16px">
       <div style="color:var(--gold);font-weight:700;margin-bottom:10px">📅 تفاصيل الأسبوع الحالي (${ws} : ${we})</div>
@@ -4076,248 +3748,6 @@ ${dayLines || '  لا توجد سجلات هذا الأسبوع'}
 };
 
 // ══════════════════════════════════════════════════════════════════
-// SUPPLIER CONTEXT MENU - القائمة العائمة للمورد
-// ══════════════════════════════════════════════════════════════════
-let _ctxCurrentSupplierId = null;
-
-window.openSupplierContextMenu = function(event, supplierId) {
-  const s = state.suppliers[supplierId];
-  if (!s) return;
-  
-  _ctxCurrentSupplierId = supplierId;
-  
-  // حساب بيانات المورد
-  const milkRecords = Object.values(state.milkRecords).filter(r => r.supplierId === supplierId);
-  const payments    = Object.values(state.supplierPayments).filter(p => p.supplierId === supplierId);
-  const advances    = Object.values(state.supplierAdvances).filter(a => a.supplierId === supplierId);
-  
-  const milkQtyKg = milkRecords.reduce((sum, r) => sum + Number(r.qty || 0), 0);
-  const milkSum   = milkRecords.reduce((sum, r) => sum + Number(r.total || 0), 0);
-  const paySum    = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-  const advSum    = advances.reduce((sum, a) => sum + Number(a.amount || 0), 0);
-  const balance   = calcSupplierBalance(supplierId);
-  
-  // تحديث محتوى القائمة
-  $('ctx-supplier-name').textContent = s.name;
-  $('ctx-supplier-phone').textContent = s.phone ? `📱 ${s.phone}` : '';
-  $('ctx-milk-qty').textContent = `${fmt(milkQtyKg, 1)} كجم`;
-  $('ctx-milk-amt').textContent = `${fmt(roundSmart(milkSum), 0)} ج`;
-  $('ctx-payments').textContent = `${fmt(roundSmart(paySum), 0)} ج`;
-  $('ctx-advances').textContent = `${fmt(roundSmart(advSum), 0)} ج`;
-  $('ctx-balance').textContent = `${fmt(roundSmart(balance), 0)} ج`;
-  $('ctx-balance').style.color = balance > 0 ? '#22c55e' : (balance < 0 ? '#ef4444' : 'var(--text-100)');
-  
-  // تحديد موقع القائمة
-  const menu = $('supplier-context-menu');
-  const backdrop = $('ctx-menu-backdrop');
-  
-  // حساب الموقع بالنسبة للشاشة
-  const rect = event.target.getBoundingClientRect();
-  let left = rect.left;
-  let top = rect.bottom + 8;
-  
-  // تعديل الموقع إذا كانت القائمة خارج الشاشة
-  if (left + 380 > window.innerWidth) {
-    left = window.innerWidth - 390;
-  }
-  if (left < 10) left = 10;
-  if (top + 450 > window.innerHeight) {
-    top = rect.top - 450;
-  }
-  
-  menu.style.left = `${left}px`;
-  menu.style.top = `${top}px`;
-  
-  // إظهار القائمة
-  menu.classList.add('active');
-  backdrop.classList.add('active');
-};
-
-window.closeSupplierContextMenu = function() {
-  const menu = $('supplier-context-menu');
-  const backdrop = $('ctx-menu-backdrop');
-  menu.classList.remove('active');
-  backdrop.classList.remove('active');
-  _ctxCurrentSupplierId = null;
-};
-
-window.viewSupplierDetailFromCtx = function() {
-  if (!_ctxCurrentSupplierId) return;
-  closeSupplierContextMenu();
-  setTimeout(() => showAccountDetail(_ctxCurrentSupplierId), 100);
-};
-
-window.printSupplierAccountFromCtx = function() {
-  if (!_ctxCurrentSupplierId) return;
-  closeSupplierContextMenu();
-  
-  const s = state.suppliers[_ctxCurrentSupplierId];
-  if (!s) return;
-  
-  const milkRecords = Object.entries(state.milkRecords)
-    .filter(([,r]) => r.supplierId === _ctxCurrentSupplierId)
-    .sort((a,b) => a[1].date > b[1].date ? -1 : 1);
-  const payments = Object.entries(state.supplierPayments)
-    .filter(([,p]) => p.supplierId === _ctxCurrentSupplierId)
-    .sort((a,b) => a[1].date > b[1].date ? -1 : 1);
-  
-  const milkQty = milkRecords.reduce((s,[,r]) => s + Number(r.qty||0), 0);
-  const milkAmt = milkRecords.reduce((s,[,r]) => s + Number(r.total||0), 0);
-  const payAmt  = payments.reduce((s,[,p]) => s + Number(p.amount||0), 0);
-  const balance = calcSupplierBalance(_ctxCurrentSupplierId);
-  
-  const CSS = `
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;padding:20px;color:#000;background:#fff}
-    h1{text-align:center;font-size:22px;margin-bottom:5px;color:#1a1a2e}
-    .sub{text-align:center;font-size:13px;color:#555;margin-bottom:20px}
-    table{width:100%;border-collapse:collapse;margin:15px 0;font-size:12px}
-    th{background:#1a1a2e;color:#fff;padding:10px 8px;text-align:right}
-    td{padding:8px;border:1px solid #ddd;text-align:right}
-    tr:nth-child(even){background:#f8f9fa}
-    .summary{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:20px 0}
-    .summary-item{background:#f0f4ff;border:2px solid #3b82f6;border-radius:12px;padding:15px 25px;text-align:center;min-width:140px}
-    .summary-val{font-size:24px;font-weight:800;color:#1a1a2e}
-    .summary-lbl{font-size:12px;color:#666;margin-top:4px}
-    .highlight{background:#fffbeb;border-color:#f59e0b}
-    .highlight .summary-val{color:#b45309}
-    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`;
-  
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>كشف حساب مورد</title><style>${CSS}</style></head><body>
-    <div><h1>${(state.settings?.factoryName||'مصنع ألبان')}</h1><div class="sub">📋 كشف حساب المورد - ${sanitize(s.name)}</div></div>
-    
-    <div class="summary">
-      <div class="summary-item"><div class="summary-val">${fmt(milkQty,1)} كجم</div><div class="summary-lbl">🥛 إجمالي الكمية</div></div>
-      <div class="summary-item"><div class="summary-val">${fmt(milkAmt,0)} ج</div><div class="summary-lbl">💰 إجمالي الحليب</div></div>
-      <div class="summary-item" style="border-color:#ef4444"><div class="summary-val" style="color:#dc2626">${fmt(payAmt,0)} ج</div><div class="summary-lbl">💳 المدفوعات</div></div>
-      <div class="summary-item highlight"><div class="summary-val">${fmt(balance,0)} ج</div><div class="summary-lbl">📊 الرصيد المستحق</div></div>
-    </div>
-    
-    <h3 style="margin:15px 0 10px;color:#1a1a2e">🥛 سجل استلام الحليب (${milkRecords.length} سجل)</h3>
-    <table><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>الكمية (كجم)</th><th>السعر</th><th>الإجمالي</th></tr></thead>
-    <tbody>${milkRecords.map(([id,r],i) => `<tr><td>${i+1}</td><td>${r.date}</td><td>${r.time||'—'}</td><td>${fmt(r.qty,1)}</td><td>${fmt(r.price,2)}</td><td>${fmt(r.total,2)}</td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center">لا توجد سجلات</td></tr>'}</tbody></table>
-    
-    <h3 style="margin:15px 0 10px;color:#1a1a2e">💳 سجل المدفوعات (${payments.length} عملية)</h3>
-    <table><thead><tr><th>#</th><th>التاريخ</th><th>المبلغ</th><th>طريقة الدفع</th><th>ملاحظات</th></tr></thead>
-    <tbody>${payments.map(([id,p],i) => `<tr><td>${i+1}</td><td>${p.date}</td><td>${fmt(p.amount,2)}</td><td>${p.method||'—'}</td><td>${p.notes||'—'}</td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center">لا توجد مدفوعات</td></tr>'}</tbody></table>
-    
-    <div style="text-align:center;margin-top:30px;font-size:11px;color:#999">
-      تاريخ الطباعة: ${new Date().toLocaleDateString('ar-EG')} | نظام إدارة مصنع الألبان
-    </div>
-    </body></html>`);
-  printWindow.document.close();
-  setTimeout(() => { printWindow.print(); }, 300);
-};
-
-window.exportSupplierAccountFromCtx = function() {
-  if (!_ctxCurrentSupplierId) return;
-  closeSupplierContextMenu();
-  
-  const s = state.suppliers[_ctxCurrentSupplierId];
-  if (!s) return;
-  
-  const milkRecords = Object.entries(state.milkRecords)
-    .filter(([,r]) => r.supplierId === _ctxCurrentSupplierId)
-    .sort((a,b) => a[1].date > b[1].date ? -1 : 1);
-  const payments = Object.entries(state.supplierPayments)
-    .filter(([,p]) => p.supplierId === _ctxCurrentSupplierId)
-    .sort((a,b) => a[1].date > b[1].date ? -1 : 1);
-  
-  const milkQty = milkRecords.reduce((s,[,r]) => s + Number(r.qty||0), 0);
-  const milkAmt = milkRecords.reduce((s,[,r]) => s + Number(r.total||0), 0);
-  const payAmt  = payments.reduce((s,[,p]) => s + Number(p.amount||0), 0);
-  const balance = calcSupplierBalance(_ctxCurrentSupplierId);
-  
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  
-  let y = 20;
-  const pageW = doc.internal.pageSize.getWidth();
-  const margin = 15;
-  
-  // العنوان
-  doc.setFontSize(18);
-  doc.setTextColor(26, 26, 46);
-  doc.text(state.settings?.factoryName || 'مصنع ألبان', pageW/2, y, { align: 'center' });
-  y += 10;
-  
-  doc.setFontSize(14);
-  doc.setTextColor(245, 158, 11);
-  doc.text(`كشف حساب المورد: ${s.name}`, pageW/2, y, { align: 'center' });
-  y += 12;
-  
-  // الملخص
-  doc.setFillColor(240, 244, 255);
-  doc.roundedRect(margin, y, pageW - 2*margin, 25, 3, 3, 'F');
-  y += 8;
-  
-  doc.setFontSize(11);
-  doc.setTextColor(26, 26, 46);
-  doc.text(`إجمالي الكمية: ${fmt(milkQty,1)} كجم`, margin + 10, y);
-  doc.text(`إجمالي الحليب: ${fmt(milkAmt,0)} ج`, pageW/2, y, { align: 'center' });
-  doc.text(`المدفوعات: ${fmt(payAmt,0)} ج`, pageW - margin - 10, y, { align: 'right' });
-  y += 10;
-  
-  doc.setFontSize(13);
-  doc.setTextColor(balance >= 0 ? 34, 197, 94 : 239, 68, 68);
-  doc.text(`الرصيد المستحق: ${fmt(balance,0)} ج`, pageW/2, y, { align: 'center' });
-  y += 15;
-  
-  // جدول الحليب
-  if (milkRecords.length > 0 && y < 250) {
-    doc.setFontSize(12);
-    doc.setTextColor(26, 26, 46);
-    doc.text('سجل استلام الحليب:', margin, y);
-    y += 8;
-    
-    doc.setFillColor(26, 26, 46);
-    doc.rect(margin, y, pageW - 2*margin, 7, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9);
-    doc.text('#', margin + 3, y + 5);
-    doc.text('التاريخ', margin + 15, y + 5);
-    doc.text('الكمية', margin + 50, y + 5);
-    doc.text('السعر', margin + 80, y + 5);
-    doc.text('الإجمالي', pageW - margin - 20, y + 5);
-    y += 7;
-    
-    doc.setTextColor(0, 0, 0);
-    const maxRows = Math.min(milkRecords.length, 18);
-    for (let i = 0; i < maxRows; i++) {
-      const [,r] = milkRecords[i];
-      if (y > 275) break;
-      doc.setFontSize(8);
-      doc.text(`${i+1}`, margin + 3, y + 5);
-      doc.text(`${r.date}`, margin + 15, y + 5);
-      doc.text(`${fmt(r.qty,1)}`, margin + 50, y + 5);
-      doc.text(`${fmt(r.price,2)}`, margin + 80, y + 5);
-      doc.text(`${fmt(r.total,2)}`, pageW - margin - 20, y + 5);
-      y += 6;
-    }
-    y += 5;
-  }
-  
-  // التذييل
-  doc.setFontSize(8);
-  doc.setTextColor(150, 150, 150);
-  doc.text(`تاريخ التصدير: ${new Date().toLocaleDateString('ar-EG')} | نظام إدارة مصنع الألبان`, pageW/2, 285, { align: 'center' });
-  
-  doc.save(`كشف_حساب_${s.name.replace(/\s+/g, '_')}.pdf`);
-  toast('تم تصدير كشف الحساب بنجاح', 'success');
-};
-
-// إغلاق القائمة عند الضغط خارجها
-document.addEventListener('click', function(e) {
-  const menu = $('supplier-context-menu');
-  if (menu && menu.classList.contains('active')) {
-    if (!menu.contains(e.target) && !e.target.closest('.supplier-name-clickable')) {
-      closeSupplierContextMenu();
-    }
-  }
-});
-
-// ══════════════════════════════════════════════════════════════════
 // MILK RECEIVING
 // ══════════════════════════════════════════════════════════════════
 function initMilkPage() {
@@ -4372,7 +3802,7 @@ window.loadMilkRecords = function() {
       <td>${i+1}</td>
       <td>${r.date}</td>
       <td>${to12Hour(r.time||'')}<br><small style="color:var(--text-400)">${r.period||getPeriodLabel(r.time)||''}</small></td>
-      <td><strong class="supplier-name-clickable" onclick="event.stopPropagation();openSupplierContextMenu(event,'${r.supplierId}')">${sanitize(state.suppliers[r.supplierId]?.name || 'غير محدد')}</strong></td>
+      <td><strong>${sanitize(state.suppliers[r.supplierId]?.name || 'غير محدد')}</strong></td>
       <td>
         <div style="display:flex;flex-direction:column;gap:4px">
           ${hasBaqri ? `<span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600">🐄 ${fmt(r.baqriQty,1)} كجم</span>` : ''}
@@ -4390,204 +3820,6 @@ window.loadMilkRecords = function() {
 window.clearMilkFilter = function() {
   $('milk-from').value = ''; $('milk-to').value = ''; $('milk-filter-supplier').value = '';
   loadMilkRecords();
-  toast('تم مسح الفلتر - عرض جميع البيانات', 'info');
-};
-
-// ─── تطبيق فلتر التاريخ للحليب ──────────────────────────────────
-window.applyMilkDateFilter = function() {
-  const fromVal = document.getElementById('milk-from')?.value || '';
-  const toVal = document.getElementById('milk-to')?.value || '';
-  
-  if (!fromVal && !toVal) {
-    toast('الرجاء اختيار تاريخ البداية أو النهاية', 'warning');
-    return;
-  }
-  
-  if (fromVal && toVal && fromVal > toVal) {
-    toast('تاريخ البداية يجب أن يكون قبل تاريخ النهاية', 'error');
-    return;
-  }
-  
-  loadMilkRecords();
-  
-  const fromStr = fromVal || 'من البداية';
-  const toStr = toVal || 'حتى الآن';
-  toast(`تم تطبيق الفلتر: ${fromStr} ← ${toStr}`, 'success');
-};
-
-window.setMilkLast7Days = function() {
-  const today = new Date();
-  const weekAgo = new Date(today);
-  weekAgo.setDate(today.getDate() - 7);
-  
-  document.getElementById('milk-from').value = weekAgo.toISOString().slice(0,10);
-  document.getElementById('milk-to').value = today.toISOString().slice(0,10);
-  loadMilkRecords();
-  toast('تم تحديد آخر 7 أيام', 'info');
-};
-
-// ─── طباعة خاصة لاستلام الحليب مع تفاصيل البقري والجاموسي ─────
-window.printMilkTable = function() {
-  const tbody = document.querySelector('#milk-tbody');
-  if (!tbody) { toast('لم يتم العثور على الجدول', 'error'); return; }
-  
-  const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state'));
-  if (!rows.length) { toast('لا توجد بيانات للطباعة', 'warning'); return; }
-  
-  // جمع البيانات من السجلات المعروضة
-  const from = $('milk-from')?.value || 'الكل';
-  const to = $('milk-to')?.value || 'الكل';
-  const supId = $('milk-filter-supplier')?.value || '';
-  const supName = supId ? (state.suppliers[supId]?.name || '') : 'جميع الموردين';
-  
-  // حساب الإجماليات مباشرة من البيانات الفعلية (وليس من نص العناصر
-  // المنسّق بأرقام عربية، لأن parseFloat لا يفهم الأرقام العربية ٠١٢٣
-  // وكان يرجّع دايماً 0 — وهو سبب ظهور "إجمالي القيمة" و"إجمالي الكمية" صفر)
-  const fromRaw = $('milk-from')?.value || '';
-  const toRaw   = $('milk-to')?.value || '';
-
-  const filteredRecords = Object.entries(state.milkRecords).filter(([, r]) => {
-    if (fromRaw && r.date < fromRaw) return false;
-    if (toRaw   && r.date > toRaw)   return false;
-    if (supId   && r.supplierId !== supId) return false;
-    return true;
-  });
-
-  const totalQty     = filteredRecords.reduce((s,[,r]) => s + Number(r.qty||0), 0);
-  const totalAmt     = filteredRecords.reduce((s,[,r]) => s + Number(r.total||0), 0);
-  const totalBaqri   = filteredRecords.reduce((s,[,r]) => s + Number(r.baqriQty||0), 0);
-  const totalJammosi = filteredRecords.reduce((s,[,r]) => s + Number(r.jammosiQty||0), 0);
-  const baqriAmt     = filteredRecords.reduce((s,[,r]) => s + Number(r.baqriTotal||0), 0);
-  const jammosiAmt   = filteredRecords.reduce((s,[,r]) => s + Number(r.jammosiTotal||0), 0);
-
-  const baqriInfo    = `🐄 ${fmt(totalBaqri,1)} كجم (${fmt(baqriAmt,0)} ج)`;
-  const jammosiInfo  = `🐃 ${fmt(totalJammosi,1)} كجم (${fmt(jammosiAmt,0)} ج)`;
-  const count = filteredRecords.length;
-  
-  const factoryName = state?.settings?.factoryName || 'نظام إدارة مصنع الألبان';
-  const now = new Date().toLocaleString('ar-EG',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
-  
-  // بناء صفوف الجدول
-  let tableRows = rows.map((r, i) => {
-    const cells = Array.from(r.querySelectorAll('td')).filter(td => !td.querySelector('button') && !td.querySelector('.btn'));
-    return `<tr>${cells.map((td, ci) => {
-      let content = td.innerHTML;
-      // تنظيف المحتوى للطباعة
-      if (ci === 4) { // عمود الكميات - الحفاظ على التنسيق
-        return `<td style="font-weight:600">${content}</td>`;
-      }
-      return `<td>${td.innerText.trim()}</td>`;
-    }).join('')}</tr>`;
-  }).join('');
-  
-  const CSS = `<style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
-    @page{size:A4;margin:12mm}
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Cairo',Tajawal,Arial,sans-serif;direction:rtl;color:#000;padding:18px;background:#fff;font-size:11px}
-    .doc-top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #000;padding-bottom:10px;margin-bottom:12px}
-    .doc-top h1{color:#000;font-size:20px;margin-bottom:2px;font-weight:bold}
-    .doc-top .sub{font-size:11px;color:#333;font-weight:600}
-    .doc-top .meta{font-size:9px;color:#666;text-align:left}
-    
-    /* بطاقات الملخص */
-    .sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0 18px}
-    .sum-card{border:2px solid;border-radius:10px;padding:14px;text-align:center;background:#fff}
-    .sum-card.baqri{border-color:#22c55e;background:linear-gradient(135deg,rgba(34,197,94,0.08),#fff)}
-    .sum-card.jammosi{border-color:#6366f1;background:linear-gradient(135deg,rgba(99,102,241,0.08),#fff)}
-    .sum-card.total{border-color:#f59e0b;background:linear-gradient(135deg,rgba(245,158,11,0.08),#fff)}
-    .sum-val{font-size:22px;font-weight:900;margin-bottom:3px}
-    .sum-card.baqri .sum-val{color:#16a34a}
-    .sum-card.jammosi .sum-val{color:#4f46e5}
-    .sum-card.total .sum-val{color:#d97706}
-    .sum-lbl{font-size:10px;color:#555;font-weight:600}
-    .sum-icon{font-size:28px;margin-bottom:5px}
-    
-    /* معلومات الفلتر */
-    .filter-info{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:12px;font-size:10px;color:#475569}
-    .filter-info span{background:#e2e8f0;padding:3px 8px;border-radius:4px;font-weight:600}
-    
-    h3{color:#000;font-size:13px;margin:14px 0 8px;border-bottom:2px solid #000;padding-bottom:4px;font-weight:bold}
-    table{width:100%;border-collapse:collapse;margin:8px 0;font-size:10px;border:2px solid #000}
-    th{background:#000;color:#fff;padding:8px 6px;text-align:center;border:2px solid #000;font-weight:700}
-    td{border:1px solid #000;padding:6px;text-align:center;color:#000}
-    tr:nth-child(even) td{background:#f8f9fa}
-    .baqri-cell{color:#16a34a;font-weight:700;background:rgba(34,197,94,0.1)}
-    .jammosi-cell{color:#4f46e5;font-weight:700;background:rgba(99,102,241,0.1)}
-    .footer{margin-top:16px;padding-top:10px;border-top:1px solid #000;display:flex;justify-content:space-between;font-size:9px;color:#666}
-    @media print{th,td{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
-  </style>`;
-
-  const printWindow = window.open('', '_blank', 'width=900,height=800');
-  printWindow.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>كشف استلام الحليب</title>${CSS}</head><body>
-    <div class="doc-top">
-      <div><h1>${factoryName}</h1><div class="sub">🥛 كشف استلام الحليب التفصيلي</div></div>
-      <div class="meta">طُبع: ${now}</div>
-    </div>
-    
-    <!-- معلومات الفلتر -->
-    <div class="filter-info">
-      <span>📅 من: ${from !== 'الكل' ? from : 'البدء'}</span>
-      <span>📅 إلى: ${to !== 'الكل' ? to : 'الآن'}</span>
-      <span>👤 المورد: ${supName}</span>
-      <span>📊 عدد السجلات: ${count}</span>
-    </div>
-    
-    <!-- بطاقات الملخص -->
-    <div class="sum-grid">
-      <div class="sum-card baqri">
-        <div class="sum-icon">🐄</div>
-        <div class="sum-val">${baqriInfo}</div>
-        <div class="sum-lbl">إجمالي الحليب البقري</div>
-      </div>
-      <div class="sum-card jammosi">
-        <div class="sum-icon">🐃</div>
-        <div class="sum-val">${jammosiInfo}</div>
-        <div class="sum-lbl">إجمالي الحليب الجاموسي</div>
-      </div>
-      <div class="sum-card total">
-        <div class="sum-icon">📦</div>
-        <div class="sum-val">${totalQty.toLocaleString('ar-EG')} كجم</div>
-        <div class="sum-lbl">إجمالي الكمية الكلية</div>
-      </div>
-      <div class="sum-card total">
-        <div class="sum-icon">💰</div>
-        <div class="sum-val">${totalAmt.toLocaleString('ar-EG',{maximumFractionDigits:0})} ج</div>
-        <div class="sum-lbl">إجمالي القيمة (جنيه)</div>
-      </div>
-    </div>
-    
-    <h3>📋 تفاصيل سجلات الاستلام</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>#</th><th>التاريخ</th><th>الوقت</th><th>المورد</th>
-          <th>🐄 البقري (كجم)</th><th>🐃 الجاموسي (كجم)</th>
-          <th>الإجمالي (ج)</th><th>ملاحظات</th>
-        </tr>
-      </thead>
-      <tbody>${tableRows}</tbody>
-    </table>
-    
-    <div class="footer">
-      <span>${factoryName}</span>
-      <span>${new Date().toLocaleDateString('ar-EG')}</span>
-    </div>
-  </body></html>`);
-  printWindow.document.close();
-  setTimeout(() => { printWindow.print(); }, 500);
-};
-
-// ─── تصدير PDF خاص لاستلام الحليب ─────────────────────────────────
-window.exportMilkToPDF = function() {
-  const tbody = document.querySelector('#milk-tbody');
-  if (!tbody) { toast('لم يتم العثور على الجدول', 'error'); return; }
-  
-  const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.querySelector('.empty-state'));
-  if (!rows.length) { toast('لا بيانات للتصدير', 'warning'); return; }
-  
-  // نفس محتوى الطباعة ولكن بصيغة PDF
-  printMilkTable();
 };
 
 window.openMilkModal = function() {
@@ -4810,36 +4042,6 @@ function renderAccounts(search='') {
 
 window.filterAccounts = function() { renderAccounts($('accounts-search')?.value || ''); };
 
-// ─── تطبيق فلتر التاريخ للحسابات ──────────────────────────────────
-window.applyAccountsDateFilter = function() {
-  const fromVal = document.getElementById('acct-from')?.value || '';
-  const toVal = document.getElementById('acct-to')?.value || '';
-  
-  if (!fromVal && !toVal) {
-    toast('الرجاء اختيار تاريخ البداية أو النهاية', 'warning');
-    return;
-  }
-  
-  if (fromVal && toVal && fromVal > toVal) {
-    toast('تاريخ البداية يجب أن يكون قبل تاريخ النهاية', 'error');
-    return;
-  }
-  
-  renderAccounts();
-  
-  // إظهار رسالة تأكيد بالفترة المحددة
-  const fromStr = fromVal || 'من البداية';
-  const toStr = toVal || 'حتى الآن';
-  toast(`تم تطبيق الفلتر: ${fromStr} ← ${toStr}`, 'success');
-};
-
-window.clearAccountsDateFilter = function() {
-  document.getElementById('acct-from').value = '';
-  document.getElementById('acct-to').value = '';
-  renderAccounts();
-  toast('تم مسح الفلتر - عرض جميع البيانات', 'info');
-};
-
 function loadPayments() {
   const rows = Object.entries(state.supplierPayments).sort((a,b) => b[1].date > a[1].date ? 1 : -1);
   $('payments-tbody').innerHTML = rows.length ? rows.map(([id,p], i) => `
@@ -4943,253 +4145,6 @@ window.deleteAdvance = async function(id) {
 };
 
 // ══════════════════════════════════════════════════════════════════
-// DEPOSIT/CREDIT SYSTEM - نظام الودائع والأرصدة
-// ══════════════════════════════════════════════════════════════════
-
-// فتح نافذة الوديعة
-window.openDepositModal = function(personId='', personType='supplier') {
-  // تهيئة نوع الشخص
-  $('dep-person-type').value = personType;
-  
-  // ملء قائمة الأشخاص حسب النوع
-  onDepositPersonTypeChange();
-  
-  // تحديد الشخص إذا تم تمريره
-  if (personId) {
-    setTimeout(() => { $('dep-person').value = personId; }, 100);
-  }
-  
-  // تهيئة الحقول
-  $('dep-date').value = today();
-  $('dep-amount').value = '';
-  $('dep-operation-type').value = 'deposit';
-  $('desc-notes').value = '';
-  $('dep-method').value = 'cash';
-  $('dep-status').value = 'active';
-  $('dep-edit-id').value = '';
-  
-  $('deposit-modal-title').textContent = 'تسجيل وديعة / رصيد جديد';
-  openModal('modal-deposit');
-};
-
-// تغيير نوع الشخص في نموذج الوديعة
-window.onDepositPersonTypeChange = function() {
-  const type = $('dep-person-type').value;
-  const sel = $('dep-person');
-  
-  let options = '<option value="">اختر شخصاً...</option>';
-  
-  if (type === 'supplier') {
-    options += Object.entries(state.suppliers || {}).map(([id, s]) => 
-      `<option value="${id}">${sanitize(s.name)}</option>`
-    ).join('');
-  } else if (type === 'buyer') {
-    options += Object.entries(state.buyers || {}).map(([id, b]) => 
-      `<option value="buyer_${id}">${sanitize(b.name)}</option>`
-    ).join('');
-  } else {
-    options += Object.entries(state.customers || {}).map(([id, c]) => 
-      `<option value="customer_${id}">${sanitize(c.name)}</option>`
-    ).join('');
-  }
-  
-  sel.innerHTML = options;
-};
-
-// حفظ الوديعة
-window.saveDeposit = async function() {
-  const personType = $('dep-person-type').value;
-  const personId = $('dep-person').value;
-  const date = $('dep-date').value;
-  const amount = parseFloat($('dep-amount').value);
-  const operationType = $('dep-operation-type').value;
-  const notes = $('desc-notes').value;
-  const method = $('dep-method').value;
-  const status = $('dep-status').value;
-  const editId = $('dep-edit-id').value;
-  
-  // التحقق من البيانات
-  if (!personId) { toast('اختر الشخص', 'error'); return; }
-  if (!date) { toast('اختر التاريخ', 'error'); return; }
-  if (!amount || amount <= 0) { toast('أدخل مبلغ صحيح أكبر من صفر', 'error'); return; }
-  
-  loading(true);
-  try {
-    const data = {
-      personType,
-      personId,
-      date,
-      amount,
-      operationType,
-      notes: sanitize(notes),
-      method,
-      status,
-      createdAt: Date.now()
-    };
-    
-    if (editId) {
-      await dbUpdate(`deposits/${editId}`, data);
-      toast('تم تحديث الوديعة', 'success');
-    } else {
-      await dbPush('deposits', data);
-      toast('تم تسجيل الوديعة بنجاح', 'success');
-      track('deposit_create', { personType, amount });
-    }
-    
-    closeModal('modal-deposit');
-    loadDeposits();
-    renderAccounts();
-  } catch(e) {
-    toast('خطأ: ' + e.message, 'error');
-  } finally {
-    loading(false);
-  }
-};
-
-// تحميل بيانات الودائع
-window.loadDeposits = function() {
-  const deposits = Object.entries(state.deposits || {})
-    .sort((a, b) => b[1].date > a[1].date ? 1 : -1);
-  
-  let totalActive = 0;
-  
-  $('deposits-tbody').innerHTML = deposits.length ? deposits.map(([id, d], i) => {
-    // حساب الإجمالي النشط
-    if (d.status === 'active' && d.operationType === 'deposit') {
-      totalActive += Number(d.amount || 0);
-    } else if (d.status === 'active' && (d.operationType === 'withdrawal' || d.operationType === 'purchase_use')) {
-      totalActive -= Number(d.amount || 0);
-    }
-    
-    // أسماء وأنواع الأشخاص
-    let personName = '—';
-    if (d.personType === 'supplier') {
-      personName = state.suppliers?.[d.personId]?.name || '—';
-    } else if (d.personType === 'buyer') {
-      const buyerId = d.personId.replace('buyer_', '');
-      personName = state.buyers?.[buyerId]?.name || '—';
-    } else if (d.personType === 'customer') {
-      const customerId = d.personId.replace('customer_', '');
-      personName = state.customers?.[customerId]?.name || '—';
-    }
-    
-    const typeLabels = {
-      supplier: '🚛 مورد',
-      buyer: '🛒 مشتري',
-      customer: '👤 عميل'
-    };
-    
-    const opLabels = {
-      deposit: '<span style="color:var(--success);background:rgba(34,197,94,0.1);padding:2px 8px;border-radius:4px">📥 وديعة</span>',
-      withdrawal: '<span style="color:var(--danger);background:rgba(239,68,68,0.1);padding:2px 8px;border-radius:4px">📤 سحب</span>',
-      purchase_use: '<span style="color:var(--info);background:rgba(59,130,246,0.1);padding:2px 8px;border-radius:4px">🛒 استخدام</span>',
-      adjustment: '<span style="color:var(--warning);background:rgba(245,158,11,0.1);padding:2px 8px;border-radius:4px">⚙️ تعديل</span>'
-    };
-    
-    const statusLabels = {
-      active: '<span class="badge badge-success">نشط</span>',
-      frozen: '<span class="badge badge-warning">مجمد</span>',
-      used: '<span class="badge badge-info">تم الاستخدام</span>'
-    };
-    
-    const methodLabels = {
-      cash: '💵 نقدي',
-      bank: '🏦 بنكي',
-      vodafone: '📱 فودافون',
-      instapay: '💳 إنستا باي',
-      other: '📋 أخرى'
-    };
-    
-    return `<tr style="animation: rowFadeIn 0.3s ease ${i * 0.03}s both">
-      <td>${i + 1}</td>
-      <td>${d.date}</td>
-      <td>${typeLabels[d.personType] || d.personType}</td>
-      <td><strong>${sanitize(personName)}</strong></td>
-      <td>${opLabels[d.operationType] || d.operationType}</td>
-      <td style="font-weight:700;color:${d.operationType === 'deposit' || d.operationType === 'adjustment' ? 'var(--success)' : 'var(--danger)'}">
-        ${d.operationType === 'withdrawal' || d.operationType === 'purchase_use' ? '-' : '+'}${fmt(d.amount, 2)} ج
-      </td>
-      <td>${methodLabels[d.method] || d.method}</td>
-      <td>${statusLabels[d.status] || d.status}</td>
-      <td>${sanitize(d.notes || '—')}</td>
-      <td>
-        <div style="display:flex;gap:4px">
-          <button class="btn btn-secondary btn-sm btn-icon" onclick="editDeposit('${id}')" title="تعديل">✏️</button>
-          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteDeposit('${id}')" title="حذف">🗑️</button>
-        </div>
-      </td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--text-400)">لا توجد ودائع مسجلة</td></tr>';
-  
-  // تحديث الإجمالي
-  $('total-active-deposits').textContent = fmt(totalActive, 2) + ' ج';
-};
-
-// تعديل وديعة
-window.editDeposit = async function(id) {
-  const deposit = state.deposits?.[id];
-  if (!deposit) return;
-  
-  $('dep-edit-id').value = id;
-  $('dep-person-type').value = deposit.personType;
-  onDepositPersonTypeChange();
-  
-  setTimeout(() => {
-    $('dep-person').value = deposit.personId;
-    $('dep-date').value = deposit.date;
-    $('dep-amount').value = deposit.amount;
-    $('dep-operation-type').value = deposit.operationType;
-    $('desc-notes').value = deposit.notes || '';
-    $('dep-method').value = deposit.method || 'cash';
-    $('dep-status').value = deposit.status || 'active';
-  }, 100);
-  
-  $('deposit-modal-title').textContent = 'تعديل وديعة';
-  openModal('modal-deposit');
-};
-
-// حذف وديعة
-window.deleteDeposit = async function(id) {
-  if (!confirm('حذف هذه الوديعة؟')) return;
-  await dbRemove(`deposits/${id}`);
-  toast('تم حذف الوديعة', 'success');
-  loadDeposits();
-  renderAccounts();
-};
-
-// حساب رصيد الودائع لشخص معين
-window.getPersonDepositBalance = function(personId, personType) {
-  const deposits = Object.values(state.deposits || {})
-    .filter(d => d.personId === personId && d.personType === personType && d.status === 'active');
-  
-  let balance = 0;
-  deposits.forEach(d => {
-    if (d.operationType === 'deposit' || d.operationType === 'adjustment') {
-      balance += Number(d.amount || 0);
-    } else if (d.operationType === 'withdrawal' || d.operationType === 'purchase_use') {
-      balance -= Number(d.amount || 0);
-    }
-  });
-  
-  return balance;
-};
-
-// تبويب الودائع
-window.switchAccountTab = function(tab) {
-  document.querySelectorAll('#page-accounts .tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('#page-accounts .tab').forEach(t => {
-    if (t.onclick?.toString().includes(tab)) t.classList.add('active');
-  });
-  
-  document.getElementById('tab-balances').style.display = tab === 'balances' ? 'block' : 'none';
-  document.getElementById('tab-payments').style.display = tab === 'payments' ? 'block' : 'none';
-  document.getElementById('tab-advances').style.display = tab === 'advances' ? 'block' : 'none';
-  document.getElementById('tab-deposits').style.display = tab === 'deposits' ? 'block' : 'none';
-  
-  if (tab === 'deposits') loadDeposits();
-};
-
-// ══════════════════════════════════════════════════════════════════
 // WAREHOUSE
 // ══════════════════════════════════════════════════════════════════
 // ══════════════════════════════════════════════════════════════════
@@ -5212,31 +4167,6 @@ window.clearWHFilter = function(wh) {
   document.getElementById(prefix + '-to').value = '';
   document.getElementById(prefix + '-type-filter').value = '';
   renderWarehouse(wh);
-  toast('تم مسح الفلتر - عرض جميع البيانات', 'info');
-};
-
-// ─── تطبيق فلتر التاريخ للمخزن ──────────────────────────────────
-window.applyWHDateFilter = function(wh) {
-  const prefix = wh === 'warehouse1' ? 'wh1' : 'wh2';
-  const fromVal = document.getElementById(prefix + '-from')?.value || '';
-  const toVal = document.getElementById(prefix + '-to')?.value || '';
-  
-  if (!fromVal && !toVal) {
-    toast('الرجاء اختيار تاريخ البداية أو النهاية', 'warning');
-    return;
-  }
-  
-  if (fromVal && toVal && fromVal > toVal) {
-    toast('تاريخ البداية يجب أن يكون قبل تاريخ النهاية', 'error');
-    return;
-  }
-  
-  renderWarehouse(wh);
-  
-  const fromStr = fromVal || 'من البداية';
-  const toStr = toVal || 'حتى الآن';
-  const whName = wh === 'warehouse1' ? 'المخزن الأول' : 'المخزن الثاني';
-  toast(`${whName}: ${fromStr} ← ${toStr}`, 'success');
 };
 
 window.setFOLast7Days = function() {
@@ -5247,37 +4177,6 @@ window.setFOLast7Days = function() {
   document.getElementById('fo-from').value = weekAgo.toISOString().slice(0,10);
   document.getElementById('fo-to').value = today.toISOString().slice(0,10);
   loadFactoryOut();
-};
-
-// ─── تطبيق ومسح فلتر خارج من المعمل ─────────────────────────────
-window.applyFODateFilter = function() {
-  const fromVal = document.getElementById('fo-from')?.value || '';
-  const toVal = document.getElementById('fo-to')?.value || '';
-  
-  if (!fromVal && !toVal) {
-    toast('الرجاء اختيار تاريخ البداية أو النهاية', 'warning');
-    return;
-  }
-  
-  if (fromVal && toVal && fromVal > toVal) {
-    toast('تاريخ البداية يجب أن يكون قبل تاريخ النهاية', 'error');
-    return;
-  }
-  
-  loadFactoryOut();
-  
-  const fromStr = fromVal || 'من البداية';
-  const toStr = toVal || 'حتى الآن';
-  toast(`خارج من المعمل: ${fromStr} ← ${toStr}`, 'success');
-};
-
-window.clearFOFilter = function() {
-  document.getElementById('fo-from').value = '';
-  document.getElementById('fo-to').value = '';
-  document.getElementById('fo-search').value = '';
-  document.getElementById('fo-type-filter').value = '';
-  loadFactoryOut();
-  toast('تم مسح الفلتر - عرض جميع البيانات', 'info');
 };
 
 function renderWarehouse(wh) {
@@ -7391,12 +6290,18 @@ const USER_KEY = 'yasen_user';
 let currentUserRole = null;
 
 function isAuthenticated() {
-  // تم تعطيل تسجيل الدخول - الدخول تلقائي
-  currentUserRole = 'admin';
-  sessionStorage.setItem(SESSION_KEY, '1');
-  sessionStorage.setItem(ROLE_KEY, 'admin');
-  sessionStorage.setItem(USER_KEY, 'auto_login');
-  return true;
+  const auth = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
+  currentUserRole = sessionStorage.getItem(ROLE_KEY) || localStorage.getItem(ROLE_KEY);
+  // migrate old localStorage sessions to sessionStorage (one-time)
+  if (localStorage.getItem(SESSION_KEY) === '1') {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    sessionStorage.setItem(ROLE_KEY, localStorage.getItem(ROLE_KEY)||'');
+    sessionStorage.setItem(USER_KEY, localStorage.getItem(USER_KEY)||'');
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(ROLE_KEY);
+    localStorage.removeItem(USER_KEY);
+  }
+  return auth === '1';
 }
 
 function isViewerMode() {
@@ -7685,35 +6590,6 @@ window.updateEasyTicker = function() {
 };
 
 // ══════════════════════════════════════════
-// EASY UI LIVE REFRESH — يحدّث الأرقام أول ما البيانات توصل من Firebase
-// (بدل ما تتحسب مرة واحدة بس وقت فتح الشاشة، ساعتها البيانات لسه
-//  مجتش من قاعدة البيانات، فتفضل الكروت عارضة "—" للأبد)
-// ══════════════════════════════════════════
-(function() {
-  let lastSnapshot = '';
-  setInterval(function() {
-    const easy = document.getElementById('easy-ui-screen');
-    if (!easy || easy.style.display === 'none' || !easy.style.display) return;
-    try {
-      const snapshot = JSON.stringify({
-        m: Object.keys(state.milkRecords || {}).length,
-        e: Object.keys(state.expenses || {}).length,
-        sa: Object.keys(state.sales || {}).length,
-        s: Object.keys(state.suppliers || {}).length,
-        b: Object.keys(state.buyers || {}).length,
-        w1: Object.keys(state.warehouse1 || {}).length,
-        w2: Object.keys(state.warehouse2 || {}).length,
-        ex: Object.keys(state.exports || {}).length
-      });
-      if (snapshot !== lastSnapshot) {
-        lastSnapshot = snapshot;
-        updateEasyTicker();
-      }
-    } catch (e) { /* silent */ }
-  }, 1200);
-})();
-
-// ══════════════════════════════════════════
 // Ctrl key → رجوع للواجهة السهلة
 // ══════════════════════════════════════════
 (function() {
@@ -7753,9 +6629,34 @@ window.updateEasyTicker = function() {
 })();
 
 window.logout = function() {
-  // تم تعطيل تسجيل الخروج - الجلسة دائمة
-  toast('تم تعطيل تسجيل الخروج', 'info');
-  return;
+  if (!confirm('هل تريد تسجيل الخروج؟')) return;
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(ROLE_KEY);
+  localStorage.removeItem(USER_KEY);
+  sessionStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem(ROLE_KEY);
+  sessionStorage.removeItem(USER_KEY);
+  currentUserRole = null;
+  // Hide easy UI and selection screen if visible
+  const easyUI = document.getElementById('easy-ui-screen');
+  const selScreen = document.getElementById('interface-select-screen');
+  if (easyUI) easyUI.style.display = 'none';
+  if (selScreen) selScreen.style.display = 'none';
+  const screen = $('login-screen');
+  screen.style.opacity = '0';
+  screen.style.display = 'flex';
+  $('login-pin').value = '';
+  $('secret-answer').value = '';
+  $('login-error').textContent = '';
+  $('login-pin').style.borderColor = 'var(--border)';
+  $('secret-answer').style.opacity = '0.5';
+  $('secret-answer').style.pointerEvents = 'none';
+  $('secret-answer').style.cursor = 'not-allowed';
+  requestAnimationFrame(() => {
+    screen.style.transition = 'opacity 0.3s ease';
+    screen.style.opacity = '1';
+    setTimeout(() => $('login-pin').focus(), 300);
+  });
 };
 
 // PASSWORD MANAGEMENT
@@ -7823,15 +6724,18 @@ window.changeOwnPwd = function() {
   }
 };
 
-// Check session on load - تم تعطيل تسجيل الدخول
-// الدخول التلقائي بدون كلمة مرور
-$('login-screen').style.display = 'none';
-const savedUI = localStorage.getItem('yasen_ui_mode');
-if (!isMobilePhone() && savedUI === 'easy') {
-  const easy = document.getElementById('easy-ui-screen');
-  if (easy) { easy.style.display = 'flex'; easy.style.opacity = '1'; }
+// Check session on load
+if (isAuthenticated()) {
+  $('login-screen').style.display = 'none';
+  const savedUI = localStorage.getItem('yasen_ui_mode');
+  if (!isMobilePhone() && savedUI === 'easy') {
+    const easy = document.getElementById('easy-ui-screen');
+    if (easy) { easy.style.display = 'flex'; easy.style.opacity = '1'; }
+  } else {
+    updateUIForRole();
+  }
 } else {
-  updateUIForRole();
+  setTimeout(() => $('login-pin').focus(), 100);
 }
 
 // ── requirePin: wraps any delete/edit action ────────────────────
@@ -10875,6 +9779,5 @@ if ('serviceWorker' in navigator) {
 
     
 </script>
-<script src="js/ui-enhance.js"></script>
 </body>
 </html>
