@@ -3193,8 +3193,8 @@
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px;padding:0 4px">
         <div class="form-group" style="min-width:150px;margin:0"><label>من تاريخ</label><input type="date" id="stmt-from"></div>
         <div class="form-group" style="min-width:150px;margin:0"><label>إلى تاريخ</label><input type="date" id="stmt-to"></div>
-        <button class="btn btn-primary btn-sm" style="margin-top:22px;background:var(--gold);color:#000;font-weight:700;border-radius:8px;padding:8px 20px" onclick="window.applySupplierDateFilter()">✓ تطبيق</button>
-        <button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="window.resetSupplierDateFilter()">الكل</button>
+        <button class="btn btn-primary btn-sm" style="margin-top:22px;background:var(--gold);color:#000;font-weight:700;border-radius:8px;padding:8px 20px" onclick="showAccountDetail(currentStmtSupplierId)">✓ تطبيق</button>
+        <button class="btn btn-secondary btn-sm" style="margin-top:22px" onclick="document.getElementById('stmt-from').value='';document.getElementById('stmt-to').value='';showAccountDetail(currentStmtSupplierId)">الكل</button>
       </div>
     <div class="modal-footer">
       <button class="btn btn-primary" onclick="printSupplierStatementChoice('full')">📋 طباعة كامل الكشف</button>
@@ -8407,29 +8407,12 @@ window.getPeriodLabel = function(time24) {
 // ══════════════════════════════════════════════════════════════════
 // GLOBAL VARIABLES FOR STATEMENTS (exposed to window for inline onclick)
 // ══════════════════════════════════════════════════════════════════
-let currentStmtSupplierId = '';
-let currentWorkerStmtId = '';
-let currentBuyerStmtId = '';
-// Expose to window for inline onclick handlers
-window.currentStmtSupplierIdRef = { get id() { return currentStmtSupplierId; }, set id(v) { currentStmtSupplierId = v; } };
-window.currentWorkerStmtIdRef = { get id() { return currentWorkerStmtId; }, set id(v) { currentWorkerStmtId = v; } };
-window.currentBuyerStmtIdRef = { get id() { return currentBuyerStmtId; }, set id(v) { currentBuyerStmtId = v; } };
-
-// Bridge functions for inline onclick handlers (global scope)
-window.applySupplierDateFilter = function() {
-  if (typeof showAccountDetail === 'function' && currentStmtSupplierId) {
-    showAccountDetail(currentStmtSupplierId);
-  }
-};
-window.resetSupplierDateFilter = function() {
-  var fromEl = document.getElementById('stmt-from');
-  var toEl = document.getElementById('stmt-to');
-  if (fromEl) fromEl.value = '';
-  if (toEl) toEl.value = '';
-  if (typeof showAccountDetail === 'function' && currentStmtSupplierId) {
-    showAccountDetail(currentStmtSupplierId);
-  }
-};
+let _currentStmtSupplierId = '';
+let _currentWorkerStmtId = '';
+let _currentBuyerStmtId = '';
+Object.defineProperty(window, 'currentStmtSupplierId', { get: () => _currentStmtSupplierId, set: v => _currentStmtSupplierId = v });
+Object.defineProperty(window, 'currentWorkerStmtId', { get: () => _currentWorkerStmtId, set: v => _currentWorkerStmtId = v });
+Object.defineProperty(window, 'currentBuyerStmtId', { get: () => _currentBuyerStmtId, set: v => _currentBuyerStmtId = v });
 
 // ══════════════════════════════════════════════════════════════════
 // QUICK DATE RANGE HELPER FOR WORKER STATEMENT
