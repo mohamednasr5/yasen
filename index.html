@@ -3932,7 +3932,7 @@ window.loadMilkRecords = function() {
       <td>${i+1}</td>
       <td>${r.date}</td>
       <td>${to12Hour(r.time||'')}<br><small style="color:var(--text-400)">${r.period||getPeriodLabel(r.time)||''}</small></td>
-      <td><strong>${sanitize(state.suppliers[r.supplierId]?.name || 'غير محدد')}</strong></td>
+      <td><strong class="supplier-name-clickable" onclick="event.stopPropagation();openSupplierMenu(event, '${r.supplierId}')">${sanitize(state.suppliers[r.supplierId]?.name || 'غير محدد')}</strong></td>
       <td>
         <div style="display:flex;flex-direction:column;gap:4px">
           ${hasBaqri ? `<span style="background:rgba(34,197,94,0.15);color:#22c55e;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600">🐄 ${fmt(r.baqriQty,1)} كجم</span>` : ''}
@@ -10468,7 +10468,395 @@ if ('serviceWorker' in navigator) {
     // ══════════════════════════════════════════════════════════
 
     
+    // ══════════════════════════════════════════════════════════
+    // القائمة العائمة لحساب المورد - Supplier Floating Menu
+    // ══════════════════════════════════════════════════════════
+
+    let currentMenuSupplierId = null;
+
+    // فتح القائمة العائمة عند الضغط على اسم المورد
+    window.openSupplierMenu = function(event, supplierId) {
+      if (!supplierId || !state.suppliers[supplierId]) {
+        toast('لم يتم العثور على بيانات المورد', 'warning');
+        return;
+      }
+
+      currentMenuSupplierId = supplierId;
+      const supplier = state.suppliers[supplierId];
+      const menu = document.getElementById('supplier-context-menu');
+      const backdrop = document.getElementById('supplier-menu-backdrop');
+
+      // تحديث معلومات المورد في القائمة
+      document.getElementById('menu-supplier-name').textContent = supplier.name || 'غير محدد';
+      
+      // حساب إحصائيات الحساب
+      const milkRecords = Object.values(state.milkRecords).filter(r => r.supplierId === supplierId);
+      const milkTotal = milkRecords.reduce((s, r) => s + Number(r.total || 0), 0);
+      const milkQty = milkRecords.reduce((s, r) => s + Number(r.qty || 0), 0);
+      const payments = Object.values(state.supplierPayments).filter(p => p.supplierId === supplierId).reduce((s, p) => s + Number(p.amount || 0), 0);
+      const advances = Object.values(state.supplierAdvances).filter(a => a.supplierId === supplierId).reduce((s, a) => s + Number(a.amount || 0), 0);
+      const balance = milkTotal - payments - advances;
+
+      // تحديث الإحصائيات في القائمة
+      document.getElementById('menu-milk-total').textContent = fmt(milkTotal, 0) + ' ج';
+      document.getElementById('menu-payments').textContent = fmt(payments, 0) + ' ج';
+      document.getElementById('menu-advances').textContent = fmt(advances, 0) + ' ج';
+      
+      const balanceEl = document.getElementById('menu-balance');
+      balanceEl.textContent = fmt(balance, 0) + ' ج';
+      balanceEl.className = 'supplier-stat-value ' + (balance > 0 ? 'positive' : balance < 0 ? 'negative' : 'info');
+
+      // تحديث المعلومات الإضافية
+      const phone = supplier.phone || '—';
+      const area = supplier.area || '—';
+      document.getElementById('menu-supplier-info').textContent = '📞 ' + phone + ' | 📍 ' + area;
+      document.getElementById('menu-record-count').textContent = milkRecords.length + ' سجل حليب | ' + fmt(milkQty, 1) + ' كجم إجمالي';
+
+      // تحديد موقع القائمة بالقرب من مكان النقر
+      const rect = event.target.getBoundingClientRect();
+      let top = rect.bottom + 8;
+      let left = rect.right - 350;
+      
+      // ضبط الحدود لتجنب خروج القائمة عن الشاشة
+      if (left + 420 > window.innerWidth) {
+        left = window.innerWidth - 420 - 16;
+      }
+      if (left < 16) {
+        left = 16;
+      }
+      if (top + 450 > window.innerHeight) {
+        top = rect.top - 450 - 8;
+      }
+      if (top < 16) {
+        top = 16;
+      }
+
+      menu.style.top = top + 'px';
+      menu.style.left = left + 'px';
+
+      // إظهار القائمة والخلفية المعتمة
+      backdrop.classList.add('open');
+      menu.classList.add('open');
+
+      // إضافة مستمع للضغط خارج القائمة لإغلاقها
+      setTimeout(function() {
+        document.addEventListener('click', handleOutsideClick);
+      }, 10);
+    };
+
+    // التعامل مع الضغط خارج القائمة
+    function handleOutsideClick(e) {
+      var menu = document.getElementById('supplier-context-menu');
+      if (menu && !menu.contains(e.target) && !e.target.classList.contains('supplier-name-clickable')) {
+        closeSupplierMenu();
+      }
+    }
+
+    // إغلاق القائمة العائمة
+    window.closeSupplierMenu = function() {
+      var menu = document.getElementById('supplier-context-menu');
+      var backdrop = document.getElementById('supplier-menu-backdrop');
+      
+      menu.classList.remove('open');
+      backdrop.classList.remove('open');
+      document.removeEventListener('click', handleOutsideClick);
+      currentMenuSupplierId = null;
+    };
+
+    // طباعة كشف حساب المورد من القائمة
+    window.printSupplierFromMenu = function() {
+      if (!currentMenuSupplierId) return;
+      
+      closeSupplierMenu();
+      
+      // استخدام دالة الطباعة الموجودة بعد تأخير بسيط
+      setTimeout(function() {
+        showAccountDetail(currentMenuSupplierId);
+        setTimeout(function() {
+          printSupplierStatementChoice('full');
+        }, 500);
+      }, 300);
+    };
+
+    // تصدير كشف حساب المورد كـ PDF
+    window.exportSupplierToPDF = function() {
+      if (!currentMenuSupplierId) return;
+      
+      var supplierId = currentMenuSupplierId;
+      var supplier = state.suppliers[supplierId];
+      if (!supplier) return;
+
+      closeSupplierMenu();
+
+      setTimeout(function() {
+        try {
+          var jsPDF = window.jspdf.jsPDF;
+          var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+          
+          // جمع البيانات
+          var milkRecords = Object.entries(state.milkRecords)
+            .filter(function(arr) { return arr[1].supplierId === supplierId; })
+            .sort(function(a, b) { return b[1].date.localeCompare(a[1].date); });
+          
+          var payments = Object.entries(state.supplierPayments)
+            .filter(function(arr) { return arr[1].supplierId === supplierId; })
+            .sort(function(a, b) { return b[1].date.localeCompare(a[1].date); });
+          
+          var advances = Object.entries(state.supplierAdvances)
+            .filter(function(arr) { return arr[1].supplierId === supplierId; });
+
+          var milkTotal = milkRecords.reduce(function(s, arr) { return s + Number(arr[1].total || 0); }, 0);
+          var payTotal = payments.reduce(function(s, arr) { return s + Number(arr[1].amount || 0); }, 0);
+          var advTotal = advances.reduce(function(s, arr) { return s + Number(arr[1].amount || 0); }, 0);
+          var balance = milkTotal - payTotal - advTotal;
+
+          // العنوان
+          doc.setFontSize(18);
+          doc.setTextColor(232, 184, 75);
+          doc.text('Factory Name', 148, 20, { align: 'center' });
+          
+          doc.setFontSize(14);
+          doc.setTextColor(0, 0, 0);
+          doc.text('Supplier Account: ' + supplier.name, 148, 32, { align: 'center' });
+
+          // الملخص
+          doc.setFontSize(11);
+          doc.setFillColor(245, 245, 245);
+          doc.rect(15, 42, 180, 25, 'F');
+          
+          doc.text('Milk Total: ' + milkTotal.toFixed(2) + ' EGP', 25, 52);
+          doc.text('Payments: ' + payTotal.toFixed(2) + ' EGP', 110, 52);
+          doc.text('Advances: ' + advTotal.toFixed(2) + ' EGP', 25, 62);
+          
+          doc.setFontSize(12);
+          doc.setTextColor(balance >= 0 ? 34 : 255, balance >= 0 ? 197 : 92, balance >= 0 ? 94 : 77);
+          doc.text('Balance Due: ' + balance.toFixed(2) + ' EGP', 110, 62);
+
+          // جدول السجلات
+          var y = 78;
+          doc.setFontSize(10);
+          doc.setTextColor(0, 0, 0);
+          
+          // الرأس
+          doc.setFillColor(232, 184, 75);
+          doc.rect(15, y, 180, 8, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.text('Date', 20, y + 5.5);
+          doc.text('Type', 50, y + 5.5);
+          doc.text('Details', 80, y + 5.5);
+          doc.text('Amount', 150, y + 5.5, { align: 'right' });
+
+          y += 12;
+          doc.setTextColor(0, 0, 0);
+
+          // سجلات الحليب
+          milkRecords.forEach(function(arr) {
+            var id = arr[0], r = arr[1];
+            if (y > 270) { doc.addPage(); y = 20; }
+            doc.text(r.date, 20, y);
+            doc.text('Milk', 50, y);
+            doc.text(Number(r.qty || 0).toFixed(1) + ' kg', 80, y);
+            doc.text(Number(r.total || 0).toFixed(2) + ' EGP', 170, y, { align: 'right' });
+            y += 7;
+          });
+
+          // المدفوعات
+          payments.forEach(function(arr) {
+            var id = arr[0], p = arr[1];
+            if (y > 270) { doc.addPage(); y = 20; }
+            doc.text(p.date, 20, y);
+            doc.text('Payment', 50, y);
+            doc.text(p.method || '-', 80, y);
+            doc.setTextColor(255, 92, 77);
+            doc.text('-' + Number(p.amount || 0).toFixed(2) + ' EGP', 170, y, { align: 'right' });
+            doc.setTextColor(0, 0, 0);
+            y += 7;
+          });
+
+          // السلف
+          advances.forEach(function(arr) {
+            var id = arr[0], a = arr[1];
+            if (y > 270) { doc.addPage(); y = 20; }
+            doc.text(a.date, 20, y);
+            doc.text('Advance', 50, y);
+            doc.text(a.reason || '-', 80, y);
+            doc.setTextColor(255, 176, 32);
+            doc.text('-' + Number(a.amount || 0).toFixed(2) + ' EGP', 170, y, { align: 'right' });
+            doc.setTextColor(0, 0, 0);
+            y += 7;
+          });
+
+          // التذييل
+          y += 5;
+          if (y > 260) { doc.addPage(); y = 20; }
+          doc.setDrawColor(232, 184, 75);
+          doc.line(15, y, 195, y);
+          doc.setFontSize(9);
+          doc.setTextColor(128, 128, 128);
+          doc.text('Generated on: ' + new Date().toLocaleDateString('ar-EG') + ' | Total Records: ' + (milkRecords.length + payments.length + advances.length), 105, y + 6, { align: 'center' });
+
+          doc.save('account_' + supplier.name.replace(/\s+/g, '_') + '.pdf');
+          toast('تم تصدير PDF بنجاح', 'success');
+          track('export_supplier_pdf', { supplierId: supplierId });
+        } catch(e) {
+          toast('خطأ في التصدير: ' + e.message, 'error');
+        }
+      }, 300);
+    };
+
+    // تصدير كشف حساب المورد كـ Excel (CSV)
+    window.exportSupplierToExcel = function() {
+      if (!currentMenuSupplierId) return;
+      
+      var supplierId = currentMenuSupplierId;
+      var supplier = state.suppliers[supplierId];
+      if (!supplier) return;
+
+      closeSupplierMenu();
+
+      setTimeout(function() {
+        try {
+          // جمع البيانات
+          var milkRecords = Object.entries(state.milkRecords)
+            .filter(function(arr) { return arr[1].supplierId === supplierId; })
+            .sort(function(a, b) { return b[1].date.localeCompare(a[1].date); });
+          
+          var payments = Object.entries(state.supplierPayments)
+            .filter(function(arr) { return arr[1].supplierId === supplierId; })
+            .sort(function(a, b) { return b[1].date.localeCompare(a[1].date); });
+          
+          var advances = Object.entries(state.supplierAdvances)
+            .filter(function(arr) { return arr[1].supplierId === supplierId; });
+
+          // إنشاء محتوى CSV
+          var csv = '\uFEFF'; // BOM for UTF-8
+          csv += 'Supplier Account Statement\n';
+          csv += 'Supplier Name,' + supplier.name + '\n';
+          csv += 'Phone,' + (supplier.phone || '-') + '\n';
+          csv += 'Area,' + (supplier.area || '-') + '\n';
+          csv += 'Export Date,' + new Date().toLocaleDateString('ar-EG') + '\n\n';
+
+          // ملخص
+          var milkTotal = milkRecords.reduce(function(s, arr) { return s + Number(arr[1].total || 0); }, 0);
+          var payTotal = payments.reduce(function(s, arr) { return s + Number(arr[1].amount || 0); }, 0);
+          var advTotal = advances.reduce(function(s, arr) { return s + Number(arr[1].amount || 0); }, 0);
+          
+          csv += '=== SUMMARY ===\n';
+          csv += 'Milk Total,' + milkTotal.toFixed(2) + ',EGP\n';
+          csv += 'Payments,' + payTotal.toFixed(2) + ',EGP\n';
+          csv += 'Advances,' + advTotal.toFixed(2) + ',EGP\n';
+          csv += 'Balance Due,' + (milkTotal - payTotal - advTotal).toFixed(2) + ',EGP\n\n';
+
+          // سجلات الحليب
+          csv += '=== MILK RECORDS ===\n';
+          csv += 'Date,Time,Quantity(kg),Price,Total(EGP),Notes\n';
+          milkRecords.forEach(function(arr) {
+            var id = arr[0], r = arr[1];
+            csv += r.date + ',' + (r.time||'') + ',' + Number(r.qty||0).toFixed(1) + ',' + Number(r.price||0).toFixed(2) + ',' + Number(r.total||0).toFixed(2) + ',' + (r.notes||'') + '\n';
+          });
+
+          // المدفوعات
+          csv += '\n=== PAYMENTS ===\n';
+          csv += 'Date,Method,Amount(EGP),Notes\n';
+          payments.forEach(function(arr) {
+            var id = arr[0], p = arr[1];
+            csv += p.date + ',' + (p.method||'') + ',' + Number(p.amount||0).toFixed(2) + ',' + (p.notes||'') + '\n';
+          });
+
+          // السلف
+          csv += '\n=== ADVANCES ===\n';
+          csv += 'Date,Reason,Amount(EGP),Status\n';
+          advances.forEach(function(arr) {
+            var id = arr[0], a = arr[1];
+            csv += a.date + ',' + (a.reason||'') + ',' + Number(a.amount||0).toFixed(2) + ',' + (a.status||'pending') + '\n';
+          });
+
+          // تحميل الملف
+          var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+          var url = URL.createObjectURL(blob);
+          var link = document.createElement('a');
+          link.href = url;
+          link.download = 'account_' + supplier.name.replace(/\s+/g, '_') + '.csv';
+          link.click();
+          URL.revokeObjectURL(url);
+          
+          toast('تم تصدير Excel بنجاح', 'success');
+          track('export_supplier_excel', { supplierId: supplierId });
+        } catch(e) {
+          toast('خطأ في التصدير: ' + e.message, 'error');
+        }
+      }, 300);
+    };
+
+    // عرض الكشف التفصيلي الكامل
+    window.viewFullAccountDetail = function() {
+      if (!currentMenuSupplierId) return;
+      
+      var supplierId = currentMenuSupplierId;
+      closeSupplierMenu();
+      
+      setTimeout(function() {
+        showAccountDetail(supplierId);
+      }, 300);
+    };
+
 </script>
+<!-- القائمة العائمة لحساب المورد -->
+<div class="supplier-menu-backdrop" id="supplier-menu-backdrop" onclick="closeSupplierMenu()"></div>
+<div class="supplier-context-menu" id="supplier-context-menu">
+  <div class="supplier-menu-header">
+    <div class="supplier-menu-icon">👤</div>
+    <div class="supplier-menu-title">
+      <h4 id="menu-supplier-name">اسم المورد</h4>
+      <span id="menu-supplier-info">جاري تحميل البيانات...</span>
+    </div>
+    <button class="supplier-menu-close" onclick="closeSupplierMenu()" title="إغلاق">✕</button>
+  </div>
+  <div class="supplier-menu-summary" id="supplier-menu-summary">
+    <div class="supplier-stat-item">
+      <span class="supplier-stat-value positive" id="menu-milk-total">0 ج</span>
+      <span class="supplier-stat-label">🥛 إجمالي الحليب</span>
+    </div>
+    <div class="supplier-stat-item">
+      <span class="supplier-stat-value negative" id="menu-payments">0 ج</span>
+      <span class="supplier-stat-label">💳 المدفوعات</span>
+    </div>
+    <div class="supplier-stat-item">
+      <span class="supplier-stat-value warning" id="menu-advances">0 ج</span>
+      <span class="supplier-stat-label">💵 السلف</span>
+    </div>
+    <div class="supplier-stat-item" style="background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.08)); border-color: rgba(99,102,241,0.3);">
+      <span class="supplier-stat-value info" id="menu-balance">0 ج</span>
+      <span class="supplier-stat-label">📊 الرصيد المستحق</span>
+    </div>
+  </div>
+  <div class="supplier-menu-actions">
+    <button class="supplier-action-btn btn-print" onclick="printSupplierFromMenu()">
+      <span class="supplier-action-icon">🖨️</span>
+      <span>طباعة كشف الحساب</span>
+      <span class="supplier-action-arrow">←</span>
+    </button>
+    <button class="supplier-action-btn btn-export" onclick="exportSupplierToPDF()">
+      <span class="supplier-action-icon">📄</span>
+      <span>تصدير PDF</span>
+      <span class="supplier-action-arrow">←</span>
+    </button>
+    <button class="supplier-action-btn btn-export" onclick="exportSupplierToExcel()">
+      <span class="supplier-action-icon">📊</span>
+      <span>تصدير Excel</span>
+      <span class="supplier-action-arrow">←</span>
+    </button>
+    <button class="supplier-action-btn btn-detail" onclick="viewFullAccountDetail()">
+      <span class="supplier-action-icon">📋</span>
+      <span>عرض الكشف التفصيلي</span>
+      <span class="supplier-action-arrow">←</span>
+    </button>
+  </div>
+  <div class="supplier-menu-details">
+    <span id="menu-record-count">0 سجل</span>
+    <span style="color: var(--gold);">اضغط خارج القائمة للإغلاق</span>
+  </div>
+</div>
 <script src="js/ui-enhance.js"></script>
 </body>
 </html>
