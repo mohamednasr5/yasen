@@ -10818,10 +10818,13 @@ if ('serviceWorker' in navigator) {
       try {
         var supplierId = currentMenuSupplierId;
         closeSupplierMenu();
-      
-      setTimeout(function() {
-        showAccountDetail(supplierId);
-      }, 300);
+        
+        setTimeout(function() {
+          showAccountDetail(supplierId);
+        }, 300);
+      } catch(err) {
+        console.error('Error in viewFullAccountDetail:', err);
+      }
     };
 
     // ══════════════════════════════════════════════════════════
