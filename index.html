@@ -2149,6 +2149,7 @@
         <div class="tab active" onclick="switchReportTab('monthly')">التقرير الشهري</div>
         <div class="tab" onclick="switchReportTab('supplier')">تقرير مورد</div>
         <div class="tab" onclick="switchReportTab('inventory')">تقرير المخزون</div>
+        <div class="tab" onclick="switchReportTab('custom')">📋 تقرير مخصص</div>
       </div>
 
       <!-- Monthly Report -->
@@ -2236,6 +2237,63 @@
       <!-- ===== END CHARTS SECTION ===== -->
       <div id="inventory-report-output"></div>
       </div>
+
+      <!-- Custom Report -->
+      <div id="report-custom" style="display:none">
+        <div style="background:var(--bg-700);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px">
+          <h4 style="color:var(--gold);margin:0 0 16px;font-size:16px">📋 تقرير مخصص - اختر المعايير</h4>
+          
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:16px">
+            <!-- Data Source -->
+            <div class="form-group" style="margin:0">
+              <label style="font-weight:600;color:var(--text-300)">مصدر البيانات</label>
+              <select id="custom-report-source" style="width:100%;padding:10px;background:var(--bg-600);border:1.5px solid var(--border);border-radius:8px;color:var(--text-100);font-size:14px">
+                <option value="all">📊 الكل (شامل)</option>
+                <option value="sales">🛒 المبيعات</option>
+                <option value="expenses">💸 المصاريف</option>
+                <option value="milk">🥛 الحليب</option>
+                <option value="warehouse">📦 المخزن</option>
+                <option value="suppliers">👥 الموردين</option>
+                <option value="buyers">🧑‍🤝‍🧑 المشترين</option>
+              </select>
+            </div>
+            
+            <!-- Date From -->
+            <div class="form-group" style="margin:0">
+              <label style="font-weight:600;color:var(--text-300)">من تاريخ</label>
+              <input type="date" id="custom-report-from" style="width:100%;padding:10px;background:var(--bg-600);border:1.5px solid var(--border);border-radius:8px;color:var(--text-100)">
+            </div>
+            
+            <!-- Date To -->
+            <div class="form-group" style="margin:0">
+              <label style="font-weight:600;color:var(--text-300)">إلى تاريخ</label>
+              <input type="date" id="custom-report-to" style="width:100%;padding:10px;background:var(--bg-600);border:1.5px solid var(--border);border-radius:8px;color:var(--text-100)">
+            </div>
+            
+            <!-- Group By -->
+            <div class="form-group" style="margin:0">
+              <label style="font-weight:600;color:var(--text-300)">تجميع حسب</label>
+              <select id="custom-report-group" style="width:100%;padding:10px;background:var(--bg-600);border:1.5px solid var(--border);border-radius:8px;color:var(--text-100);font-size:14px">
+                <option value="day">يومي</option>
+                <option value="week" selected>أسبوعي</option>
+                <option value="month">شهري</option>
+                <option value="none">بدون تجميع</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+            <button class="btn btn-primary" onclick="window.generateCustomReport()">🔍 إنشاء التقرير</button>
+            <button class="btn btn-secondary" onclick="window.printCustomReport()">🖨️ طباعة</button>
+            <button class="btn btn-secondary" onclick="window.exportCustomReportPDF()">📄 تصدير PDF</button>
+          </div>
+        </div>
+        
+        <!-- Custom Report Output -->
+        <div id="custom-report-output"></div>
+      </div>
+
     </div>
 
     <!-- ════ PAGE: WORKERS ════ -->
@@ -2788,6 +2846,49 @@
   </div>
 </div>
 
+<!-- Buyer Mutual Transactions Modal -->
+<div class="modal-backdrop" id="modal-buyer-mutual">
+  <div class="modal" style="max-width:550px;max-height:90vh;overflow-y:auto">
+    <div class="modal-header">
+      <span style="font-size:22px">🔄</span>
+      <h3 id="bm-modal-title">معاملات متبادلة</h3>
+      <button class="btn btn-secondary btn-icon" onclick="closeModal('modal-buyer-mutual')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="bm-buyer-id" value="">
+      <input type="hidden" id="bm-edit-id" value="">
+      <div class="form-grid">
+        <div class="form-group"><label>المشتري *</label>
+          <select id="bm-buyer-select" onchange="document.getElementById('bm-buyer-id').value=this.value">
+            <option value="">اختر مشترياً...</option>
+          </select>
+        </div>
+        <div class="form-group"><label>التاريخ *</label><input type="date" id="bm-date"></div>
+        <div class="form-group"><label>نوع المعاملة *</label>
+          <select id="bm-type">
+            <option value="gave">أعطى (للمشتري)</option>
+            <option value="took">أخذ (من المشتري)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>المبلغ (جنيه) *</label><input type="number" id="bm-amount" placeholder="0" min="0" step="0.01"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>السبب / الوصف</label><input type="text" id="bm-reason" placeholder="مثال: سلفة، بضاعة مرتجعة..."></div>
+        <div class="form-group" style="grid-column:1/-1"><label>ملاحظات</label><textarea id="bm-notes" rows="2" placeholder="ملاحظات إضافية" style="width:100%;padding:10px 12px;background:var(--bg-600);border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text-100);font-family:inherit;font-size:14px;resize:vertical;box-sizing:border-box"></textarea></div>
+      </div>
+      
+      <!-- Mutual Transactions List -->
+      <div id="bm-transactions-list" style="margin-top:16px;display:none">
+        <h4 style="color:var(--gold);margin-bottom:10px;font-size:14px">📋 سجل المعاملات المتبادلة</h4>
+        <div id="bm-table-container" class="table-wrapper" style="max-height:250px;overflow-y:auto"></div>
+        <div id="bm-balance-summary" style="margin-top:10px;padding:10px;background:var(--bg-600);border-radius:8px;text-align:center"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-buyer-mutual')">إغلاق</button>
+      <button class="btn btn-primary" onclick="window.saveBuyerMutualTransaction()">💾 حفظ المعاملة</button>
+    </div>
+  </div>
+</div>
+
 <!-- Payment Modal -->
 <div class="modal-backdrop" id="modal-payment">
   <div class="modal" style="max-width:480px">
@@ -2913,8 +3014,9 @@
       <input type="hidden" id="wh-modal-target">
       <input type="hidden" id="wh-item-id">
       <div class="form-grid">
-        <div class="form-group"><label>نوع المنتج *</label>
+        <div class="form-group"><label>نوع المنتج <span style="color:var(--text-400);font-size:11px">(اختياري)</span></label>
           <select id="wh-product-type" onchange="toggleWHOtherName()">
+            <option value="">-- اختر أو اترك فارغ --</option>
             <option value="رومي">رومي</option>
             <option value="قشطة">قشطة</option>
             <option value="أخرى">أخرى</option>
@@ -4913,7 +5015,224 @@ function renderWarehouse(wh) {
       </td>
     </tr>`;
   }).join('') : `<tr><td colspan="9"><div class="empty-state"><span class="empty-icon">📦</span><p>المخزن فارغ</p></div></td></tr>`;
+  
+  // Render enhanced statistics with date filter
+  window.renderWarehouseStats(wh);
 }
+
+// ══════════════════════════════════════════════════════════════════
+// WAREHOUSE STATISTICS SYSTEM - نظام إحصائيات المخازن
+// ══════════════════════════════════════════════════════════════════
+window.renderWarehouseStats = function(wh) {
+  const isWH1 = wh === 'warehouse1';
+  const prefix = isWH1 ? 'wh1' : 'wh2';
+  const statsContainerEl = $(prefix + '-stats-container');
+  
+  if (!statsContainerEl) return;
+  
+  // Get filter values or defaults
+  const fromEl = $(prefix + '-stats-from');
+  const toEl = $(prefix + '-stats-to');
+  const periodBtns = document.querySelectorAll(`.${prefix}-period-btn`);
+  let activePeriod = 'all';
+  periodBtns.forEach(btn => { if (btn.classList.contains('btn-primary')) activePeriod = btn.dataset.period; });
+  
+  const from = fromEl ? fromEl.value : '';
+  const to = toEl ? toEl.value : '';
+  
+  // Calculate date range based on period
+  let calcFrom = from, calcTo = to;
+  if (activePeriod !== 'all' && !from && !to) {
+    const today = new Date();
+    calcTo = today.toISOString().slice(0, 10);
+    if (activePeriod === 'daily') {
+      calcFrom = calcTo;
+    } else if (activePeriod === 'weekly') {
+      const weekAgo = new Date(today);
+      weekAgo.setDate(today.getDate() - 7);
+      calcFrom = weekAgo.toISOString().slice(0, 10);
+    } else if (activePeriod === 'monthly') {
+      const monthAgo = new Date(today);
+      monthAgo.setDate(today.getDate() - 30);
+      calcFrom = monthAgo.toISOString().slice(0, 10);
+    }
+  }
+  
+  const stats = window.getWarehousePeriodStats(wh, calcFrom, calcTo);
+  
+  statsContainerEl.innerHTML = `
+    <div style="background:var(--bg-700);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-top:16px">
+      <h4 style="color:var(--gold);margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px">
+        📊 إحصائيات تفصيلية ${isWH1 ? 'المخزن الأول' : 'المخزن الثاني'}
+      </h4>
+      
+      <!-- Date Filter -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;padding:12px;background:var(--bg-600);border-radius:8px">
+        <div class="form-group" style="margin:0;min-width:140px">
+          <label style="font-size:11px;color:var(--text-400)">من تاريخ</label>
+          <input type="date" id="${prefix}-stats-from" value="${from}" onchange="window.applyWHStatsFilter('${wh}')" style="width:100%;padding:6px 8px;background:var(--bg-500);border:1px solid var(--border);border-radius:6px;color:var(--text-100);font-size:13px">
+        </div>
+        <div class="form-group" style="margin:0;min-width:140px">
+          <label style="font-size:11px;color:var(--text-400)">إلى تاريخ</label>
+          <input type="date" id="${prefix}-stats-to" value="${to}" onchange="window.applyWHStatsFilter('${wh}')" style="width:100%;padding:6px 8px;background:var(--bg-500);border:1px solid var(--border);border-radius:6px;color:var(--text-100);font-size:13px">
+        </div>
+        <div style="display:flex;gap:6px;margin-top:16px">
+          <button class="btn btn-sm ${activePeriod === 'all' ? 'btn-primary' : 'btn-secondary'} ${prefix}-period-btn" data-period="all" onclick="window.applyWHStatsFilter('${wh}', 'all')">📋 الكل</button>
+          <button class="btn btn-sm ${activePeriod === 'daily' ? 'btn-primary' : 'btn-secondary'} ${prefix}-period-btn" data-period="daily" onclick="window.applyWHStatsFilter('${wh}', 'daily')">يومي</button>
+          <button class="btn btn-sm ${activePeriod === 'weekly' ? 'btn-primary' : 'btn-secondary'} ${prefix}-period-btn" data-period="weekly" onclick="window.applyWHStatsFilter('${wh}', 'weekly')">أسبوعي</button>
+          <button class="btn btn-sm ${activePeriod === 'monthly' ? 'btn-primary' : 'btn-secondary'} ${prefix}-period-btn" data-period="monthly" onclick="window.applyWHStatsFilter('${wh}', 'monthly')">شهري</button>
+        </div>
+      </div>
+      
+      <!-- Statistics Cards -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px">
+        <div style="background:linear-gradient(135deg,#e3f2fd,#bbdefb);border:1px solid #1976d2;border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:18px">📦</div>
+          <div style="font-size:20px;font-weight:900;color:#0d47a1">${stats.totalItems}</div>
+          <div style="font-size:11px;color:#1565c0">عدد الأصناف</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border:1px solid #4caf50;border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:18px">💰</div>
+          <div style="font-size:20px;font-weight:900;color:#1b5e20">${fmt(stats.totalValue,0)}</div>
+          <div style="font-size:11px;color:#2e7d32">القيمة الإجمالية (ج)</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:1px solid #e65100;border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:18px">⚠️</div>
+          <div style="font-size:20px;font-weight:900;color:#bf360c">${stats.belowMin}</div>
+          <div style="font-size:11px;color:#e65100">تحت الحد الأدنى</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#fce4ec,#f8bbd0);border:1px solid #c2185b;border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:18px">📥</div>
+          <div style="font-size:20px;font-weight:900;color:#880e4f">${stats.movementIn}</div>
+          <div style="font-size:11px;color:#c2185b">وارد (عملية)</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#f3e5f5,#e1bee7);border:1px solid #7b1fa2;border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:18px">📤</div>
+          <div style="font-size:20px;font-weight:900;color:#4a148c">${stats.movementOut}</div>
+          <div style="font-size:11px;color:#7b1fa2">صادر (عملية)</div>
+        </div>
+      </div>
+      
+      <!-- Period Label -->
+      <div style="text-align:center;margin-bottom:12px;font-size:12px;color:var(--text-400)">
+        📅 الفترة: ${calcFrom && calcTo ? `${calcFrom} ← ${calcTo}` : 'كامل الفترة'}
+      </div>
+      
+      <!-- Movement Table -->
+      ${stats.movements.length > 0 ? `
+      <h5 style="color:var(--gold);margin:10px 0 8px;font-size:13px">📋 حركة المخزن في هذه الفترة</h5>
+      <div class="table-wrapper" style="max-height:250px;overflow-y:auto">
+        <table>
+          <thead><tr><th>التاريخ</th><th>الصنف</th><th>النوع</th><th>الكمية</th><th>العميل/ملاحظات</th></tr></thead>
+          <tbody>
+            ${stats.movements.slice(0, 50).map(m => `
+              <tr>
+                <td>${m.date}</td>
+                <td>${sanitize(m.item)}</td>
+                <td><span class="badge ${m.type === 'in' ? 'badge-success' : 'badge-danger'}">${m.type === 'in' ? '📥 وارد' : '📤 صادر'}</span></td>
+                <td style="font-weight:700">${fmt(m.qty, 2)}</td>
+                <td style="font-size:12px;color:var(--text-400)">${sanitize(m.note || '—')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+      ${stats.movements.length > 50 ? `<div style="text-align:center;font-size:11px;color:var(--text-400);margin-top:6px">عرض أول 50 عملية من إجمالي ${stats.movements.length}</div>` : ''}
+      ` : `
+      <div style="text-align:center;padding:16px;color:var(--text-400);font-size:13px">
+        📭 لا توجد حركات مخزنية في هذه الفترة
+      </div>
+      `}
+    </div>
+  `;
+};
+
+window.applyWHStatsFilter = function(wh, period) {
+  const isWH1 = wh === 'warehouse1';
+  const prefix = isWH1 ? 'wh1' : 'wh2';
+  
+  // Update active button state
+  if (period) {
+    document.querySelectorAll(`.${prefix}-period-btn`).forEach(btn => {
+      btn.classList.remove('btn-primary');
+      btn.classList.add('btn-secondary');
+    });
+    const activeBtn = document.querySelector(`.${prefix}-period-btn[data-period="${period}"]`);
+    if (activeBtn) {
+      activeBtn.classList.remove('btn-secondary');
+      activeBtn.classList.add('btn-primary');
+    }
+    // Clear dates when using preset periods
+    const fromEl = $(prefix + '-stats-from');
+    const toEl = $(prefix + '-stats-to');
+    if (fromEl) fromEl.value = '';
+    if (toEl) toEl.value = '';
+  }
+  
+  window.renderWarehouseStats(wh);
+};
+
+window.getWarehousePeriodStats = function(wh, from, to) {
+  const allItems = Object.entries(state[wh] || {});
+  
+  // Basic item statistics (current state, not filtered by date)
+  const totalItems = allItems.length;
+  const totalValue = allItems.reduce((s, [,i]) => s + Number(i.qty||0) * Number(i.price||0), 0);
+  const belowMin = allItems.filter(([,i]) => Number(i.qty||0) <= Number(i.minQty||0)).length;
+  
+  // Calculate movements from exports/transactions
+  const movements = [];
+  
+  // Get exports for this warehouse
+  const whKey = wh === 'warehouse1' ? 'warehouse1' : wh === 'warehouse2' ? 'warehouse2' : '';
+  const exports = Object.entries(state.exports || {})
+    .filter(([, e]) => !whKey || e.warehouse === whKey)
+    .filter(([, e]) => {
+      if (from && e.date < from) return false;
+      if (to && e.date > to) return false;
+      return true;
+    });
+  
+  exports.forEach(([id, e]) => {
+    movements.push({
+      date: e.date,
+      item: e.itemName || e.product || 'صنف',
+      type: 'out',
+      qty: Number(e.totalWeight || e.qty || 0),
+      note: e.client || ''
+    });
+  });
+  
+  // Factory out records
+  const factoryOuts = Object.entries(state.factoryOut || {})
+    .filter(([, e]) => {
+      if (from && e.date < from) return false;
+      if (to && e.date > to) return false;
+      return true;
+    });
+  
+  factoryOuts.forEach(([id, e]) => {
+    movements.push({
+      date: e.date,
+      item: e.productType || 'منتج',
+      type: 'out',
+      qty: Number(e.qty || 0),
+      note: e.client || ''
+    });
+  });
+  
+  // Sort movements by date descending
+  movements.sort((a, b) => b.date.localeCompare(a.date));
+  
+  return {
+    totalItems,
+    totalValue,
+    belowMin,
+    movementIn: 0, // Would need separate tracking for incoming items
+    movementOut: exports.length + factoryOuts.length,
+    movements
+  };
+};
 
 function openWHModal(wh, id='') {
   $('wh-modal-target').value = wh;
@@ -4964,7 +5283,9 @@ window.openWHEditModal = (wh, id) => openWHModal(wh, id);
 window.saveWarehouseItem = async function() {
   const wh   = $('wh-modal-target').value;
   const id   = $('wh-item-id').value;
-  const productType = $('wh-product-type').value;
+  let productType = $('wh-product-type').value;
+  // Default to 'عام' if empty
+  if (!productType) productType = 'عام';
   let name = '';
   if (productType === 'أخرى') {
     name = sanitize($('wh-name').value);
@@ -5944,10 +6265,10 @@ function initReports() {
 }
 
 window.switchReportTab = function(tab) {
-  ['monthly','supplier','inventory'].forEach(t => $(`report-${t}`).style.display = 'none');
+  ['monthly','supplier','inventory','custom'].forEach(t => $(`report-${t}`).style.display = 'none');
   $(`report-${tab}`).style.display = 'block';
   document.querySelectorAll('#page-reports .tab').forEach((el,i) => {
-    el.classList.toggle('active', ['monthly','supplier','inventory'][i] === tab);
+    el.classList.toggle('active', ['monthly','supplier','inventory','custom'][i] === tab);
   });
 };
 
@@ -6061,6 +6382,288 @@ window.exportReportPDF = async function() {
 };
 
 window.printReport = function() { window.print(); };
+
+// ══════════════════════════════════════════════════════════════════
+// CUSTOM REPORT GENERATION - نظام التقارير المخصصة
+// ══════════════════════════════════════════════════════════════════
+window.generateCustomReport = function() {
+  const source = document.getElementById('custom-report-source')?.value || 'all';
+  const from = document.getElementById('custom-report-from')?.value || '';
+  const to = document.getElementById('custom-report-to')?.value || '';
+  const groupBy = document.getElementById('custom-report-group')?.value || 'week';
+  
+  const outputEl = document.getElementById('custom-report-output');
+  if (!outputEl) return;
+  
+  // Collect data based on source
+  let data = { sales: [], expenses: [], milk: [], warehouse: {}, suppliers: {}, buyers: {} };
+  
+  // Sales
+  if (source === 'all' || source === 'sales') {
+    data.sales = Object.entries(state.sales || {})
+      .filter(([, s]) => (!from || s.date >= from) && (!to || s.date <= to))
+      .map(([id, s]) => ({ id, ...s }));
+  }
+  
+  // Expenses
+  if (source === 'all' || source === 'expenses') {
+    data.expenses = Object.entries(state.expenses || {})
+      .filter(([, e]) => (!from || e.date >= from) && (!to || e.date <= to))
+      .map(([id, e]) => ({ id, ...e }));
+  }
+  
+  // Milk Records
+  if (source === 'all' || source === 'milk') {
+    data.milk = Object.entries(state.milkRecords || {})
+      .filter(([, m]) => (!from || m.date >= from) && (!to || m.date <= to))
+      .map(([id, m]) => ({ id, ...m }));
+  }
+  
+  // Warehouse
+  if (source === 'all' || source === 'warehouse') {
+    data.warehouse1 = Object.entries(state.warehouse1 || {}).map(([id, w]) => ({ id, ...w }));
+    data.warehouse2 = Object.entries(state.warehouse2 || {}).map(([id, w]) => ({ id, ...w }));
+  }
+  
+  // Suppliers summary
+  if (source === 'all' || source === 'suppliers') {
+    Object.entries(state.suppliers || {}).forEach(([id, s]) => {
+      const supplierMilk = Object.values(state.milkRecords || {})
+        .filter(m => m.supplierId === id && (!from || m.date >= from) && (!to || m.date <= to));
+      const milkTotal = supplierMilk.reduce((sum, m) => sum + Number(m.total || 0), 0);
+      const milkQty = supplierMilk.reduce((sum, m) => sum + Number(m.qty || 0), 0);
+      data.suppliers[id] = { name: s.name, phone: s.phone, milkTotal, milkQty };
+    });
+  }
+  
+  // Buyers summary
+  if (source === 'all' || source === 'buyers') {
+    Object.entries(state.buyers || {}).forEach(([id, b]) => {
+      const buyerSales = Object.values(state.sales || {})
+        .filter(s => (s.buyerId === id || (b.name && (s.client||'').includes(b.name))) && 
+               (!from || s.date >= from) && (!to || s.date <= to));
+      const salesTotal = buyerSales.reduce((sum, s) => sum + Number(s.total || 0), 0);
+      data.buyers[id] = { name: b.name, phone: b.phone, salesTotal, transactions: buyerSales.length };
+    });
+  }
+  
+  // Calculate totals
+  const totalSales = data.sales.reduce((sum, s) => sum + Number(s.total || 0), 0);
+  const totalExpenses = data.expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const totalMilkQty = data.milk.reduce((sum, m) => sum + Number(m.qty || 0), 0);
+  const totalMilkValue = data.milk.reduce((sum, m) => sum + Number(m.total || 0), 0);
+  const netProfit = totalSales - totalExpenses;
+  
+  // Group data by period if needed
+  const groupedData = groupDataByPeriod(data, groupBy, from, to);
+  
+  // Build report HTML
+  const periodLabel = from && to ? `${from} ← ${to}` : from ? `من ${from}` : to ? `حتى ${to}` : 'كامل الفترة';
+  const groupLabels = { day: 'يومي', week: 'أسبوعي', month: 'شهري', none: 'بدون تجميع' };
+  
+  let html = `
+    <div style="background:var(--bg-700);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px">
+      <h3 style="color:var(--gold);margin-bottom:8px;font-size:18px">📋 تقرير مخصص</h3>
+      <p style="color:var(--text-400);font-size:12px;margin-bottom:16px">
+        الفترة: ${periodLabel} | التجمع: ${groupLabels[groupBy] || groupBy} | المصدر: ${getSourceLabel(source)}
+      </p>
+      
+      <!-- Summary Cards -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px">
+        ${(source === 'all' || source === 'sales') ? `
+        <div class="stat-card" style="--accent:var(--success)">
+          <span class="stat-icon">🛒</span>
+          <div class="stat-value">${fmt(totalSales, 0)}</div>
+          <div class="stat-label">إجمالي المبيعات (ج)</div>
+        </div>` : ''}
+        ${(source === 'all' || source === 'expenses') ? `
+        <div class="stat-card" style="--accent:var(--danger)">
+          <span class="stat-icon">💸</span>
+          <div class="stat-value">${fmt(totalExpenses, 0)}</div>
+          <div class="stat-label">إجمالي المصاريف (ج)</div>
+        </div>` : ''}
+        ${(source === 'all' || source === 'milk') ? `
+        <div class="stat-card" style="--accent:var(--info)">
+          <span class="stat-icon">🥛</span>
+          <div class="stat-value">${fmt(totalMilkQty, 1)} كجم</div>
+          <div class="stat-label">كمية الحليب</div>
+        </div>
+        <div class="stat-card" style="--accent:var(--gold)">
+          <span class="stat-icon">💰</span>
+          <div class="stat-value">${fmt(totalMilkValue, 0)}</div>
+          <div class="stat-label">قيمة الحليب (ج)</div>
+        </div>` : ''}
+        ${source === 'all' ? `
+        <div class="stat-card" style="--accent:${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'}">
+          <span class="stat-icon">${netProfit >= 0 ? '📈' : '📉'}</span>
+          <div class="stat-value" style="color:${netProfit >= 0 ? 'var(--success)' : 'var(--danger)'}">${fmt(netProfit, 0)}</div>
+          <div class="stat-label">صافي الربح (ج)</div>
+        </div>` : ''}
+      </div>
+  `;
+  
+  // Add grouped data tables
+  if (groupBy !== 'none' && groupedData.length > 0) {
+    html += `<h4 style="color:var(--gold);margin:16px 0 10px">📊 البيانات حسب ${groupLabels[groupBy]}</h4>`;
+    
+    groupedData.forEach(group => {
+      html += `
+        <div style="background:var(--bg-600);border-radius:8px;padding:12px;margin-bottom:10px">
+          <strong style="color:var(--text-200)">${group.label}</strong>
+          <div style="display:flex;gap:15px;flex-wrap:wrap;margin-top:6px;font-size:13px">
+            ${group.sales !== undefined ? `<span>🛒 مبيعات: <strong style="color:var(--success)">${fmt(group.sales, 0)} ج</strong></span>` : ''}
+            ${group.expenses !== undefined ? `<span>💸 مصاريف: <strong style="color:var(--danger)">${fmt(group.expenses, 0)} ج</strong></span>` : ''}
+            ${group.milkQty !== undefined ? `<span>🥛 حليب: <strong>${fmt(group.milkQty, 1)} كجم</strong></span>` : ''}
+            ${group.count !== undefined ? `<span>📋 عمليات: <strong>${group.count}</strong></span>` : ''}
+          </div>
+        </div>
+      `;
+    });
+  }
+  
+  // Add detailed tables based on source
+  if (data.sales.length > 0 && (source === 'all' || source === 'sales')) {
+    html += renderCustomTable('المبيعات', data.sales, ['date', 'client', 'total'], ['التاريخ', 'العميل', 'الإجمالي']);
+  }
+  
+  if (data.expenses.length > 0 && (source === 'all' || source === 'expenses')) {
+    html += renderCustomTable('المصاريف', data.expenses, ['date', 'category', 'amount'], ['التاريخ', 'الفئة', 'المبلغ']);
+  }
+  
+  if (data.milk.length > 0 && (source === 'all' || source === 'milk')) {
+    html += renderCustomTable('الحليب', data.milk, ['date', 'supplierId', 'qty', 'total'], ['التاريخ', 'المورد', 'الكمية', 'الإجمالي']);
+  }
+  
+  // Suppliers table
+  if (Object.keys(data.suppliers).length > 0 && (source === 'all' || source === 'suppliers')) {
+    const supRows = Object.entries(data.suppliers).map(([id, s]) => 
+      `<tr><td>${sanitize(s.name)}</td><td>${fmt(s.milkQty, 1)} كجم</td><td>${fmt(s.milkTotal, 0)} ج</td></tr>`
+    ).join('');
+    html += `
+      <h4 style="color:var(--gold);margin:16px 0 10px">👥 ملخص الموردين</h4>
+      <div class="table-wrapper"><table><thead><tr><th>المورد</th><th>كمية الحليب</th><th>القيمة</th></tr></thead><tbody>${supRows || '<tr><td colspan="3">لا توجد بيانات</td></tr>'}</tbody></table></div>
+    `;
+  }
+  
+  // Buyers table
+  if (Object.keys(data.buyers).length > 0 && (source === 'all' || source === 'buyers')) {
+    const buyRows = Object.entries(data.buyers).map(([id, b]) => 
+      `<tr><td>${sanitize(b.name)}</td><td>${b.transactions}</td><td>${fmt(b.salesTotal, 0)} ج</td></tr>`
+    ).join('');
+    html += `
+      <h4 style="color:var(--gold);margin:16px 0 10px">🧑‍🤝‍🧑 ملخص المشترين</h4>
+      <div class="table-wrapper"><table><thead><tr><th>المشتري</th><th>عدد العمليات</th><th>إجمالي المشتريات</th></tr></thead><tbody>${buyRows || '<tr><td colspan="3">لا توجد بيانات</td></tr>'}</tbody></table></div>
+    `;
+  }
+  
+  html += `</div>`;
+  outputEl.innerHTML = html;
+  toast('تم إنشاء التقرير بنجاح', 'success');
+};
+
+function getSourceLabel(source) {
+  const labels = {
+    all: 'شامل',
+    sales: 'المبيعات',
+    expenses: 'المصاريف',
+    milk: 'الحليب',
+    warehouse: 'المخزن',
+    suppliers: 'الموردين',
+    buyers: 'المشترين'
+  };
+  return labels[source] || source;
+}
+
+function groupDataByPeriod(data, groupBy, from, to) {
+  const groups = {};
+  
+  const getGroupKey = (date) => {
+    if (!date) return 'غير محدد';
+    if (groupBy === 'day') return date;
+    if (groupBy === 'week') {
+      const d = new Date(date);
+      const startOfYear = new Date(d.getFullYear(), 0, 1);
+      const weekNum = Math.ceil(((d - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+      return `أسبوع ${weekNum}`;
+    }
+    if (groupBy === 'month') return date.slice(0, 7);
+    return date;
+  };
+  
+  // Group sales
+  data.sales.forEach(s => {
+    const key = getGroupKey(s.date);
+    if (!groups[key]) groups[key] = { label: key, sales: 0, expenses: 0, milkQty: 0, count: 0 };
+    groups[key].sales += Number(s.total || 0);
+    groups[key].count++;
+  });
+  
+  // Group expenses
+  data.expenses.forEach(e => {
+    const key = getGroupKey(e.date);
+    if (!groups[key]) groups[key] = { label: key, sales: 0, expenses: 0, milkQty: 0, count: 0 };
+    groups[key].expenses += Number(e.amount || 0);
+    groups[key].count++;
+  });
+  
+  // Group milk
+  data.milk.forEach(m => {
+    const key = getGroupKey(m.date);
+    if (!groups[key]) groups[key] = { label: key, sales: 0, expenses: 0, milkQty: 0, count: 0 };
+    groups[key].milkQty += Number(m.qty || 0);
+    groups[key].count++;
+  });
+  
+  // Sort by key descending
+  return Object.values(groups).sort((a, b) => b.label.localeCompare(a.label));
+}
+
+function renderCustomTable(title, rows, fields, labels) {
+  if (!rows.length) return '';
+  
+  const headerRow = labels.map(l => `<th>${l}</th>`).join('');
+  const bodyRows = rows.map(row => 
+    '<tr>' + fields.map(f => `<td>${f === 'total' || f === 'amount' ? fmt(Number(row[f] || 0), 2) + ' ج' : sanitize(String(row[f] || '—'))}</td>`) + '</tr>'
+  ).join('');
+  
+  return `
+    <h4 style="color:var(--gold);margin:16px 0 10px">${title} (${rows.length})</h4>
+    <div class="table-wrapper" style="max-height:300px;overflow-y:auto">
+      <table><thead><tr>${headerRow}</tr></thead><tbody>${bodyRows}</tbody></table>
+    </div>
+  `;
+}
+
+window.printCustomReport = function() {
+  const content = document.getElementById('custom-report-output')?.innerHTML;
+  if (!content) { toast('لا يوجد تقرير للطباعة', 'warning'); return; }
+  
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <!DOCTYPE html><html dir="rtl" lang="ar"><head>
+      <meta charset="UTF-8"><title>تقرير مخصص</title>
+      <style>body{font-family:'Tajawal','Cairo',sans-serif;padding:20px;direction:rtl}
+        table{width:100%;border-collapse:collapse;margin:10px 0}
+        th,td{border:1px solid #ddd;padding:8px;text-align:right}
+        th{background:#D4A843;color:#fff}
+        @media print{body{-webkit-print-color-adjust:exact}}</style>
+    </head><body><h1>تقرير مخصص - ${new Date().toLocaleDateString('ar-EG')}</h1>${content}</body></html>
+  `);
+  printWindow.document.close();
+  setTimeout(() => printWindow.print(), 250);
+};
+
+window.exportCustomReportPDF = async function() {
+  try {
+    const element = document.getElementById('custom-report-output');
+    if (!element || !element.innerHTML.trim()) { toast('لا يوجد تقرير للتصدير', 'warning'); return; }
+    
+    exportTableToPDF('#custom-report-output', `تقرير_مخصص_${new Date().toISOString().slice(0,10)}.pdf`);
+    toast('جاري التصدير...', 'info');
+  } catch(e) {
+    toast('خطأ في التصدير: ' + e.message, 'error');
+  }
+};
 
 // ══════════════════════════════════════════════════════════════════
 // SETTINGS
@@ -6216,8 +6819,12 @@ function calcBuyerBalance(buyerId) {
   const bPayments = Object.values(state.buyerPayments).filter(p => p.buyerId === buyerId).reduce((sum, p) => sum + Number(p.amount||0), 0);
   const salesPaid = buyerSales.reduce((sum, s) => sum + Number(s.paidNow ?? s.total ?? 0), 0);
   const totalPaid = bPayments + salesPaid;
-  const remaining = Math.max(0, salesTotal - totalPaid);
-  return { salesTotal, paid: totalPaid, remaining };
+  
+  // Include mutual transactions balance
+  const mutualBalance = window.calcBuyerMutualBalance ? window.calcBuyerMutualBalance(buyerId) : 0;
+  
+  const remaining = Math.max(0, salesTotal - totalPaid - mutualBalance);
+  return { salesTotal, paid: totalPaid, remaining, mutualBalance };
 }
 
 function renderBuyers(search='') {
@@ -6254,11 +6861,183 @@ function renderBuyers(search='') {
           <button class="btn btn-secondary btn-sm btn-icon" onclick="openBuyerModal('${id}')">✏️</button>
           <button class="btn btn-danger btn-sm btn-icon" onclick="deleteBuyer('${id}')">🗑️</button>
           <button class="btn btn-primary btn-sm" onclick="openBuyerPaymentModal('${id}')">💳</button>
+          <button class="btn btn-secondary btn-sm" onclick="window.openBuyerMutualModal('${id}')" title="معاملات متبادلة">🔄</button>
         </div>
       </td>
     </tr>`;
   }).join('');
 }
+
+// ══════════════════════════════════════════════════════════════════
+// BUYER MUTUAL TRANSACTIONS - المعاملات المتبادلة للمشترين
+// ══════════════════════════════════════════════════════════════════
+
+// Initialize buyerMutualTransactions in state if not exists
+if (!state.buyerMutualTransactions) {
+  state.buyerMutualTransactions = {};
+}
+
+window.openBuyerMutualModal = function(buyerId) {
+  // Populate buyer select
+  const selectEl = document.getElementById('bm-buyer-select');
+  if (selectEl) {
+    selectEl.innerHTML = '<option value="">اختر مشترياً...</option>';
+    Object.entries(state.buyers || {}).forEach(([id, b]) => {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = b.name;
+      if (id === buyerId) opt.selected = true;
+      selectEl.appendChild(opt);
+    });
+  }
+  
+  // Set values
+  document.getElementById('bm-buyer-id').value = buyerId || '';
+  document.getElementById('bm-edit-id').value = '';
+  document.getElementById('bm-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('bm-type').value = 'gave';
+  document.getElementById('bm-amount').value = '';
+  document.getElementById('bm-reason').value = '';
+  document.getElementById('bm-notes').value = '';
+  
+  // Update title
+  const buyer = buyerId ? state.buyers[buyerId] : null;
+  document.getElementById('bm-modal-title').textContent = buyer 
+    ? `🔄 معاملات متبادلة - ${buyer.name}` 
+    : '🔄 معاملة متبادلة جديدة';
+  
+  // Show transactions list for this buyer
+  if (buyerId) {
+    window.renderBuyerMutualTransactions(buyerId);
+  }
+  
+  openModal('modal-buyer-mutual');
+};
+
+window.saveBuyerMutualTransaction = async function() {
+  const buyerId = document.getElementById('bm-buyer-id').value;
+  const editId = document.getElementById('bm-edit-id').value;
+  const date = document.getElementById('bm-date').value;
+  const type = document.getElementById('bm-type').value;
+  const amount = parseFloat(document.getElementById('bm-amount').value);
+  const reason = sanitize(document.getElementById('bm-reason').value);
+  const notes = sanitize(document.getElementById('bm-notes').value);
+  
+  if (!buyerId) { toast('اختر المشتري', 'error'); return; }
+  if (!date) { toast('أدخل التاريخ', 'error'); return; }
+  if (!amount || amount <= 0) { toast('أدخل مبلغ صحيح', 'error'); return; }
+  
+  const data = {
+    buyerId,
+    date,
+    type, // 'gave' = أعطينا للمشتري (مدين لنا), 'took' = أخذنا من المشتري (لنا عليه)
+    amount,
+    reason,
+    notes,
+    createdAt: new Date().toISOString()
+  };
+  
+  loading(true, 'جارٍ الحفظ...');
+  try {
+    if (editId) {
+      await dbUpdate(`buyerMutualTransactions/${editId}`, data);
+      toast('تم تحديث المعاملة', 'success');
+    } else {
+      await dbPush('buyerMutualTransactions', data);
+      toast('تم حفظ المعاملة', 'success');
+    }
+    
+    closeModal('modal-buyer-mutual');
+    renderBuyers();
+    track('buyer_mutual_transaction', { buyerId, type, amount });
+  } catch(e) {
+    toast('خطأ: ' + e.message, 'error');
+  } finally {
+    loading(false);
+  }
+};
+
+window.renderBuyerMutualTransactions = function(buyerId) {
+  const container = document.getElementById('bm-transactions-list');
+  const tableContainer = document.getElementById('bm-table-container');
+  const balanceSummary = document.getElementById('bm-balance-summary');
+  
+  if (!container || !tableContainer) return;
+  
+  // Get all transactions for this buyer
+  const transactions = Object.entries(state.buyerMutualTransactions || {})
+    .filter(([, t]) => t.buyerId === buyerId)
+    .sort((a, b) => b[1].date.localeCompare(a[1].date));
+  
+  if (transactions.length > 0) {
+    container.style.display = 'block';
+    
+    tableContainer.innerHTML = `
+      <table>
+        <thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>السبب</th><th>إجراء</th></tr></thead>
+        <tbody>
+          ${transactions.map(([id, t]) => `
+            <tr>
+              <td>${t.date}</td>
+              <td><span class="badge ${t.type === 'gave' ? 'badge-warning' : 'badge-info'}">${t.type === 'gave' ? '📤 أعطى' : '📥 أخذ'}</span></td>
+              <td style="font-weight:700">${fmt(t.amount, 2)} ج</td>
+              <td style="font-size:12px">${sanitize(t.reason || '—')}</td>
+              <td><button class="btn btn-danger btn-sm" onclick="window.deleteBuyerMutualTransaction('${id}', '${buyerId}')">🗑️</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+    
+    // Calculate and show balance
+    const balance = window.calcBuyerMutualBalance(buyerId);
+    balanceSummary.innerHTML = `
+      <div style="font-size:14px">
+        <span style="color:var(--text-400)">رصيد المعاملات المتبادلة:</span>
+        <span style="font-weight:900;font-size:18px;color:${balance >= 0 ? 'var(--success)' : 'var(--danger)'}">
+          ${balance >= 0 ? '' : '-'}${fmt(Math.abs(balance), 2)} ج
+        </span>
+        <span style="color:var(--text-400);font-size:11px">(${balance >= 0 ? 'لصالح المصنع' : 'لصالح المشتري'})</span>
+      </div>
+    `;
+  } else {
+    container.style.display = 'none';
+  }
+};
+
+window.calcBuyerMutualBalance = function(buyerId) {
+  const transactions = Object.values(state.buyerMutualTransactions || {})
+    .filter(t => t.buyerId === buyerId);
+  
+  let balance = 0;
+  transactions.forEach(t => {
+    if (t.type === 'gave') {
+      // We gave to buyer - they owe us (positive for factory)
+      balance += Number(t.amount || 0);
+    } else {
+      // We took from buyer - we owe them (negative for factory)
+      balance -= Number(t.amount || 0);
+    }
+  });
+  
+  return balance;
+};
+
+window.deleteBuyerMutualTransaction = async function(transactionId, buyerId) {
+  if (!confirm('حذف هذه المعاملة؟')) return;
+  
+  loading(true);
+  try {
+    await dbRemove(`buyerMutualTransactions/${transactionId}`);
+    toast('تم الحذف', 'success');
+    window.renderBuyerMutualTransactions(buyerId);
+    renderBuyers();
+  } catch(e) {
+    toast('خطأ: ' + e.message, 'error');
+  } finally {
+    loading(false);
+  }
+};
 
 function renderBuyerAccounts(search='') {
   search = search || '';
@@ -9302,11 +10081,34 @@ function buildSupplierSummaryHTML(d) {
       ${d.s.area ? `<div style="font-size:12px;margin-top:3px;opacity:0.8">📍 ${d.s.area}</div>` : ''}
     </div>
     
+    <!-- 📊 ملخص 2x2 سريع -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:linear-gradient(135deg,#e3f2fd,#bbdefb);border:2px solid #1976d2;border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:20px;margin-bottom:4px">🥛</div>
+        <div style="font-size:11px;color:#1565c0;font-weight:600">إجمالي سعر اللبن</div>
+        <div style="font-size:18px;font-weight:900;color:#0d47a1">${fmt(rMilkSum, 0)} ج</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:2px solid #e65100;border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:20px;margin-bottom:4px">💵</div>
+        <div style="font-size:11px;color:#e65100;font-weight:600">إجمالي السلف</div>
+        <div style="font-size:18px;font-weight:900;color:#bf360c">${fmt(rAdvSum, 0)} ج</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#fce4ec,#f8bbd0);border:2px solid #c2185b;border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:20px;margin-bottom:4px">💳</div>
+        <div style="font-size:11px;color:#c2185b;font-weight:600">المدفوعات</div>
+        <div style="font-size:18px;font-weight:900;color:#880e4f">${fmt(rPaySum, 0)} ج</div>
+      </div>
+      <div style="background:linear-gradient(135deg,${rBalance >= 0 ? '#e8f5e9,#c8e6c9' : '#ffebee,#ffcdd2'});border:3px solid ${rBalance >= 0 ? '#4caf50' : '#f44336'};border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:20px;margin-bottom:4px">📊</div>
+        <div style="font-size:11px;color:${rBalance >= 0 ? '#2e7d32' : '#c62828'};font-weight:600">الرصيد النهائي</div>
+        <div style="font-size:18px;font-weight:900;color:${rBalance >= 0 ? '#1b5e20' : '#b71c1c'}">${fmt(Math.abs(rBalance), 0)} ج</div>
+      </div>
+    </div>
+    
     <!-- معلومات الفترة -->
     <div class="info-grid" style="margin-bottom:14px">
       <div class="info-row"><span>الفترة:</span><span>${(d.df.from||'الكل')+' ← '+(d.df.to||'الكل')}</span></div>
       <div class="info-row"><span>تاريخ الطباعة:</span><span>${d.nowStr}</span></div>
-
     </div>
     
     <!-- 🐄🐃 تفاصيل الحليب التفصيلية -->
@@ -9325,11 +10127,15 @@ function buildSupplierSummaryHTML(d) {
         <td style="padding:10px;border:1px solid #ddd;font-weight:900;text-align:right">📦 إجمالي الكمية (البقري + الجاموسي)</td>
         <td style="padding:10px;border:1px solid #ddd;font-weight:900;text-align:left;color:#000;font-size:18px">${fmt(d.milkQtyKg, 1)} كجم</td>
       </tr>
+      <tr style="background:#fff8e1">
+        <td style="padding:10px;border:1px solid #ddd;font-weight:900;text-align:right">💰 إجمالي قيمة الحليب (سعر/كجم: ${fmt(d.pricePerKg, 2)})</td>
+        <td style="padding:10px;border:1px solid #ddd;font-weight:900;text-align:left;color:#2e7d32;font-size:18px">${fmt(rMilkSum, 0)} ج</td>
+      </tr>
 
     </table>
     
     <!-- 💳 المدفوعات والسلف والرصيد -->
-    <h3 style="color:#000;font-size:15px;margin:12px 0 10px;padding-bottom:6px;border-bottom:2px solid #D4A843">💰 الحسابات</h3>
+    <h3 style="color:#000;font-size:15px;margin:12px 0 10px;padding-bottom:6px;border-bottom:2px solid #D4A843">💰 الحسابات التفصيلية</h3>
     
     <table style="width:100%;border-collapse:collapse;margin-bottom:14px">
       <tr>
@@ -9337,7 +10143,7 @@ function buildSupplierSummaryHTML(d) {
         <td style="padding:10px;border:1px solid #ddd;font-weight:900;text-align:left;color:#d32f2f;font-size:16px">- ${fmt(rPaySum, 0)} ج</td>
       </tr>
       <tr style="background:#fff3e0">
-        <td style="padding:10px;border:1px solid #ddd;font-weight:700;text-align:right">💵 السلف</td>
+        <td style="padding:10px;border:1px solid #ddd;font-weight:700;text-align:right">💵 السلف (مبالغ مستلمة مقدماً)</td>
         <td style="padding:10px;border:1px solid #ddd;font-weight:900;text-align:left;color:#e65100;font-size:16px">- ${fmt(rAdvSum, 0)} ج</td>
       </tr>
       ${d.purSum > 0 ? `<tr>
@@ -9349,11 +10155,14 @@ function buildSupplierSummaryHTML(d) {
     <!-- 📊 الرصيد النهائي -->
     <div style="background:${rBalance >= 0 ? '#e8f5e9' : '#ffebee'};border:3px solid ${rBalance >= 0 ? '#4caf50' : '#f44336'};border-radius:12px;padding:18px;margin-top:10px">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:18px;font-weight:900;color:#000">📊 الرصيد المستحق:</span>
+        <span style="font-size:18px;font-weight:900;color:#000">📊 الرصيد المستحق للمورد:</span>
         <span style="font-size:28px;font-weight:900;color:${rBalance >= 0 ? '#2e7d32' : '#c62828'}">${fmt(Math.abs(rBalance), 0)} جنيه</span>
       </div>
       <div style="text-align:center;margin-top:8px;font-size:13px;font-weight:600;color:#666">
         ${rBalance >= 0 ? '(لصالح المصنع - مستحق الصرف)' : '(لصالح المورد - عليه دفع)'}
+      </div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px dashed #ccc;font-size:11px;color:#888;text-align:center">
+        ⚡ حساب الرصيد: (${fmt(rMilkSum,0)} - ${fmt(rPaySum,0)} - ${fmt(rAdvSum,0)}${d.purSum > 0 ? ` - ${fmt(rPurSum,0)}` : ''}) = ${fmt(Math.abs(rBalance),0)} ج
       </div>
     </div>`;
 }
