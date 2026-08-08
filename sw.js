@@ -1,10 +1,11 @@
 /**
- * Print Manager - Service Worker v2
+ * Print Manager - Service Worker v3
  * Professional PWA with offline support and caching strategies
+ * Updated: Multi-page OCR + Firebase fix
  */
 
-const CACHE_NAME = "print-manager-v2";
-const DYNAMIC_CACHE = "print-manager-dynamic-v1";
+const CACHE_NAME = "print-manager-v3";
+const DYNAMIC_CACHE = "print-manager-dynamic-v3";
 
 // App Shell - Core files needed for offline functionality
 const APP_SHELL = [
