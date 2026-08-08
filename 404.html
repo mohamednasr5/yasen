@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الصفحة غير موجودة - 404 | معمل البان</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a73e8;
+      --primary-light: #4a9af5;
+      --primary-dark: #0d47a1;
+      --milk: #fafbff;
+      --cream: #fff8e7;
+      --gold: #f5a623;
+      --dark: #1a1a2e;
+      --dark2: #16213e;
+      --dark3: #0f3460;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: var(--dark);
+      min-height: 100vh;
+      overflow: hidden;
+      color: white;
+    }
+
+    /* ===== Animated Background ===== */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .bg-gradient {
+      position: absolute;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse at 20% 50%, rgba(26, 115, 232, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(245, 166, 35, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(15, 52, 96, 0.3) 0%, transparent 50%),
+        linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    }
+
+    /* Stars */
+    .stars {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle var(--dur) ease-in-out infinite;
+      opacity: 0;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0; transform: scale(0.5); }
+      50% { opacity: var(--opacity); transform: scale(1); }
+    }
+
+    /* Floating Milk Bubbles */
+    .bubbles-container {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .bubble {
+      position: absolute;
+      bottom: -100px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), rgba(255,255,255,0.05));
+      border: 1px solid rgba(255,255,255,0.1);
+      animation: floatUp var(--dur) ease-in infinite;
+      animation-delay: var(--delay);
+    }
+
+    @keyframes floatUp {
+      0% {
+        transform: translateY(0) translateX(0) scale(1);
+        opacity: 0;
+      }
+      10% { opacity: 1; }
+      90% { opacity: 0.5; }
+      100% {
+        transform: translateY(-110vh) translateX(var(--drift)) scale(0.3);
+        opacity: 0;
+      }
+    }
+
+    /* ===== Main Content ===== */
+    .main-content {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* 404 Number */
+    .error-number {
+      font-size: clamp(100px, 20vw, 200px);
+      font-weight: 900;
+      line-height: 1;
+      position: relative;
+      margin-bottom: -20px;
+      user-select: none;
+    }
+
+    .error-number span {
+      display: inline-block;
+      animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) both;
+    }
+
+    .error-number span:nth-child(1) { animation-delay: 0.1s; color: var(--primary-light); }
+    .error-number span:nth-child(2) { animation-delay: 0.3s; color: var(--gold); }
+    .error-number span:nth-child(3) { animation-delay: 0.5s; color: var(--primary-light); }
+
+    @keyframes bounceIn {
+      0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+      60% { transform: scale(1.2) rotate(3deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .error-number::after {
+      content: '';
+      position: absolute;
+      inset: -20px;
+      background: radial-gradient(circle, rgba(26,115,232,0.2), transparent 70%);
+      filter: blur(30px);
+      z-index: -1;
+      animation: glowPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    /* ===== Cow Scene ===== */
+    .cow-scene {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      height: 280px;
+      margin: 10px auto 20px;
+      animation: fadeInUp 0.8s ease-out 0.8s both;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .cow-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Cow animations */
+    .cow-body-group {
+      animation: cowBreathe 4s ease-in-out infinite;
+      transform-origin: 250px 180px;
+    }
+
+    @keyframes cowBreathe {
+      0%, 100% { transform: scaleY(1); }
+      50% { transform: scaleY(1.02); }
+    }
+
+    .cow-head-group {
+      animation: cowNod 5s ease-in-out infinite;
+      transform-origin: 150px 130px;
+    }
+
+    @keyframes cowNod {
+      0%, 70%, 100% { transform: rotate(0deg); }
+      75% { transform: rotate(-5deg); }
+      80% { transform: rotate(3deg); }
+      85% { transform: rotate(-3deg); }
+    }
+
+    .cow-tail {
+      animation: tailWag 2s ease-in-out infinite;
+      transform-origin: 370px 150px;
+    }
+
+    @keyframes tailWag {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(8deg); }
+      75% { transform: rotate(-5deg); }
+    }
+
+    .cow-leg-front {
+      animation: legWalk 1.5s ease-in-out infinite;
+      transform-origin: 200px 240px;
+    }
+
+    .cow-leg-back {
+      animation: legWalk 1.5s ease-in-out infinite 0.75s;
+      transform-origin: 300px 240px;
+    }
+
+    @keyframes legWalk {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(5deg); }
+      75% { transform: rotate(-5deg); }
+    }
+
+    /* Milk stream from cow */
+    .milk-stream {
+      animation: milkFlow 2s ease-in-out infinite;
+      transform-origin: top center;
+    }
+
+    @keyframes milkFlow {
+      0%, 100% { opacity: 0.8; transform: scaleX(1); }
+      50% { opacity: 1; transform: scaleX(1.3); }
+    }
+
+    /* Bucket */
+    .bucket-group {
+      animation: bucketFill 4s ease-in-out infinite;
+    }
+
+    @keyframes bucketFill {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
+
+    /* Milk splash particles */
+    .splash-particle {
+      animation: splash 1.5s ease-out infinite;
+    }
+
+    .splash-particle:nth-child(2) { animation-delay: 0.3s; }
+    .splash-particle:nth-child(3) { animation-delay: 0.6s; }
+    .splash-particle:nth-child(4) { animation-delay: 0.9s; }
+
+    @keyframes splash {
+      0% { transform: translate(0, 0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--sx), var(--sy)) scale(0); opacity: 0; }
+    }
+
+    /* Ground */
+    .ground-line {
+      animation: groundGlow 3s ease-in-out infinite;
+    }
+
+    @keyframes groundGlow {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.6; }
+    }
+
+    /* Clouds */
+    .cloud {
+      animation: cloudDrift var(--speed) linear infinite;
+    }
+
+    @keyframes cloudDrift {
+      0% { transform: translateX(-200px); }
+      100% { transform: translateX(800px); }
+    }
+
+    /* ===== Text Content ===== */
+    .content-card {
+      text-align: center;
+      max-width: 600px;
+      animation: fadeInUp 0.8s ease-out 1s both;
+    }
+
+    .main-message {
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight: 700;
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+
+    .main-message .highlight {
+      background: linear-gradient(135deg, var(--gold), #ffcc02);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .sub-message {
+      font-size: clamp(15px, 2.5vw, 18px);
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 30px;
+      line-height: 1.8;
+    }
+
+    /* Countdown */
+    .countdown-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 30px;
+      direction: rtl;
+    }
+
+    .countdown-label {
+      font-size: 16px;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .countdown-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 900;
+      position: relative;
+      box-shadow: 0 0 30px rgba(26,115,232,0.4);
+    }
+
+    .countdown-circle::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: var(--gold);
+      animation: spinCircle 1s linear infinite;
+    }
+
+    @keyframes spinCircle {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Buttons */
+    .btn-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: 'Cairo', sans-serif;
+      transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      cursor: pointer;
+      border: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      box-shadow: 0 8px 30px rgba(26,115,232,0.4);
+    }
+
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn-primary:hover::before {
+      left: 100%;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(26,115,232,0.6);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-3px);
+      border-color: rgba(255,255,255,0.4);
+    }
+
+    .btn svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    /* ===== Footer ===== */
+    .footer {
+      text-align: center;
+      animation: fadeInUp 0.8s ease-out 1.2s both;
+    }
+
+    .footer-divider {
+      width: 80px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      margin: 0 auto 20px;
+    }
+
+    .dev-credit {
+      font-size: 14px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 15px;
+    }
+
+    .dev-credit .heart {
+      display: inline-block;
+      color: #e74c3c;
+      animation: heartBeat 1s ease-in-out infinite;
+    }
+
+    @keyframes heartBeat {
+      0%, 100% { transform: scale(1); }
+      15% { transform: scale(1.3); }
+      30% { transform: scale(1); }
+      45% { transform: scale(1.2); }
+    }
+
+    .dev-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 15px;
+    }
+
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .social-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      color: white;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .social-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .social-btn.fb {
+      background: linear-gradient(135deg, #1877f2, #0d47a1);
+    }
+
+    .social-btn.wa {
+      background: linear-gradient(135deg, #25d366, #128c7e);
+    }
+
+    .social-btn:hover {
+      transform: translateY(-4px) scale(1.1);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+
+    .social-btn svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    /* ===== Milk Drip Overlay ===== */
+    .milk-drip-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .drip {
+      position: absolute;
+      top: -5px;
+      width: var(--size);
+      height: var(--size);
+      background: radial-gradient(ellipse at center, rgba(255,255,255,0.9), rgba(255,255,255,0.3));
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      animation: dripDown var(--dur) ease-in infinite;
+      animation-delay: var(--delay);
+      opacity: 0;
+    }
+
+    @keyframes dripDown {
+      0% { transform: translateY(0) scaleY(0.5); opacity: 0; }
+      5% { opacity: 0.8; transform: scaleY(1); }
+      80% { opacity: 0.6; }
+      100% { transform: translateY(100vh) scaleY(2); opacity: 0; }
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 600px) {
+      .cow-scene {
+        height: 200px;
+        margin: 5px auto 15px;
+      }
+
+      .btn-group {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .btn {
+        width: 80%;
+        justify-content: center;
+      }
+
+      .countdown-wrapper {
+        gap: 8px;
+      }
+
+      .countdown-circle {
+        width: 48px;
+        height: 48px;
+        font-size: 18px;
+      }
+    }
+
+    /* ===== Page Load Animation ===== */
+    .page-loader {
+      position: fixed;
+      inset: 0;
+      background: var(--dark);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: loaderOut 0.5s ease-out 0.5s both;
+    }
+
+    @keyframes loaderOut {
+      to { opacity: 0; pointer-events: none; }
+    }
+
+    .loader-milk {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: white;
+      animation: loaderMilk 0.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes loaderMilk {
+      from { transform: scale(0.8); opacity: 0.5; }
+      to { transform: scale(1.2); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Page Loader -->
+<div class="page-loader">
+  <div class="loader-milk"></div>
+</div>
+
+<!-- Animated Background -->
+<div class="bg-layer">
+  <div class="bg-gradient"></div>
+  <div class="stars" id="stars"></div>
+</div>
+
+<!-- Milk Bubbles -->
+<div class="bubbles-container" id="bubbles"></div>
+
+<!-- Milk Drip Overlay -->
+<div class="milk-drip-overlay" id="drips"></div>
+
+<!-- Main Content -->
+<div class="main-content">
+
+  <!-- 404 Number -->
+  <div class="error-number">
+    <span>4</span><span>0</span><span>4</span>
+  </div>
+
+  <!-- Cow Animation Scene -->
+  <div class="cow-scene">
+    <svg class="cow-svg" viewBox="0 0 600 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Sky gradient -->
+      <defs>
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="200">
+          <stop offset="0%" stop-color="#0f3460" stop-opacity="0.5"/>
+          <stop offset="100%" stop-color="#1a1a2e" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="milkGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="white" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="white" stop-opacity="0.3"/>
+        </linearGradient>
+        <radialGradient id="moonGlow" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0%" stop-color="#fff8e7" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="#fff8e7" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
+      <!-- Moon -->
+      <circle cx="500" cy="50" r="40" fill="#fff8e7" opacity="0.15" filter="url(#glow)"/>
+      <circle cx="500" cy="50" r="25" fill="#fff8e7" opacity="0.3"/>
+
+      <!-- Clouds -->
+      <g class="cloud" style="--speed: 25s;">
+        <ellipse cx="100" cy="50" rx="40" ry="15" fill="white" opacity="0.08"/>
+        <ellipse cx="120" cy="45" rx="30" ry="12" fill="white" opacity="0.06"/>
+      </g>
+      <g class="cloud" style="--speed: 35s; animation-delay: -10s;">
+        <ellipse cx="300" cy="70" rx="50" ry="18" fill="white" opacity="0.06"/>
+        <ellipse cx="325" cy="64" rx="35" ry="14" fill="white" opacity="0.05"/>
+      </g>
+
+      <!-- Ground -->
+      <ellipse cx="300" cy="260" rx="280" ry="25" fill="rgba(26,115,232,0.08)"/>
+      <line class="ground-line" x1="50" y1="255" x2="550" y2="255" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+
+      <!-- Cow Group -->
+      <g class="cow-body-group">
+        <!-- Shadow -->
+        <ellipse cx="230" cy="252" rx="90" ry="8" fill="rgba(0,0,0,0.3)"/>
+
+        <!-- Body -->
+        <ellipse cx="230" cy="190" rx="85" ry="60" fill="#2d2d44"/>
+        <ellipse cx="230" cy="190" rx="85" ry="60" fill="url(#cowBodyPattern)" opacity="0.3"/>
+
+        <!-- Spots -->
+        <ellipse cx="200" cy="180" rx="25" ry="30" fill="rgba(255,255,255,0.15)"/>
+        <ellipse cx="260" cy="200" rx="20" ry="25" fill="rgba(255,255,255,0.1)"/>
+        <ellipse cx="240" cy="170" rx="15" ry="18" fill="rgba(255,255,255,0.08)"/>
+
+        <!-- Udder -->
+        <ellipse cx="280" cy="230" rx="20" ry="12" fill="#e8b4b8" opacity="0.8"/>
+
+        <!-- Legs -->
+        <rect x="175" y="235" width="16" height="25" rx="8" fill="#2d2d44"/>
+        <rect x="200" y="237" width="16" height="23" rx="8" fill="#2d2d44"/>
+        <g class="cow-leg-front">
+          <rect x="260" y="235" width="16" height="25" rx="8" fill="#252540"/>
+        </g>
+        <g class="cow-leg-back">
+          <rect x="285" y="237" width="16" height="23" rx="8" fill="#252540"/>
+        </g>
+
+        <!-- Hooves -->
+        <rect x="175" y="256" width="16" height="6" rx="3" fill="#1a1a2e"/>
+        <rect x="200" y="256" width="16" height="6" rx="3" fill="#1a1a2e"/>
+        <rect x="260" y="256" width="16" height="6" rx="3" fill="#1a1a2e"/>
+        <rect x="285" y="256" width="16" height="6" rx="3" fill="#1a1a2e"/>
+      </g>
+
+      <!-- Cow Head -->
+      <g class="cow-head-group">
+        <!-- Neck -->
+        <rect x="140" y="170" width="40" height="40" rx="15" fill="#2d2d44"/>
+
+        <!-- Head -->
+        <ellipse cx="130" cy="155" rx="38" ry="35" fill="#2d2d44"/>
+
+        <!-- Face lighter area -->
+        <ellipse cx="125" cy="162" rx="22" ry="20" fill="rgba(255,255,255,0.05)"/>
+
+        <!-- Ears -->
+        <ellipse cx="100" cy="125" rx="15" ry="10" fill="#2d2d44" transform="rotate(-30 100 125)"/>
+        <ellipse cx="100" cy="125" rx="8" ry="5" fill="#e8b4b8" opacity="0.5" transform="rotate(-30 100 125)"/>
+        <ellipse cx="160" cy="125" rx="15" ry="10" fill="#2d2d44" transform="rotate(30 160 125)"/>
+        <ellipse cx="160" cy="125" rx="8" ry="5" fill="#e8b4b8" opacity="0.5" transform="rotate(30 160 125)"/>
+
+        <!-- Horns -->
+        <path d="M108 128 Q95 95 105 85" stroke="#f5a623" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M152 128 Q165 95 155 85" stroke="#f5a623" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+        <!-- Eyes -->
+        <g>
+          <circle cx="115" cy="148" r="8" fill="white"/>
+          <circle cx="145" cy="148" r="8" fill="white"/>
+          <circle cx="117" cy="148" r="4" fill="#1a1a2e"/>
+          <circle cx="147" cy="148" r="4" fill="#1a1a2e"/>
+          <!-- Eye shine -->
+          <circle cx="119" cy="146" r="1.5" fill="white"/>
+          <circle cx="149" cy="146" r="1.5" fill="white"/>
+        </g>
+
+        <!-- Snout -->
+        <ellipse cx="130" cy="172" rx="20" ry="14" fill="rgba(255,255,255,0.08)"/>
+
+        <!-- Nostrils -->
+        <ellipse cx="123" cy="174" rx="3" ry="4" fill="rgba(0,0,0,0.3)"/>
+        <ellipse cx="137" cy="174" rx="3" ry="4" fill="rgba(0,0,0,0.3)"/>
+
+        <!-- Mouth -->
+        <path d="M120 180 Q130 186 140 180" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" fill="none"/>
+      </g>
+
+      <!-- Tail -->
+      <g class="cow-tail">
+        <path d="M315 175 Q345 155 355 130 Q360 120 365 110" stroke="#2d2d44" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <ellipse cx="366" cy="108" rx="6" ry="10" fill="#2d2d44"/>
+      </g>
+
+      <!-- Milk Stream from udder to bucket -->
+      <g class="milk-stream">
+        <path d="M275 238 Q275 250 350 248" stroke="white" stroke-width="3" fill="none" opacity="0.7" stroke-linecap="round"/>
+        <path d="M280 240 Q280 252 350 250" stroke="white" stroke-width="2" fill="none" opacity="0.4" stroke-linecap="round"/>
+      </g>
+
+      <!-- Bucket -->
+      <g class="bucket-group">
+        <!-- Bucket body -->
+        <path d="M330 240 L335 270 L385 270 L390 240 Z" fill="rgba(245,166,35,0.6)" stroke="#f5a623" stroke-width="1.5"/>
+        <!-- Bucket rim -->
+        <ellipse cx="360" cy="240" rx="32" ry="8" fill="rgba(245,166,35,0.8)" stroke="#f5a623" stroke-width="1"/>
+        <!-- Milk in bucket -->
+        <ellipse cx="360" cy="258" rx="22" ry="6" fill="white" opacity="0.5"/>
+        <!-- Handle -->
+        <path d="M335 235 Q360 210 385 235" stroke="#f5a623" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      </g>
+
+      <!-- Splash particles -->
+      <circle class="splash-particle" cx="340" cy="245" r="2" fill="white" opacity="0.6" style="--sx: -15px; --sy: -20px;"/>
+      <circle class="splash-particle" cx="350" cy="242" r="1.5" fill="white" opacity="0.5" style="--sx: 10px; --sy: -18px;"/>
+      <circle class="splash-particle" cx="360" cy="244" r="2" fill="white" opacity="0.6" style="--sx: 5px; --sy: -22px;"/>
+      <circle class="splash-particle" cx="370" cy="243" r="1.5" fill="white" opacity="0.5" style="--sx: 15px; --sy: -16px;"/>
+
+      <!-- Spilled milk puddle -->
+      <ellipse cx="360" cy="272" rx="45" ry="5" fill="white" opacity="0.1">
+        <animate attributeName="rx" values="30;50;30" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.05;0.15;0.05" dur="3s" repeatCount="indefinite"/>
+      </ellipse>
+    </svg>
+  </div>
+
+  <!-- Text Content -->
+  <div class="content-card">
+    <div class="main-message">
+      عذراً، الصفحة اللي بتدور عليها <span class="highlight">وقع عليها اللبن!</span> 🥛
+    </div>
+    <div class="sub-message">
+      يبدو إن الصفحة دي اتمحت أو تم نقلها، هنعودك للصفحة الرئيسية تلقائياً
+    </div>
+
+    <!-- Countdown -->
+    <div class="countdown-wrapper">
+      <span class="countdown-label">التحويل التلقائي بعد</span>
+      <div class="countdown-circle" id="countdown">10</div>
+      <span class="countdown-label">ثانية</span>
+    </div>
+
+    <!-- Buttons -->
+    <div class="btn-group">
+      <a href="https://mohamednasr5.github.io/yasen/" class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        الصفحة الرئيسية
+      </a>
+      <button onclick="history.back()" class="btn btn-secondary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"/>
+          <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        الصفحة السابقة
+      </button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-divider"></div>
+    <div class="dev-credit">
+      تم البرمجة والتطوير بكل <span class="heart">❤️</span> بواسطة
+    </div>
+    <div class="dev-name">المهندس محمد حماد</div>
+    <div class="social-links">
+      <a href="https://www.facebook.com/en.mohamed.nasr" target="_blank" rel="noopener" class="social-btn fb" title="فيسبوك">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+        </svg>
+      </a>
+      <a href="https://wa.me/201279934735" target="_blank" rel="noopener" class="social-btn wa" title="واتساب">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== Generate Stars =====
+  (function() {
+    const starsContainer = document.getElementById('stars');
+    for (let i = 0; i < 100; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      star.style.left = Math.random() * 100 + '%';
+      star.style.top = Math.random() * 100 + '%';
+      star.style.setProperty('--dur', (2 + Math.random() * 4) + 's');
+      star.style.setProperty('--opacity', (0.3 + Math.random() * 0.7));
+      star.style.animationDelay = Math.random() * 3 + 's';
+      star.style.width = (1 + Math.random() * 2) + 'px';
+      star.style.height = star.style.width;
+      starsContainer.appendChild(star);
+    }
+  })();
+
+  // ===== Generate Bubbles =====
+  (function() {
+    const bubblesContainer = document.getElementById('bubbles');
+    for (let i = 0; i < 15; i++) {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      const size = 10 + Math.random() * 40;
+      bubble.style.width = size + 'px';
+      bubble.style.height = size + 'px';
+      bubble.style.left = Math.random() * 100 + '%';
+      bubble.style.setProperty('--dur', (8 + Math.random() * 15) + 's');
+      bubble.style.setProperty('--delay', Math.random() * 10 + 's');
+      bubble.style.setProperty('--drift', (Math.random() * 100 - 50) + 'px');
+      bubblesContainer.appendChild(bubble);
+    }
+  })();
+
+  // ===== Generate Milk Drips =====
+  (function() {
+    const dripsContainer = document.getElementById('drips');
+    for (let i = 0; i < 8; i++) {
+      const drip = document.createElement('div');
+      drip.className = 'drip';
+      drip.style.left = (5 + Math.random() * 90) + '%';
+      drip.style.setProperty('--size', (8 + Math.random() * 20) + 'px');
+      drip.style.setProperty('--dur', (6 + Math.random() * 10) + 's');
+      drip.style.setProperty('--delay', Math.random() * 8 + 's');
+      dripsContainer.appendChild(drip);
+    }
+  })();
+
+  // ===== Countdown =====
+  let countdown = 10;
+  const countdownEl = document.getElementById('countdown');
+
+  const interval = setInterval(() => {
+    countdown--;
+    countdownEl.textContent = countdown;
+
+    if (countdown <= 0) {
+      clearInterval(interval);
+      window.location.href = 'https://mohamednasr5.github.io/yasen/';
+    }
+  }, 1000);
+
+  // Stop countdown when clicking main button
+  document.querySelectorAll('.btn-primary').forEach(btn => {
+    btn.addEventListener('click', () => clearInterval(interval));
+  });
+
+  // ===== Parallax on mouse move =====
+  document.addEventListener('mousemove', (e) => {
+    const x = (e.clientX / window.innerWidth - 0.5) * 10;
+    const y = (e.clientY / window.innerHeight - 0.5) * 10;
+
+    const cowScene = document.querySelector('.cow-scene');
+    if (cowScene) {
+      cowScene.style.transform = `translate(${x}px, ${y}px)`;
+    }
+  });
+</script>
+
+</body>
+</html>
