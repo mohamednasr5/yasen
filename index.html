@@ -10027,17 +10027,6 @@ function getSupplierStmtData() {
   const milkQtyKg = baqriQtyKg + jammosiQtyKg; // 📦 الإجمالي = البقري + الجاموسي
   
   const milkSum = milk.reduce((s,[,r]) => s+Number(r.total||0), 0);
-  // حساب إجمالي سعر البقري والجاموسي (من حقل total أو الكمية × السعر)
-  const baqriSum = milk.reduce((s,[,r]) => {
-    const qty = Number(r.baqriQty || r.qty || 0);
-    const isBaqri = (r.milkType || 'بقري') === 'بقري' || r.baqriQty;
-    return isBaqri ? s + Number(r.total || 0) : s;
-  }, 0);
-  const jammosiSum = milk.reduce((s,[,r]) => {
-    const isJammosi = (r.milkType || 'بقري') === 'جاموسي' || r.jammosiQty;
-    return isJammosi ? s + Number(r.total || 0) : s;
-  }, 0);
-  
   const paySum = pay.reduce((s,[,p]) => s+Number(p.amount||0), 0);
   const advSum = adv.reduce((s,[,a]) => s+Number(a.amount||0), 0);
   const purSum = pur.reduce((s,[,p]) => s+Number(p.totalPrice||0), 0);
@@ -10048,7 +10037,7 @@ function getSupplierStmtData() {
   
   const nowStr = new Date().toLocaleString('ar-EG', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
   
-  return {s, df, milk, pay, adv, pur, milkQtyKg, baqriQtyKg, jammosiQtyKg, milkSum, baqriSum, jammosiSum, paySum, advSum, purSum, balance, pricePerKg, nowStr};
+  return {s, df, milk, pay, adv, pur, milkQtyKg, baqriQtyKg, jammosiQtyKg, milkSum, paySum, advSum, purSum, balance, pricePerKg, nowStr};
 }
 
 function buildSupplierFullHTML(d) {
@@ -10175,8 +10164,36 @@ function buildSupplierKrokyHTML(d) {
   const rAdvSum = roundSmart(d.advSum);
   const rPurSum = roundSmart(d.purSum);
   const rBalance = roundSmart(d.balance);
-  const rBaqriSum = roundSmart(d.baqriSum || 0);
-  const rJammosiSum = roundSmart(d.jammosiSum || 0);
+  
+  let tableRows = '';
+  const maxRows = 10;
+  
+  // سجل الحليب
+  for (let i = 0; i < Math.min(d.milk.length, maxRows); i++) {
+    const [,r] = d.milk[i];
+    tableRows += `<tr><td style="text-align:right;padding-right:2mm">${r.date}</td><td style="text-align:left">${fmt(r.qty,1)} كجم</td></tr>`;
+  }
+  
+  // المدفوعات
+  if (d.pay.length > 0 && d.milk.length < maxRows) {
+    for (let i = 0; i < Math.min(d.pay.length, maxRows - d.milk.length); i++) {
+      const [,p] = d.pay[i];
+      tableRows += `<tr><td style="text-align:right;padding-right:2mm">💰 ${p.date}</td><td style="text-align:left">-${fmt(roundSmart(p.amount),0)}</td></tr>`;
+    }
+  }
+  
+  // السلف
+  if (d.adv.length > 0 && d.milk.length + d.pay.length < maxRows) {
+    for (let i = 0; i < Math.min(d.adv.length, maxRows - d.milk.length - d.pay.length); i++) {
+      const [,a] = d.adv[i];
+      tableRows += `<tr><td style="text-align:right;padding-right:2mm">📋 سلفة</td><td style="text-align:left">-${fmt(roundSmart(a.amount),0)}</td></tr>`;
+    }
+  }
+  
+  const filledRows = d.milk.length + Math.min(d.pay.length, maxRows - d.milk.length) + Math.min(d.adv.length, maxRows - d.milk.length - d.pay.length);
+  for (let i = filledRows; i < maxRows; i++) {
+    tableRows += `<tr><td></td><td></td></tr>`;
+  }
 
   return `<div class="kroky-page">
     <!-- النصف الأيسر - الحسابات والبيانات -->
@@ -10187,7 +10204,18 @@ function buildSupplierKrokyHTML(d) {
         <div style="font-size:7pt">${d.df.from||'الكل'} ← ${d.df.to||'الكل'}</div>
       </div>
       
-      <!-- 4 بطاقات -->
+      <!-- عنوان الحسابات -->
+      <div class="kroky-title" style="font-size:11pt;padding:2mm 0">الحسابات</div>
+      
+      <!-- جدول الحركات -->
+      <div class="kroky-table-container" style="flex:1">
+        <table class="kroky-table">
+          <thead><tr><th style="width:55%">التاريخ / البيان</th><th style="width:45%">الكمية / المبلغ</th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+      
+      <!-- 4 بطاقات فوق -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:2mm;margin-bottom:2mm">
         <!-- بطاقة 1: إجمالي الحليب بالكيلو -->
         <div style="border:1.5px solid #000;border-radius:4px;padding:2mm;text-align:center;background:#fff">
@@ -10211,52 +10239,19 @@ function buildSupplierKrokyHTML(d) {
         </div>
       </div>
       
-      <!-- جدول الملخص التفصيلي (9 صفوف) -->
-      <table style="width:100%;border-collapse:collapse;font-size:7.5pt;border:1.5px solid #000;border-radius:4px;overflow:hidden;background:#fff">
-        <!-- صف 1: كمية اللبن البقري -->
+      <!-- جدول الملخص الصغير (3 صفوف) -->
+      <table style="width:100%;border-collapse:collapse;font-size:8pt;border:1.5px solid #000;border-radius:4px;overflow:hidden;background:#fff">
         <tr>
-          <td style="padding:1.2mm;border:1px solid #999;text-align:right;font-weight:700;width:65%">🐄 كمية اللبن البقري</td>
-          <td style="padding:1.2mm;border:1px solid #999;text-align:left;font-weight:900">${fmt(d.baqriQtyKg,1)} كجم</td>
+          <td style="padding:1.5mm;border:1px solid #999;text-align:right;font-weight:700;width:65%">📌 المبلغ قبل الخصم</td>
+          <td style="padding:1.5mm;border:1px solid #999;text-align:left;font-weight:900">${fmt(rMilkSum,0)} ج</td>
         </tr>
-        <!-- صف 2: إجمالي سعر اللبن البقري -->
         <tr style="background:#f5f5f5">
-          <td style="padding:1.2mm;border:1px solid #999;text-align:right;font-weight:700">💰 إجمالي سعر اللبن البقري</td>
-          <td style="padding:1.2mm;border:1px solid #999;text-align:left;font-weight:900">${fmt(rBaqriSum,0)} ج</td>
+          <td style="padding:1.5mm;border:1px solid #999;text-align:right;font-weight:700">➖ خصم السلف والمدفوعات</td>
+          <td style="padding:1.5mm;border:1px solid #999;text-align:left;font-weight:900">-${fmt(rAdvSum + rPaySum,0)} ج</td>
         </tr>
-        <!-- صف 3: كمية اللبن الجاموسي -->
-        <tr>
-          <td style="padding:1.2mm;border:1px solid #999;text-align:right;font-weight:700">🐃 كمية اللبن الجاموسي</td>
-          <td style="padding:1.2mm;border:1px solid #999;text-align:left;font-weight:900">${fmt(d.jammosiQtyKg,1)} كجم</td>
-        </tr>
-        <!-- صف 4: إجمالي سعر اللبن الجاموسي -->
-        <tr style="background:#f5f5f5">
-          <td style="padding:1.2mm;border:1px solid #999;text-align:right;font-weight:700">💰 إجمالي سعر اللبن الجاموسي</td>
-          <td style="padding:1.2mm;border:1px solid #999;text-align:left;font-weight:900">${fmt(rJammosiSum,0)} ج</td>
-        </tr>
-        <!-- صف 5: السلف -->
-        <tr>
-          <td style="padding:1.2mm;border:1px solid #999;text-align:right;font-weight:700">📋 السلف</td>
-          <td style="padding:1.2mm;border:1px solid #999;text-align:left;font-weight:900">${fmt(rAdvSum,0)} ج</td>
-        </tr>
-        <!-- صف 6: المدفوعات -->
-        <tr style="background:#f5f5f5">
-          <td style="padding:1.2mm;border:1px solid #999;text-align:right;font-weight:700">💸 المدفوعات</td>
-          <td style="padding:1.2mm;border:1px solid #999;text-align:left;font-weight:900">${fmt(rPaySum,0)} ج</td>
-        </tr>
-        <!-- صف 7: المبلغ قبل الخصم -->
-        <tr>
-          <td style="padding:1.2mm;border:1px solid #999;text-align:right;font-weight:700">📌 المبلغ قبل الخصم</td>
-          <td style="padding:1.2mm;border:1px solid #999;text-align:left;font-weight:900">${fmt(rMilkSum,0)} ج</td>
-        </tr>
-        <!-- صف 8: خصم السلف والمدفوعات -->
-        <tr style="background:#f5f5f5">
-          <td style="padding:1.2mm;border:1px solid #999;text-align:right;font-weight:700">➖ خصم السلف والمدفوعات</td>
-          <td style="padding:1.2mm;border:1px solid #999;text-align:left;font-weight:900">-${fmt(rAdvSum + rPaySum,0)} ج</td>
-        </tr>
-        <!-- صف 9: المتبقي (أخير - مميز) -->
         <tr style="background:#e8e8e8;border-top:2px solid #000;border-bottom:2px solid #000">
-          <td style="padding:1.8mm;border:1px solid #999;text-align:right;font-weight:900;font-size:8.5pt">✅ المتبقي</td>
-          <td style="padding:1.8mm;border:1px solid #999;text-align:left;font-weight:900;font-size:10pt">${fmt(Math.abs(rBalance),0)} ج</td>
+          <td style="padding:2mm;border:1px solid #999;text-align:right;font-weight:900;font-size:9pt">✅ المتبقي</td>
+          <td style="padding:2mm;border:1px solid #999;text-align:left;font-weight:900;font-size:10pt">${fmt(Math.abs(rBalance),0)} ج</td>
         </tr>
       </table>
       
