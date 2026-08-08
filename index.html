@@ -3302,6 +3302,7 @@
     <div class="modal-footer">
       <button class="btn btn-primary" onclick="printSupplierStatementChoice('full')">📋 طباعة كامل الكشف</button>
       <button class="btn btn-secondary" onclick="printSupplierStatementChoice('summary')">📊 طباعة الإجمالي فقط</button>
+      <button class="btn btn-secondary" onclick="printSupplierStatementChoice('kroky')" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border-color:#6366f1">🖨️ طباعة A5 كروكي</button>
       <button class="btn btn-secondary" type="button" onclick="closeModal('modal-account-detail')">إغلاق</button>
       <button class="btn-whatsapp" type="button" id="wa-send-btn" style="display:none">
         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -10026,6 +10027,17 @@ function getSupplierStmtData() {
   const milkQtyKg = baqriQtyKg + jammosiQtyKg; // 📦 الإجمالي = البقري + الجاموسي
   
   const milkSum = milk.reduce((s,[,r]) => s+Number(r.total||0), 0);
+  // حساب إجمالي سعر البقري والجاموسي (من حقل total أو الكمية × السعر)
+  const baqriSum = milk.reduce((s,[,r]) => {
+    const qty = Number(r.baqriQty || r.qty || 0);
+    const isBaqri = (r.milkType || 'بقري') === 'بقري' || r.baqriQty;
+    return isBaqri ? s + Number(r.total || 0) : s;
+  }, 0);
+  const jammosiSum = milk.reduce((s,[,r]) => {
+    const isJammosi = (r.milkType || 'بقري') === 'جاموسي' || r.jammosiQty;
+    return isJammosi ? s + Number(r.total || 0) : s;
+  }, 0);
+  
   const paySum = pay.reduce((s,[,p]) => s+Number(p.amount||0), 0);
   const advSum = adv.reduce((s,[,a]) => s+Number(a.amount||0), 0);
   const purSum = pur.reduce((s,[,p]) => s+Number(p.totalPrice||0), 0);
@@ -10036,7 +10048,7 @@ function getSupplierStmtData() {
   
   const nowStr = new Date().toLocaleString('ar-EG', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:true});
   
-  return {s, df, milk, pay, adv, pur, milkQtyKg, baqriQtyKg, jammosiQtyKg, milkSum, paySum, advSum, purSum, balance, pricePerKg, nowStr};
+  return {s, df, milk, pay, adv, pur, milkQtyKg, baqriQtyKg, jammosiQtyKg, milkSum, baqriSum, jammosiSum, paySum, advSum, purSum, balance, pricePerKg, nowStr};
 }
 
 function buildSupplierFullHTML(d) {
@@ -10135,12 +10147,143 @@ function buildSupplierSummaryHTML(d) {
     </div>`;
 }
 
+// ═══ A5 Landscape Kroky Style (كروكي - نصفين) - أبيض وأسود ═══
+function getA5LandscapeKrokyStyle() {
+  return `@page{size:210mm 148mm;margin:0}*{margin:0;padding:0;box-sizing:border-box}
+html,body{font-family:'Cairo',Tahoma,Arial,sans-serif;direction:rtl;color:#000;background:#fff;width:210mm;height:148mm;overflow:hidden}
+.kroky-page{width:210mm;height:148mm;display:flex;flex-direction:row;background:#fff}
+.kroky-left{width:105mm;height:148mm;padding:5mm;border-left:2px dashed #333;display:flex;flex-direction:column}
+.kroky-title{text-align:center;font-size:13pt;font-weight:700;color:#000;border:1.5px solid #000;border-radius:4px;padding:2.5mm 0;margin-bottom:3mm;background:#fff}
+.kroky-table-container{flex:1;border:1.5px solid #000;border-radius:6px;overflow:hidden}
+.kroky-table{width:100%;border-collapse:collapse}
+.kroky-table th,.kroky-table td{border:1px dashed #666;text-align:center;font-size:9pt;padding:2mm 1mm;height:7mm;color:#000}
+.kroky-table th{font-weight:700;background:#f0f0f0;font-size:8pt;color:#000}
+.kroky-right{width:105mm;height:148mm;padding:5mm;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.kroky-signature-area{width:100%;height:100%;border:2px solid #000;border-radius:10px;display:flex;flex-direction:column;justify-content:space-between;padding:6mm 5mm;background:#fff}
+.kroky-signature-title{text-align:center;font-size:26pt;font-weight:900;color:#000;flex:1;display:flex;align-items:center;justify-content:center}
+.kroky-signature-box{border:1.5px solid #000;border-radius:6px;padding:3mm;min-height:22mm;background:#fff}
+.kroky-signature-field{display:flex;align-items:center;margin-bottom:2.5mm;font-size:10pt;color:#000}
+.kroky-signature-line{flex:1;border-bottom:1px dotted #333;margin-right:4mm;min-height:5px}
+/* أبيض وأسود - بدون أي ألوان */
+.kroky-page * { color: #000 !important; background: #fff !important; border-color: #000 !important; }
+@media print{body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}`;
+}
+
+function buildSupplierKrokyHTML(d) {
+  const rMilkSum = roundSmart(d.milkSum);
+  const rPaySum = roundSmart(d.paySum);
+  const rAdvSum = roundSmart(d.advSum);
+  const rPurSum = roundSmart(d.purSum);
+  const rBalance = roundSmart(d.balance);
+  const rBaqriSum = roundSmart(d.baqriSum || 0);
+  const rJammosiSum = roundSmart(d.jammosiSum || 0);
+
+  return `<div class="kroky-page">
+    <!-- النصف الأيسر - الحسابات والبيانات -->
+    <div class="kroky-left">
+      <!-- عنوان المورد -->
+      <div style="text-align:center;background:#000;color:#fff;padding:2.5mm;border-radius:5px;margin-bottom:2mm">
+        <div style="font-size:11pt;font-weight:900">${d.s.name}</div>
+        <div style="font-size:7pt">${d.df.from||'الكل'} ← ${d.df.to||'الكل'}</div>
+      </div>
+      
+      <!-- 4 بطاقات -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2mm;margin-bottom:2mm">
+        <!-- بطاقة 1: إجمالي الحليب بالكيلو -->
+        <div style="border:1.5px solid #000;border-radius:4px;padding:2mm;text-align:center;background:#fff">
+          <div style="font-size:7pt;font-weight:700">🥛 إجمالي الحليب</div>
+          <div style="font-size:11pt;font-weight:900">${fmt(d.milkQtyKg,1)} كجم</div>
+        </div>
+        <!-- بطاقة 2: إجمالي سعر الحليب -->
+        <div style="border:1.5px solid #000;border-radius:4px;padding:2mm;text-align:center;background:#fff">
+          <div style="font-size:7pt;font-weight:700">💵 سعر الحليب</div>
+          <div style="font-size:11pt;font-weight:900">${fmt(rMilkSum,0)} ج</div>
+        </div>
+        <!-- بطاقة 3: السلف -->
+        <div style="border:1.5px solid #000;border-radius:4px;padding:2mm;text-align:center;background:#fff">
+          <div style="font-size:7pt;font-weight:700">📋 السلف</div>
+          <div style="font-size:11pt;font-weight:900">${fmt(rAdvSum,0)} ج</div>
+        </div>
+        <!-- بطاقة 4: المدفوعات -->
+        <div style="border:1.5px solid #000;border-radius:4px;padding:2mm;text-align:center;background:#fff">
+          <div style="font-size:7pt;font-weight:700">💸 المدفوعات</div>
+          <div style="font-size:11pt;font-weight:900">${fmt(rPaySum,0)} ج</div>
+        </div>
+      </div>
+      
+      <!-- جدول الملخص التفصيلي (9 صفوف) -->
+      <table style="width:100%;border-collapse:collapse;font-size:7.5pt;border:1.5px solid #000;border-radius:4px;overflow:hidden;background:#fff">
+        <!-- صف 1: كمية اللبن البقري -->
+        <tr>
+          <td style="padding:1.2mm;border:1px solid #999;text-align:right;font-weight:700;width:65%">🐄 كمية اللبن البقري</td>
+          <td style="padding:1.2mm;border:1px solid #999;text-align:left;font-weight:900">${fmt(d.baqriQtyKg,1)} كجم</td>
+        </tr>
+        <!-- صف 2: إجمالي سعر اللبن البقري -->
+        <tr style="background:#f5f5f5">
+          <td style="padding:1.2mm;border:1px solid #999;text-align:right;font-weight:700">💰 إجمالي سعر اللبن البقري</td>
+          <td style="padding:1.2mm;border:1px solid #999;text-align:left;font-weight:900">${fmt(rBaqriSum,0)} ج</td>
+        </tr>
+        <!-- صف 3: كمية اللبن الجاموسي -->
+        <tr>
+          <td style="padding:1.2mm;border:1px solid #999;text-align:right;font-weight:700">🐃 كمية اللبن الجاموسي</td>
+          <td style="padding:1.2mm;border:1px solid #999;text-align:left;font-weight:900">${fmt(d.jammosiQtyKg,1)} كجم</td>
+        </tr>
+        <!-- صف 4: إجمالي سعر اللبن الجاموسي -->
+        <tr style="background:#f5f5f5">
+          <td style="padding:1.2mm;border:1px solid #999;text-align:right;font-weight:700">💰 إجمالي سعر اللبن الجاموسي</td>
+          <td style="padding:1.2mm;border:1px solid #999;text-align:left;font-weight:900">${fmt(rJammosiSum,0)} ج</td>
+        </tr>
+        <!-- صف 5: السلف -->
+        <tr>
+          <td style="padding:1.2mm;border:1px solid #999;text-align:right;font-weight:700">📋 السلف</td>
+          <td style="padding:1.2mm;border:1px solid #999;text-align:left;font-weight:900">${fmt(rAdvSum,0)} ج</td>
+        </tr>
+        <!-- صف 6: المدفوعات -->
+        <tr style="background:#f5f5f5">
+          <td style="padding:1.2mm;border:1px solid #999;text-align:right;font-weight:700">💸 المدفوعات</td>
+          <td style="padding:1.2mm;border:1px solid #999;text-align:left;font-weight:900">${fmt(rPaySum,0)} ج</td>
+        </tr>
+        <!-- صف 7: المبلغ قبل الخصم -->
+        <tr>
+          <td style="padding:1.2mm;border:1px solid #999;text-align:right;font-weight:700">📌 المبلغ قبل الخصم</td>
+          <td style="padding:1.2mm;border:1px solid #999;text-align:left;font-weight:900">${fmt(rMilkSum,0)} ج</td>
+        </tr>
+        <!-- صف 8: خصم السلف والمدفوعات -->
+        <tr style="background:#f5f5f5">
+          <td style="padding:1.2mm;border:1px solid #999;text-align:right;font-weight:700">➖ خصم السلف والمدفوعات</td>
+          <td style="padding:1.2mm;border:1px solid #999;text-align:left;font-weight:900">-${fmt(rAdvSum + rPaySum,0)} ج</td>
+        </tr>
+        <!-- صف 9: المتبقي (أخير - مميز) -->
+        <tr style="background:#e8e8e8;border-top:2px solid #000;border-bottom:2px solid #000">
+          <td style="padding:1.8mm;border:1px solid #999;text-align:right;font-weight:900;font-size:8.5pt">✅ المتبقي</td>
+          <td style="padding:1.8mm;border:1px solid #999;text-align:left;font-weight:900;font-size:10pt">${fmt(Math.abs(rBalance),0)} ج</td>
+        </tr>
+      </table>
+      
+      <!-- التوقيعات -->
+      <div style="display:flex;gap:3mm;margin-top:2mm;font-size:7pt">
+        <div style="flex:1;border-bottom:1px dotted #333;padding:1mm 0;text-align:center">توقيع المورد</div>
+        <div style="flex:1;border-bottom:1px dotted #333;padding:1mm 0;text-align:center">توقيع المحاسب</div>
+      </div>
+    </div>
+    
+    <!-- النصف الأيمن - فاضي للفلوس الورقية -->
+    <div class="kroky-right">
+      <div class="kroky-signature-area">
+        <!-- فاضي تماماً - مكان للفلوس الورقية -->
+      </div>
+    </div>
+  </div>`;
+}
+
 window.printSupplierStatementChoice = function(mode) {
   const d = getSupplierStmtData(); if (!d) return;
-  openPrintWindow(mode === 'full' ? buildSupplierFullHTML(d) : buildSupplierSummaryHTML(d), getA5Style());
+  // كل الطباعات تطلع بتنسيق A5 كروكي (نصفين)
+  openPrintWindow(buildSupplierKrokyHTML(d), getA5LandscapeKrokyStyle());
 };
 
 window.printSupplierStatement = function() { printSupplierStatementChoice('full'); };
+window.printSupplierStatementKroky = function() { printSupplierStatementChoice('kroky'); };
 
 // ═══ Worker Statement Print Choices ═══
 function getWorkerStmtData() {
