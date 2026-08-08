@@ -1,1 +1,0 @@
-{"projects": {"default": "print-manager-app", "production": "print-manager-prod"}, "targets": {"hosting": {"production": ["print-manager-prod"]}}}
