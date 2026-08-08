@@ -10157,15 +10157,22 @@ html,body{font-family:'Cairo',Tahoma,Arial,sans-serif;direction:rtl;color:#000;b
 }
 
 function buildSupplierKrokyHTML(d) {
+  const rMilkSum = roundSmart(d.milkSum);
+  const rPaySum = roundSmart(d.paySum);
+  const rAdvSum = roundSmart(d.advSum);
+  const rPurSum = roundSmart(d.purSum);
   const rBalance = roundSmart(d.balance);
-  let tableRows = '';
-  const maxRows = 12;
   
+  let tableRows = '';
+  const maxRows = 14;
+  
+  // سجل الحليب
   for (let i = 0; i < Math.min(d.milk.length, maxRows); i++) {
     const [,r] = d.milk[i];
     tableRows += `<tr><td style="text-align:right;padding-right:2mm">${r.date}</td><td style="text-align:left">${fmt(r.qty,1)} كجم</td></tr>`;
   }
   
+  // المدفوعات
   if (d.pay.length > 0 && d.milk.length < maxRows) {
     for (let i = 0; i < Math.min(d.pay.length, maxRows - d.milk.length); i++) {
       const [,p] = d.pay[i];
@@ -10173,32 +10180,71 @@ function buildSupplierKrokyHTML(d) {
     }
   }
   
-  const filledRows = d.milk.length + Math.min(d.pay.length, maxRows - d.milk.length);
+  // السلف
+  if (d.adv.length > 0 && d.milk.length + d.pay.length < maxRows) {
+    for (let i = 0; i < Math.min(d.adv.length, maxRows - d.milk.length - d.pay.length); i++) {
+      const [,a] = d.adv[i];
+      tableRows += `<tr><td style="text-align:right;padding-right:2mm">📋 سلفة ${a.date}</td><td style="text-align:left;color:orange">-${fmt(roundSmart(a.amount),0)}</td></tr>`;
+    }
+  }
+  
+  const filledRows = d.milk.length + Math.min(d.pay.length, maxRows - d.milk.length) + Math.min(d.adv.length, maxRows - d.milk.length - d.pay.length);
   for (let i = filledRows; i < maxRows; i++) {
     tableRows += `<tr><td></td><td></td></tr>`;
   }
 
   return `<div class="kroky-page">
+    <!-- النصف الأيسر - الحسابات والبيانات -->
     <div class="kroky-left">
+      <!-- عنوان المورد -->
+      <div style="text-align:center;background:linear-gradient(135deg,#D4A843,#B8860B);color:#fff;padding:3mm;border-radius:5px;margin-bottom:2mm">
+        <div style="font-size:12pt;font-weight:900">${d.s.name}</div>
+        <div style="font-size:8pt;opacity:0.9">${d.df.from||'الكل'} ← ${d.df.to||'الكل'}</div>
+      </div>
+      
+      <!-- عنوان الحسابات -->
       <div class="kroky-title">الحسابات</div>
-      <div class="kroky-table-container">
+      
+      <!-- جدول الحركات -->
+      <div class="kroky-table-container" style="flex:1">
         <table class="kroky-table">
           <thead><tr><th style="width:55%">التاريخ / البيان</th><th style="width:45%">المبلغ / الكمية</th></tr></thead>
           <tbody>${tableRows}</tbody>
         </table>
       </div>
+      
+      <!-- جدول الإجماليات في الأسفل -->
+      <table style="width:100%;border-collapse:collapse;font-size:8.5pt;margin-top:2mm;border:1.5px solid #000;border-radius:4px;overflow:hidden">
+        <tr style="background:#fff3cd">
+          <td style="padding:1.5mm;border:1px solid #ddd;text-align:right;font-weight:700">💵 إجمالي الفلوس قبل الخصم</td>
+          <td style="padding:1.5mm;border:1px solid #ddd;text-align:left;font-weight:900;color:#d4a843">${fmt(rMilkSum,0)} ج</td>
+        </tr>
+        <tr style="background:#f8d7da">
+          <td style="padding:1.5mm;border:1px solid #ddd;text-align:right;font-weight:700">💸 المدفوعات + السلف</td>
+          <td style="padding:1.5mm;border:1px solid #ddd;text-align:left;font-weight:900;color:#dc3545">-${fmt(rPaySum + rAdvSum,0)} ج</td>
+        </tr>
+        ${rPurSum > 0 ? `
+        <tr style="background:#e2e3e5">
+          <td style="padding:1.5mm;border:1px solid #ddd;text-align:right;font-weight:700">🛒 المشتريات</td>
+          <td style="padding:1.5mm;border:1px solid #ddd;text-align:left;font-weight:900;color:#6c757d">-${fmt(rPurSum,0)} ج</td>
+        </tr>` : ''}
+        <tr style="background:${rBalance>=0?'#d4edda':'#f8d7da'};border-top:2px solid #000">
+          <td style="padding:2mm;text-align:right;font-weight:900;font-size:10pt">🎯 الرصيد المستحق</td>
+          <td style="padding:2mm;text-align:left;font-weight:900;font-size:12pt;color:${rBalance>=0?'#28a745':'#dc3545'}">${fmt(Math.abs(rBalance),0)} ج</td>
+        </tr>
+      </table>
+      
+      <!-- التوقيعات -->
+      <div style="display:flex;gap:4mm;margin-top:2mm;font-size:8pt">
+        <div style="flex:1;border-bottom:1px dotted #333;padding:1mm 0;text-align:center">توقيع المورد</div>
+        <div style="flex:1;border-bottom:1px dotted #333;padding:1mm 0;text-align:center">توقيع المحاسب</div>
+      </div>
     </div>
+    
+    <!-- النصف الأيمن - فاضي للفلوس الورقية -->
     <div class="kroky-right">
       <div class="kroky-signature-area">
-        <div class="kroky-signature-title">هام للتوقيع</div>
-        <div style="text-align:center;margin:4mm 0;font-size:11pt;font-weight:700">
-          <div>المورد: ${d.s.name}</div>
-          <div style="margin-top:2mm;font-size:14pt;color:${rBalance>=0?'green':'red'}">الرصيد: ${fmt(rBalance,0)} ج</div>
-        </div>
-        <div class="kroky-signature-box">
-          <div class="kroky-signature-field"><span>توقيع المورد</span><div class="kroky-signature-line"></div></div>
-          <div class="kroky-signature-field"><span>توقيع المحاسب</span><div class="kroky-signature-line"></div></div>
-        </div>
+        <!-- فاضي تماماً - مكان للفلوس الورقية -->
       </div>
     </div>
   </div>`;
@@ -10206,11 +10252,8 @@ function buildSupplierKrokyHTML(d) {
 
 window.printSupplierStatementChoice = function(mode) {
   const d = getSupplierStmtData(); if (!d) return;
-  if (mode === 'kroky') {
-    openPrintWindow(buildSupplierKrokyHTML(d), getA5LandscapeKrokyStyle());
-  } else {
-    openPrintWindow(mode === 'full' ? buildSupplierFullHTML(d) : buildSupplierSummaryHTML(d), getA5Style());
-  }
+  // كل الطباعات تطلع بتنسيق A5 كروكي (نصفين)
+  openPrintWindow(buildSupplierKrokyHTML(d), getA5LandscapeKrokyStyle());
 };
 
 window.printSupplierStatement = function() { printSupplierStatementChoice('full'); };
