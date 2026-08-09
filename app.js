@@ -71,6 +71,9 @@ const ocrState = {
   currentPageNumber: 0,       // Current page being captured (1-based)
   isMultiPageMode: true,      // Enable multi-page capture by default
   allPagesText: [],           // Array of extracted texts per page
+  
+  // Processing mode: 'server' (AI) or 'local' (offline)
+  processingMode: 'server',
 };
 
 // R2 Configuration
@@ -1966,6 +1969,9 @@ function setupOcrEventListeners() {
     pdfPreview: $('#ocrPdfPreview'),
     addPageBtn: $('#ocrAddPageBtn'),
     finishCaptureBtn: $('#ocrFinishCaptureBtn'),
+    // Mode selection buttons
+    modeServer: $('#ocrModeServer'),
+    modeLocal: $('#ocrModeLocal'),
   };
   
   // Remove old listeners to prevent duplicates
@@ -1987,6 +1993,8 @@ function setupOcrEventListeners() {
     closePdf: $('#ocrClosePdfPreview'),
     addPage: $('#ocrAddPageBtn'),
     finishCapture: $('#ocrFinishCaptureBtn'),
+    modeServer: $('#ocrModeServer'),
+    modeLocal: $('#ocrModeLocal'),
   };
   
   // Capture button - now captures and adds to pages array
@@ -2024,6 +2032,10 @@ function setupOcrEventListeners() {
   // Finish capture & generate PDF button
   if (btns.finishCapture) btns.finishCapture.addEventListener('click', () => { finishMultiPageCapture(); });
   
+  // Mode selection buttons
+  if (btns.modeServer) btns.modeServer.addEventListener('click', () => { switchOcrMode('server'); });
+  if (btns.modeLocal) btns.modeLocal.addEventListener('click', () => { switchOcrMode('local'); });
+  
   // JSON toggle
   if (btns.jsonTgl && elements.jsonSection) {
     btns.jsonTgl.addEventListener('click', () => {
@@ -2038,7 +2050,7 @@ function setupOcrEventListeners() {
     btns.closePdf.addEventListener('click', () => { elements.pdfPreview.style.display = 'none'; });
   }
   
-  console.log('[OCR] Event listeners initialized with multi-page support!');
+  console.log('[OCR] Event listeners initialized with multi-page + mode support!');
 }
 
 // Start OCR Camera
@@ -2401,36 +2413,25 @@ async function finishMultiPageCapture() {
   }
 }
 
-// Process a single page image through OCR
+// Process a single page image through OCR (supports server/local)
 async function processSinglePage(imageDataUrl) {
-  console.log('[OCR-Multi] Sending single page to OCR...');
+  console.log('[OCR-Multi] Processing page... Mode:', ocrState.processingMode);
   
-  // Convert base64 to blob
-  const response = await fetch(imageDataUrl);
-  const blob = await response.blob();
-  
-  // Create form data
-  const formData = new FormData();
-  formData.append('file', blob, `page_${Date.now()}.jpg`);
-  formData.append('type', 'ocr');
-  
-  // Send to worker
-  const workerResponse = await fetch(ocrState.workerUrl + '/ocr', {
-    method: 'POST',
-    body: formData
-  });
-  
-  if (!workerResponse.ok) {
-    throw new Error(`Worker error: ${workerResponse.status}`);
+  if (ocrState.processingMode === 'local') {
+    // Local mode
+    return await processOcrLocal(imageDataUrl);
+  } else {
+    // Server mode
+    try {
+      return await processOcrServer(imageDataUrl);
+    } catch (serverErr) {
+      console.warn('[OCR-Multi] Server failed for page, trying local:', serverErr);
+      // Auto-fallback to local for multi-page
+      ocrState.processingMode = 'local';
+      toast('⚠️ السيرفر فشل - التحويل للوضع المحلي');
+      return await processOcrLocal(imageDataUrl);
+    }
   }
-  
-  const result = await workerResponse.json();
-  
-  if (!result.success) {
-    throw new Error(result.error || 'Unknown error');
-  }
-  
-  return result.text;
 }
 
 // Mark/unmark thumbnail as processing
@@ -2666,14 +2667,14 @@ function resetOcrFull() {
   toast('🔄 تم إعادة تعيين المستند');
 }
 
-// Process image with OCR (send to worker -> OpenRouter)
+// Process image with OCR - supports server and local modes
 async function processOcrImage() {
   if (!ocrState.capturedImage || ocrState.isProcessing) {
     console.warn('[OCR] Cannot process: no image or already processing');
     return;
   }
   
-  console.log('[OCR] Starting image processing...');
+  console.log('[OCR] Starting image processing... Mode:', ocrState.processingMode);
   ocrState.isProcessing = true;
   
   // Show processing UI
@@ -2686,39 +2687,48 @@ async function processOcrImage() {
   if (results) results.classList.remove('show');
   
   try {
-    // Convert base64 to blob for upload
-    const response = await fetch(ocrState.capturedImage);
-    const blob = await response.blob();
+    let result;
     
-    // Create form data
-    const formData = new FormData();
-    formData.append('file', blob, 'document.jpg');
-    formData.append('type', 'ocr');
-    
-    console.log('[OCR] Sending to worker:', ocrState.workerUrl);
-    
-    // Send to worker
-    const workerResponse = await fetch(ocrState.workerUrl + '/ocr', {
-      method: 'POST',
-      body: formData
-    });
-    
-    if (!workerResponse.ok) {
-      throw new Error(`Worker error: ${workerResponse.status} ${workerResponse.statusText}`);
+    if (ocrState.processingMode === 'local') {
+      // Local/Offline mode - use Tesseract.js or basic extraction
+      result = await processOcrLocal(ocrState.capturedImage);
+    } else {
+      // Server/AI mode - send to Cloudflare Worker
+      result = await processOcrServer(ocrState.capturedImage);
     }
     
-    const result = await workerResponse.json();
-    console.log('[OCR] Worker response:', result);
-    
     if (result.success) {
-      // Display results
       displayOcrResults(result);
     } else {
-      throw new Error(result.error || 'Unknown error from worker');
+      throw new Error(result.error || 'Unknown error from processor');
     }
     
   } catch (err) {
     console.error('[OCR] Processing error:', err);
+    
+    // If server failed, offer to try local mode
+    if (ocrState.processingMode === 'server') {
+      console.log('[OCR] Server failed, offering local fallback...');
+      
+      const tryLocal = confirm(
+        '⚠️ فشل الاتصال بالسيرفر!\n\n' +
+        'هل تريد المحاولة بالوضع المحلي؟\n\n' +
+        '(الوضع المحلي يعمل بدون إنترنت لكن بأقل دقة)'
+      );
+      
+      if (tryLocal) {
+        ocrState.processingMode = 'local';
+        
+        // Retry with local mode
+        ocrState.isProcessing = false;
+        if (processing) processing.classList.remove('show');
+        
+        toast('🔄 التحويل للوضع المحلي...');
+        setTimeout(() => processOcrImage(), 500);
+        return;
+      }
+    }
+    
     toast('خطأ في معالجة الصورة: ' + err.message);
     
     // Hide processing, show capture step again
@@ -2727,6 +2737,159 @@ async function processOcrImage() {
   } finally {
     ocrState.isProcessing = false;
   }
+}
+
+// Process OCR using Server (Cloudflare Worker -> OpenRouter)
+async function processOcrServer(imageDataUrl) {
+  console.log('[OCR-Server] Sending to worker...');
+  
+  // Convert base64 to blob for upload
+  const response = await fetch(imageDataUrl);
+  const blob = await response.blob();
+  
+  // Create form data
+  const formData = new FormData();
+  formData.append('file', blob, 'document.jpg');
+  formData.append('type', 'ocr');
+  
+  console.log('[OCR-Server] Sending to worker:', ocrState.workerUrl);
+  
+  // Send to worker with timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+  
+  try {
+    const workerResponse = await fetch(ocrState.workerUrl + '/ocr', {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!workerResponse.ok) {
+      throw new Error(`خطأ السيرفر: ${workerResponse.status} ${workerResponse.statusText}`);
+    }
+    
+    const result = await workerResponse.json();
+    console.log('[OCR-Server] Response:', result);
+    
+    return result;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error('انتهت مهلة الاتصال بالسيرفر (30 ثانية)');
+    }
+    throw err;
+  }
+}
+
+// Process OCR Locally (Offline mode)
+async function processOcrLocal(imageDataUrl) {
+  console.log('[OCR-Local] Processing locally...');
+  
+  // Update processing message
+  const processing = $('#ocrProcessing');
+  if (processing) {
+    const msg = processing.querySelector('p');
+    if (msg) msg.textContent = 'جارٍ المعالجة المحلية... (قد يستغرق وقتاً أطول)';
+  }
+  
+  try {
+    // Try to use Tesseract.js if available
+    if (typeof Tesseract !== 'undefined') {
+      return await processWithTesseract(imageDataUrl);
+    }
+    
+    // Fallback: Basic text extraction simulation
+    // In production, you'd integrate Tesseract.js properly
+    return await simulateLocalExtraction(imageDataUrl);
+    
+  } catch (err) {
+    console.error('[OCR-Local] Error:', err);
+    throw new Error('فشل المعالجة المحلية: ' + err.message);
+  }
+}
+
+// Process using Tesseract.js
+async function processWithTesseract(imageDataUrl) {
+  console.log('[OCR-Tesseract] Using Tesseract.js...');
+  
+  const result = await Tesseract.recognize(
+    imageDataUrl,
+    'ara+eng', // Arabic + English
+    {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          const progress = Math.round(m.progress * 100);
+          const processing = $('#ocrProcessing');
+          if (processing) {
+            const msg = processing.querySelector('p');
+            if (msg) msg.textContent = `جارٍ المعالجة: ${progress}%`;
+          }
+        }
+      }
+    }
+  );
+  
+  console.log('[OCR-Tesseract] Result:', result.data.text);
+  
+  return {
+    success: true,
+    text: result.data.text,
+    json: { 
+      confidence: result.data.confidence,
+      words: result.data.words?.length || 0,
+      lines: result.data.lines?.length || 0,
+      mode: 'local-tesseract'
+    },
+    language: result.data.script || 'AR/EN'
+  };
+}
+
+// Simulate local extraction (fallback when Tesseract not available)
+async function simulateLocalExtraction(imageDataUrl) {
+  console.log('[OCR-Simulate] Using simulated extraction...');
+  
+  // Simulate processing delay
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  // Return a helpful message explaining the limitation
+  return {
+    success: true,
+    text: `[وضع المعالجة المحلية]\n\n` +
+           `⚠️ ملاحظة: لاستخراج النصوص بدقة عالية، يرجى:\n\n` +
+           `1. تثبيت Tesseract.js لمعالجة محلية حقيقية\n` +
+           `أو\n` +
+           `2. استخدام وضع السيرفر مع اتصال إنترنت\n\n` +
+           `--- معلومات الصورة ---\n` +
+           `الحجم: ${Math.round(imageDataUrl.length / 1024)} KB\n` +
+           `الاتجاه: ${ocrState.documentOrientation === 'portrait' ? 'عمودي' : 'أفقي'}\n` +
+           `التاريخ: ${new Date().toLocaleString('ar-EG')}\n\n` +
+           `[تم حفظ الصورة - يمكنك تحميلها كـ PDF]`,
+    json: {
+      mode: 'local-simulated',
+      imageSize: `${Math.round(imageDataUrl.length / 1024)} KB`,
+      orientation: ocrState.documentOrientation
+    },
+    language: 'AR'
+  };
+}
+
+// Switch OCR processing mode
+function switchOcrMode(mode) {
+  ocrState.processingMode = mode;
+  
+  const serverBtn = $('#ocrModeServer');
+  const localBtn = $('#ocrModeLocal');
+  
+  if (serverBtn && localBtn) {
+    serverBtn.classList.toggle('selected', mode === 'server');
+    localBtn.classList.toggle('selected', mode === 'local');
+  }
+  
+  console.log('[OCR] Mode switched to:', mode);
+  toast(`✅ تم اختيار الوضع: ${mode === 'server' ? 'السيرفر (AI)' : 'محلي (Offline)'}`);
 }
 
 // Display OCR results
