@@ -1,0 +1,23 @@
+{
+  "name": "نظام إدارة مصنع الألبان",
+  "short_name": "مصنع الألبان",
+  "description": "نظام متكامل لإدارة مصانع الألبان",
+  "start_url": "/yasen/",
+  "display": "standalone",
+  "background_color": "#0A0C0F",
+  "theme_color": "#E8B84B",
+  "orientation": "portrait-primary",
+  "lang": "ar",
+  "dir": "rtl",
+  "scope": "/yasen/",
+  "icons": [
+    { "src": "/yasen/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/yasen/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/yasen/icons/icon.svg",     "sizes": "any",     "type": "image/svg+xml" }
+  ],
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    { "name": "لوحة التحكم", "url": "/yasen/?page=dashboard", "icons": [{"src": "/yasen/icons/icon-192.png", "sizes": "192x192"}] },
+    { "name": "استلام الحليب", "url": "/yasen/?page=milk", "icons": [{"src": "/yasen/icons/icon-192.png", "sizes": "192x192"}] }
+  ]
+}
