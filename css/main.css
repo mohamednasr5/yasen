@@ -3,7 +3,7 @@
    إعادة تصميم احترافية كاملة مع حركات وانتقالات سينمائية
    ═══════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 
 :root {
   --gold:        #E8B84B;
@@ -1592,4 +1592,70 @@ table th { position: sticky; top: 0; z-index: 1; }
   .supplier-stat-value {
     font-size: 15px;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   إصلاح وضوح الأرقام - Number Clarity Fix
+   استخدام خط IBM Plex Mono للأرقام لتمييز 2 عن 3
+   ═══════════════════════════════════════════════════════════════ */
+
+/* خط الأرقام الواضح */
+.num-font, 
+input[type="number"],
+input[type="text"][id*="qty"],
+input[type="text"][id*="price"],
+input[type="text"][id*="total"],
+.stat-value,
+.stat-card .stat-value,
+.summary-item .val,
+.ticker-val,
+.val,
+td[style*="font-weight"],
+.form-group input {
+  font-family: 'IBM Plex Mono', 'Courier New', monospace !important;
+  letter-spacing: 1.5px !important;
+  font-feature-settings: "tnum" on, "lnum" on;
+}
+
+/* تحسين الأرقام في الجداول */
+tbody td {
+  font-family: 'IBM Plex Mono', 'Cairo', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+/* تمييز الرقم 2 - منحنى أكثر وضوحاً */
+@supports (font-variation-settings: normal) {
+  .num-font,
+  input[type="number"] {
+    font-weight: 600 !important;
+  }
+}
+
+/* تحسين أزرار الأرقام في الواجهة السهلة */
+.easy-num-btn {
+  font-family: 'IBM Plex Mono', monospace !important;
+  font-weight: 700 !important;
+  letter-spacing: 2px !important;
+  min-width: 50px;
+}
+
+/* تأثير التمييز عند التركيز على حقل رقم */
+input[type="number"]:focus,
+input[id*="qty"]:focus,
+input[id*="price"]:focus {
+  font-weight: 700 !important;
+  letter-spacing: 2px !important;
+  transform: scale(1.02);
+}
+
+/* الإحصائيات الكبيرة */
+.esc-val,
+#esc-milk-price,
+#esc-milk-qty,
+#esc-cheese-price,
+#esc-sales,
+#esc-expenses {
+  font-family: 'IBM Plex Mono', monospace !important;
+  font-weight: 700 !important;
+  letter-spacing: 2px !important;
 }

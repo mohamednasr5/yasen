@@ -4405,9 +4405,21 @@ function renderAccounts(search='') {
     const milkQty = milkRecs.reduce((s,r) => s + Number(r.qty||0), 0);
     const milkTotal = milkRecs.reduce((s,r) => s + Number(r.total||0), 0);
     
-    // حساب كميات الحليب حسب النوع
-    const baqriQty = milkRecs.filter(r => (r.milkType || 'بقري') === 'بقري').reduce((s,r) => s + Number(r.qty||0), 0);
-    const jammosiQty = milkRecs.filter(r => (r.milkType || 'بقري') === 'جاموسي').reduce((s,r) => s + Number(r.qty||0), 0);
+    // ✅ إصلاح: حساب كميات الحليب حسب النوع - استخدام الحقول الجديدة أولاً
+    // دعم التوافقية: السجلات القديمة تستخدم milkType/qty، الجديدة تستخدم baqriQty/jammosiQty
+    const baqriQty = milkRecs.reduce((s,r) => {
+      // استخدام baqriItem إذا موجود (النظام الجديد)
+      if (r.baqriQty !== undefined && r.baqriQty !== null) return s + Number(r.baqriQty||0);
+      //否则使用 milkType للسجلات القديمة
+      return (r.milkType || 'بقري') === 'بقري' ? s + Number(r.qty||0) : s;
+    }, 0);
+    
+    const jammosiQty = milkRecs.reduce((s,r) => {
+      // استخدام jammosiQty إذا موجود (النظام الجديد)
+      if (r.jammosiQty !== undefined && r.jammosiQty !== null) return s + Number(r.jammosiQty||0);
+      //否则使用 milkType للسجلات القديمة
+      return (r.milkType || 'بقري') === 'جاموسي' ? s + Number(r.qty||0) : s;
+    }, 0);
     
     // حساب متوسط سعر الكيلو لهذا المورد
     const avgPrice = milkQty > 0 ? milkTotal / milkQty : 0;
@@ -9414,25 +9426,11 @@ window.editMilkRecord = function(id) {
   calcMilkTotal();
 };
 
-// Override saveMilkRecord
-window.saveMilkRecord = async function() {
-  const supplierId = $('m-supplier').value;
-  const qty = parseFloat($('m-qty').value);
-  const milkType = $('milk-type').value || 'بقري';
-  if (!supplierId) { toast('اختر المورد', 'error'); return; }
-  if (!qty || qty <= 0) { toast('الكمية يجب أن تكون أكبر من صفر', 'error'); return; }
-  const price = parseFloat($('m-price').value) || 0;
-  if (price < 0) { toast('السعر لا يمكن أن يكون سالباً', 'error'); return; }
-  const data = { supplierId, date: $('m-date').value, time: $('m-time').value, qty, price, total: qty * price, milkType, period: $('m-period').value, notes: sanitize($('m-notes').value) };
-  loading(true, 'جارٍ حفظ سجل الحليب...');
-  try {
-    const editId = $('m-record-id').value;
-    if (editId) { await dbUpdate('milkRecords/' + editId, data); toast('تم تحديث السجل', 'success'); }
-    else { await dbPush('milkRecords', data); toast('تم تسجيل استلام الحليب', 'success'); track('milk_receive', { supplierId, qty, milkType }); }
-    closeModal('modal-milk'); loadMilkRecords(); recalcAll();
-  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
-  finally { loading(false); }
-};
+// ══════════════════════════════════════════════════════════════════
+// ⚠️ تم إزالة النسخة القديمة من saveMilkRecord
+// كانت تستخدم نظام qty/milkType القديم يسبب مشاكل في الحسابات
+// الآن نستخدم فقط النظام الجديد: baqriQty/jammosiQty (أسفل الملف)
+// ══════════════════════════════════════════════════════════════════
 
 // Fix openMilkModal to reset edit state
 const __origOpenMilkModal = window.openMilkModal;
@@ -9480,29 +9478,44 @@ window.openMilkModal = function() {
 };
 
 // Updated saveMilkRecord with flexible price update - supports cow & buffalo milk
+// ✅ إصلاح: هذه النسخة الوحيدة الصحيحة - تحفظ البقري والجاموسي بشكل منفصل
 window.saveMilkRecord = async function() {
   const supplierId = $('m-supplier').value;
   if (!supplierId) { toast('اختر المورد', 'error'); return; }
 
-  // Get cow milk data
+  // Get cow milk data - 🐄 الحليب البقري
   const baqriQty = parseFloat($('m-baqri-qty').value) || 0;
   const baqriPrice = parseFloat($('m-baqri-price').value) || 0;
 
-  // Get buffalo milk data
+  // Get buffalo milk data - 🐃 الحليب الجاموسي
   const jammosiQty = parseFloat($('m-jammosi-qty').value) || 0;
   const jammosiPrice = parseFloat($('m-jammosi-price').value) || 0;
 
   // Validate - at least one type must have quantity
-  if (baqriQty <= 0 && jammosiQty <= 0) { toast('الكمية يجب أن تكون أكبر من صفر (بقري أو جاموسي)', 'error'); return; }
-  if (baqriPrice < 0 || jammosiPrice < 0) { toast('السعر لا يمكن أن يكون سالباً', 'error'); return; }
+  if (baqriQty <= 0 && jammosiQty <= 0) { 
+    toast('⚠️ يجب إدخال كمية واحدة على الأقل (بقري أو جاموسي)', 'error'); 
+    return; 
+  }
+  
+  // Validate prices
+  if (baqriPrice < 0 || jammosiPrice < 0) { 
+    toast('⚠️ السعر لا يمكن أن يكون سالباً', 'error'); 
+    return; 
+  }
+  
+  // ✅ تحقق إضافي: التأكد من أن القيم أرقام صحيحة
+  if (isNaN(baqriQty) || isNaN(jammosiQty)) {
+    toast('⚠️ خطأ في إدخال الكمية - تأكد من كتابة أرقام صحيحة', 'error');
+    return;
+  }
 
   const dateStr = $('m-date').value || today();
   const editId = $('m-record-id').value;
 
-  // Calculate totals
-  const baqriTotal = baqriQty * baqriPrice;
-  const jammosiTotal = jammosiQty * jammosiPrice;
-  const total = baqriTotal + jammosiTotal;
+  // Calculate totals - حساب الإجماليات بشكل منفصل لكل نوع
+  const baqriTotal = baqriQty * baqriPrice;      // إجمالي البقري فقط
+  const jammosiTotal = jammosiQty * jammosiPrice; // إجمالي الجاموسي فقط
+  const total = baqriTotal + jammosiTotal;        // الإجمالي الكلي (بدون مضاعفة!)
 
   // Build data object with separate cow/buffalo info
   const data = {
@@ -9511,34 +9524,45 @@ window.saveMilkRecord = async function() {
     time: $('m-time').value,
     period: $('m-period').value,
     notes: sanitize($('m-notes').value),
-    // Cow milk
+    // 🐄 Cow milk - البيانات الخاصة بالبقري
     baqriQty,
     baqriPrice,
     baqriTotal,
-    // Buffalo milk
+    // 🐃 Buffalo milk - البيانات الخاصة بالجاموسي
     jammosiQty,
     jammosiPrice,
     jammosiTotal,
-    // Totals for backward compatibility
-    qty: baqriQty + jammosiQty,
-    total,
+    // Totals for backward compatibility - الإجماليات الكلية
+    qty: baqriQty + jammosiQty,  // مجموع الكميات (ليس مضاعفاً!)
+    total,                        // مجموع الإجماليات (ليس مضاعفاً!)
     avgPrice: total > 0 ? total / (baqriQty + jammosiQty) : 0
   };
+
+  // ✅ log للتأكد من صحة الحسابات (يمكن إزالته لاحقاً)
+  console.log('💾 حفظ سجل حليب:', {
+    supplierId,
+    '🐄 بقري': `${baqriQty} كجم × ${baqriPrice} = ${baqriTotal}`,
+    '🐃 جاموسي': `${jammosiQty} كجم × ${jammosiPrice} = ${jammosiTotal}`,
+    '📊 الإجمالي': total
+  });
 
   loading(true, 'جارٍ حفظ سجل الحليب...');
   try {
     if (editId) {
       await dbUpdate('milkRecords/' + editId, data);
-      toast('تم تحديث السجل', 'success');
+      toast('✅ تم تحديث السجل بنجاح', 'success');
     } else {
       await dbPush('milkRecords', data);
-      toast('تم تسجيل استلام الحليب', 'success');
-      track('milk_receive', { supplierId, qty: data.qty });
+      toast('✅ تم تسجيل استلام الحليب بنجاح', 'success');
+      track('milk_receive', { supplierId, qty: data.qty, baqriQty, jammosiQty });
     }
     closeModal('modal-milk');
     loadMilkRecords();
     recalcAll();
-  } catch(e) { toast('خطأ: ' + e.message, 'error'); }
+  } catch(e) { 
+    console.error('❌ خطأ في حفظ سجل الحليب:', e);
+    toast('خطأ: ' + e.message, 'error'); 
+  }
   finally { loading(false); }
 };
 
